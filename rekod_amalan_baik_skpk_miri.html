@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekod Amalan Baik SKPK Miri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body { 
+            background-color: #050505; 
+            color: #00ff41; 
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        h1, h2, h3, .cyber-font { font-family: 'Orbitron', sans-serif; }
+        
+        .cyber-container { 
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #00ff41; 
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .input-dark { 
+            background-color: #0f172a; 
+            border: 1px solid #1e293b; 
+            color: #e2e8f0; 
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-dark:focus { 
+            outline: none; 
+            border-color: #00ff41; 
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.4); 
+        }
+
+        .btn-cyber {
+            background: transparent;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            transition: all 0.3s ease;
+        }
+        .btn-cyber:hover, .btn-cyber.active {
+            background: #00ff41;
+            color: #000;
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        /* Penting: touch-action: none untuk elak scroll bila sign di phone */
+        canvas.sign-pad { 
+            background-color: #000; 
+            border: 1px dashed #475569; 
+            width: 100%; 
+            touch-action: none; 
+            cursor: crosshair; 
+        }
+
+        /* Mod Cetakan PDF */
+        @media print { 
+            .no-print { display: none !important; } 
+            body { 
+                color: black; 
+                background: white; 
+                background-image: none; 
+                padding: 0 !important;
+                margin: 0 !important;
+                font-family: Arial, sans-serif;
+            }
+            .cyber-container { border: none; background: transparent; box-shadow: none; padding: 0 !important; }
+            .print-fit { width: 100%; max-width: 100%; margin: 0; padding: 0; }
+            .sign-black { filter: brightness(0); }
+            /* Memaksa background color dicetak dalam PDF */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="w-full max-w-5xl mb-6 no-print">
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="window.location.href='index.html'" class="px-4 py-2 border border-slate-600 hover:bg-slate-800 text-sm text-gray-300 rounded transition">← KEMBALI KE MENU</button>
+            <div class="w-24"></div> 
+        </div>
+        
+        <div class="flex flex-wrap gap-4">
+            <button onclick="switchTab('form')" id="nav-form" class="btn-cyber active px-6 py-2 rounded font-bold tracking-wide">BORANG BAHARU</button>
+            <button onclick="switchTab('record')" id="nav-record" class="btn-cyber px-6 py-2 rounded font-bold tracking-wide">SENARAI REKOD</button>
+            <button onclick="switchTab('leaderboard')" id="nav-leaderboard" class="btn-cyber px-6 py-2 rounded font-bold tracking-wide">MARKAH MURID</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-5xl">
+        
+        <div id="tab-form" class="cyber-container p-6 md:p-8 rounded-xl">
+            <h2 class="text-2xl font-bold cyber-font mb-6 tracking-widest uppercase text-[#00ff41]">Rekod Amalan Baik</h2>
+            
+            <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" onsubmit="saveRecord(event)">
+                <input type="hidden" id="editId" value="">
+                
+                <div class="space-y-1">
+                    <label class="text-xs text-gray-400">Nama Murid</label>
+                    <input type="text" id="namaMurid" class="w-full input-dark p-3 rounded" required>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs text-gray-400">Kelas</label>
+                    <input type="text" id="kelas" class="w-full input-dark p-3 rounded" required>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs text-gray-400">Tarikh Kejadian</label>
+                    <input type="date" id="tarikhKejadian" class="w-full input-dark p-3 rounded" required>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs text-gray-400">Tempat Kejadian</label>
+                    <div class="flex items-center h-full gap-6 px-3 bg-[#0f172a] border border-[#1e293b] rounded">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-300">
+                            <input type="radio" name="tempat" value="Dalam Sekolah" class="accent-[#00ff41]" checked> Dalam Sekolah
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-300">
+                            <input type="radio" name="tempat" value="Luar Sekolah" class="accent-[#00ff41]"> Luar Sekolah
+                        </label>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 space-y-1 mt-2">
+                    <label class="text-xs text-gray-400">Kategori Amalan Baik</label>
+                    <select id="kategori" onchange="updateSubKategori()" class="w-full input-dark p-3 rounded" required>
+                        <option value="">Pilih Kategori...</option>
+                    </select>
+                </div>
+                
+                <div class="md:col-span-2 space-y-1">
+                    <label class="text-xs text-gray-400">Sub-Kategori</label>
+                    <select id="subKategori" class="w-full input-dark p-3 rounded" required>
+                        <option value="">Sila Pilih Kategori Dahulu...</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2 space-y-1">
+                    <label class="text-xs text-gray-400">Keterangan Kejadian (Tidak Wajib)</label>
+                    <textarea id="keterangan" placeholder="Sila perincikan kejadian amalan baik..." class="w-full input-dark p-3 rounded h-28 resize-none"></textarea>
+                </div>
+                
+                <div class="md:col-span-2 space-y-1">
+                    <label class="text-xs text-gray-400">Eviden (Gambar/Video - Max 1000MB) (Tidak Wajib)</label>
+                    <input type="file" id="eviden" class="w-full input-dark p-2 rounded text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#00ff41] file:text-black hover:file:bg-green-400 cursor-pointer">
+                </div>
+
+                <div class="md:col-span-2 mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1 border border-slate-700 p-4 rounded bg-[#0a0a0a] flex flex-col">
+                        <label class="text-xs text-center text-gray-400 mb-2">TANDATANGAN PELAPOR</label>
+                        <canvas id="signPelapor" height="120" class="sign-pad rounded"></canvas>
+                        <p id="signError" class="text-red-500 text-xs hidden mt-1">Sila tandatangan di sini.</p>
+                        <div class="flex justify-between items-center mt-2">
+                            <button type="button" onclick="clearCanvas('signPelapor')" class="text-red-500 text-xs hover:underline">Padam E-Sign</button>
+                        </div>
+                        <div class="mt-4">
+                            <label class="text-[10px] text-gray-500 block mb-1">NAMA GURU PELAPOR</label>
+                            <select id="guruPelapor" class="w-full input-dark p-2 text-sm rounded" required>
+                                <option value="">Pilih Guru...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-1 border border-slate-800 p-4 rounded flex flex-col justify-center items-center opacity-50">
+                        <p class="text-xs text-[#00ff41] mb-2 cyber-font">DISEMAK OLEH (PK HEM)</p>
+                        <p class="font-bold text-white uppercase text-center text-sm">Ling Mee Choo</p>
+                        <p class="text-[10px] mt-2 italic text-gray-500">(Tandatangan di Paparan Rekod)</p>
+                    </div>
+
+                    <div class="md:col-span-1 border border-slate-800 p-4 rounded flex flex-col justify-center items-center opacity-50">
+                        <p class="text-xs text-[#00ff41] mb-2 cyber-font">DISAHKAN OLEH (GB)</p>
+                        <p class="font-bold text-white uppercase text-center text-sm">Aziz bin Tahir</p>
+                        <p class="text-[10px] mt-2 italic text-gray-500">(Tandatangan di Paparan Rekod)</p>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 mt-4">
+                    <button type="submit" class="w-full bg-[#00ff41] hover:bg-green-400 text-black font-bold py-4 rounded cyber-font tracking-widest text-lg shadow-[0_0_15px_rgba(0,255,65,0.3)] transition">SIMPAN REKOD</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tab-record" class="hidden cyber-container p-6 rounded-xl">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-xl font-bold cyber-font text-white flex items-center gap-2">
+                    <span class="text-[#00ff41]">≡</span> SENARAI REKOD AMALAN BAIK
+                </h2>
+                <div class="w-full md:w-1/3">
+                    <input type="text" id="filterMurid" oninput="renderTable()" placeholder="🔍 Cari Nama Murid..." class="w-full input-dark p-2 rounded text-sm outline-none focus:border-[#00ff41]">
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-900 text-gray-300 border-b border-[#00ff41]">
+                        <tr>
+                            <th class="p-4 w-40">Tarikh & Status</th>
+                            <th class="p-4">Nama Murid / Kategori</th>
+                            <th class="p-4 text-center w-32">Markah</th>
+                            <th class="p-4 text-center w-32">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordTableBody" class="divide-y divide-slate-800 text-gray-300">
+                        <!-- Disuntik oleh JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="emptyState" class="hidden text-center py-10 text-gray-500 italic">Tiada rekod dijumpai.</div>
+        </div>
+
+        <div id="tab-leaderboard" class="hidden cyber-container p-6 rounded-xl">
+            <div class="flex justify-between items-center mb-6 no-print">
+                <h2 class="text-xl font-bold cyber-font text-white flex items-center gap-2">
+                    <span class="text-[#00ff41]">★</span> MARKAH TERKUMPUL
+                </h2>
+                <button type="button" onclick="window.print()" class="px-6 py-2 bg-[#00ff41] hover:bg-green-400 text-black font-bold rounded text-sm transition cyber-font shadow-[0_0_10px_rgba(0,255,65,0.3)]">🖨 CETAK LAPORAN</button>
+            </div>
+            
+            <div class="hidden print:block text-center mb-8">
+                <h2 class="text-2xl font-bold uppercase underline mb-2">Laporan Markah Terkumpul Amalan Baik</h2>
+                <h3 class="text-lg font-bold uppercase">SK Pendidikan Khas Miri</h3>
+            </div>
+            
+            <div class="overflow-x-auto print-fit">
+                <table class="w-full text-left text-sm print:border-collapse print:border print:border-black">
+                    <thead class="bg-slate-900 text-gray-300 border-b border-[#00ff41] print:bg-gray-200 print:text-black">
+                        <tr>
+                            <th class="p-4 print:p-2 print:border print:border-black w-20 text-center">Kedudukan</th>
+                            <th class="p-4 print:p-2 print:border print:border-black">Nama Murid</th>
+                            <th class="p-4 print:p-2 print:border print:border-black w-32">Kelas</th>
+                            <th class="p-4 print:p-2 print:border print:border-black text-center w-32">Jumlah Markah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardTableBody" class="divide-y divide-slate-800 text-gray-300 print:text-black print:divide-y-0">
+                        <!-- Disuntik oleh JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="emptyLeaderboard" class="hidden text-center py-10 text-gray-500 italic">Tiada rekod dijumpai.</div>
+        </div>
+
+        <div id="tab-view" class="hidden cyber-container p-4 md:p-6 rounded-xl">
+            <div class="flex flex-wrap gap-2 mb-6 no-print items-center">
+                <button type="button" onclick="switchTab('record')" class="px-4 py-2 border border-slate-600 bg-slate-800 hover:bg-slate-700 text-white rounded text-sm transition">← Kembali</button>
+                <div class="flex-1"></div>
+                <button type="button" onclick="window.print()" class="px-6 py-2 bg-[#00ff41] hover:bg-green-400 text-black font-bold rounded text-sm transition cyber-font shadow-[0_0_10px_rgba(0,255,65,0.3)]">🖨 CETAK PDF</button>
+            </div>
+
+            <!-- Printable Area (White Theme) -->
+            <div class="bg-white text-black p-6 md:p-10 rounded print-fit shadow-lg mx-auto" style="max-width: 800px;">
+                <!-- Letterhead -->
+                <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-black">
+                    <div class="w-24">
+                        <img src="logo.png" alt="Logo Sekolah" class="w-24 h-24 object-contain" onerror="this.outerHTML='<div class=\'w-24 h-24 border-2 border-black flex items-center justify-center font-bold text-xs\'>LOGO</div>'">
+                    </div>
+                    <div class="flex-1 text-center">
+                        <h2 class="text-xl md:text-2xl font-bold uppercase underline tracking-wide mb-1">REKOD AMALAN BAIK</h2>
+                        <h3 class="text-lg md:text-xl font-bold uppercase">SK PENDIDIKAN KHAS MIRI</h3>
+                    </div>
+                    <div class="w-24"></div> <!-- Spacer untuk center -->
+                </div>
+
+                <table class="w-full text-left border-collapse border border-black text-sm mb-12">
+                    <tbody id="pdfTableBody">
+                        <!-- Disuntik oleh JS -->
+                    </tbody>
+                </table>
+
+                <div class="grid grid-cols-2 gap-8 text-center text-sm pt-8">
+                    <div class="flex flex-col items-center justify-end h-32 relative">
+                        <div id="viewSemakState" class="w-full flex flex-col items-center justify-end h-24 mb-2"></div>
+                        <div class="border-t border-black w-3/4 pt-1 font-bold uppercase">Ling Mee Choo</div>
+                        <div class="text-xs">PK Hal Ehwal Murid</div>
+                    </div>
+                    <div class="flex flex-col items-center justify-end h-32 relative">
+                        <div id="viewSahState" class="w-full flex flex-col items-center justify-end h-24 mb-2"></div>
+                        <div class="border-t border-black w-3/4 pt-1 font-bold uppercase">Aziz bin Tahir</div>
+                        <div class="text-xs">Guru Besar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="modal-delete" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-slate-900 border border-red-500 p-6 rounded-lg max-w-sm w-full">
+            <h3 class="text-red-500 font-bold text-lg mb-2 cyber-font">PENGESAHAN PADAM</h3>
+            <p class="text-sm text-gray-300 mb-4">Sila masukkan kata laluan untuk memadam rekod ini.</p>
+            <input type="password" id="deletePassword" class="w-full input-dark p-2 rounded mb-4" placeholder="Kata Laluan...">
+            <p id="deleteError" class="text-red-500 text-xs hidden mb-4">Katalaluan salah!</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('modal-delete')" class="px-4 py-2 text-gray-400 hover:text-white">Batal</button>
+                <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold">Padam</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-esign" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-slate-900 border border-[#00ff41] p-6 rounded-lg max-w-md w-full">
+            <h3 id="esignTitle" class="text-[#00ff41] font-bold text-lg mb-4 cyber-font">Tandatangan Digital</h3>
+            <div class="w-full relative">
+                <canvas id="signAction" height="150" class="sign-pad rounded bg-[#050505] mb-2 w-full"></canvas>
+            </div>
+            <p id="signActionError" class="text-red-500 text-xs hidden mt-1">Sila buat tandatangan.</p>
+            <div class="flex justify-between items-center mb-6">
+                <button type="button" onclick="clearCanvas('signAction')" class="text-red-400 text-xs hover:underline">Padam Tandatangan</button>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('modal-esign')" class="px-4 py-2 text-gray-400 hover:text-white border border-slate-700 rounded">Batal</button>
+                <button onclick="saveActionSign()" class="px-4 py-2 bg-[#00ff41] hover:bg-green-400 text-black rounded font-bold">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const amalanData = {
+            "ADAB DAN BERBUDI BAHASA (3 Markah)": [
+                { name: "Menghargai diri", mark: 3 },
+                { name: "Menghargai orang lain serta menjaga sensitiviti", mark: 3 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 3 }
+            ],
+            "JATI DIRI (4 Markah)": [
+                { name: "Menzahirkan semangat patriotisme", mark: 4 },
+                { name: "Mempunyai daya tahan diri secara fizikal dan mental", mark: 4 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 4 }
+            ],
+            "TOLONG-MENOLONG (4 Markah)": [
+                { name: "Menawarkan dan memberi bantuan", mark: 4 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 4 }
+            ],
+            "KEBERSIHAN, KECERIAAN DAN KELESTARIAN (4 Markah)": [
+                { name: "Menjaga kelestarian, kebersihan dan keceriaan", mark: 4 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 4 }
+            ],
+            "KEPIMPINAN (5 Markah)": [
+                { name: "Merancang, mengurus, memimpin dan mengawal aktiviti", mark: 5 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 5 }
+            ],
+            "KEBERTANGGUNGJAWABAN DAN KEPRIHATINAN (4 Markah)": [
+                { name: "Bertanggungjawab terhadap kesan tindakan", mark: 4 },
+                { name: "Prihatin memaklumkan kes salah laku", mark: 4 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 4 }
+            ],
+            "KEHADIRAN AKTIVITI (2 Markah)": [
+                { name: "Menghadirkan diri secara konsisten", mark: 2 },
+                { name: "Menunjukkan peningkatan kehadiran", mark: 2 },
+                { name: "Melibatkan diri dalam aktiviti", mark: 2 },
+                { name: "Menepati masa dalam aktiviti", mark: 2 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 2 }
+            ],
+            "PENAMPILAN DIRI (1 Markah)": [
+                { name: "Memakai pakaian kemas, sopan, bersih", mark: 1 },
+                { name: "Menjaga kekemasan diri secara menyeluruh", mark: 1 },
+                { name: "Menunjukkan kesediaan diri untuk belajar", mark: 1 },
+                { name: "Menjadi pendorong dan suri teladan", mark: 1 }
+            ]
+        };
+
+        const teacherList = [
+            "Ahmad bin Ali", "Siti Aminah binti Abu", "Ling Mee Choo", 
+            "Aziz bin Tahir", "Teng Ru Yun", "Vanitha a/p Subramaniam"
+        ];
+
+        let deleteTargetId = null;
+        let actionTarget = { id: null, type: null }; 
+
+        // Jalankan apabila DOM bersedia
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        function initApp() {
+            // Set Tarikh Hari Ini
+            document.getElementById('tarikhKejadian').valueAsDate = new Date();
+            
+            // Populate Dropdown Kategori
+            const katSelect = document.getElementById('kategori');
+            Object.keys(amalanData).forEach(k => { katSelect.innerHTML += `<option value="${k}">${k}</option>`; });
+
+            // Populate Dropdown Guru
+            const guruSelect = document.getElementById('guruPelapor');
+            teacherList.forEach(t => { guruSelect.innerHTML += `<option value="${t}">${t}</option>`; });
+
+            // Inisialisasi Canvas (Berikan masa sejenak untuk DOM render sepenuhnya)
+            setTimeout(() => {
+                setupCanvas('signPelapor');
+                setupCanvas('signAction');
+                renderTable();
+            }, 100);
+        }
+
+        // --- Logik Canvas (Diperbaiki untuk sentuhan & resolusi) ---
+        function setupCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#00ff41'; 
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            let drawing = false;
+
+            // Pastikan saiz internal canvas sama dengan saiz paparan CSS
+            const resize = () => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                // Simpan imej sedia ada sebelum resize
+                const imgData = canvas.toDataURL();
+                
+                canvas.width = rect.width;
+                // Height dikekalkan berdasarkan attribut HTML
+                
+                // Lukis semula selepas resize
+                const img = new Image();
+                img.src = imgData;
+                img.onload = () => { ctx.drawImage(img, 0, 0); };
+                
+                // Tetapkan semula style selepas resize
+                ctx.strokeStyle = '#00ff41'; 
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                // Kira skala jika canvas.width berbeza dari rect.width
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                return { 
+                    x: (clientX - rect.left) * scaleX, 
+                    y: (clientY - rect.top) * scaleY 
+                };
+            };
+
+            const start = (e) => { 
+                e.preventDefault(); 
+                drawing = true; 
+                const pos = getPos(e); 
+                ctx.beginPath(); 
+                ctx.moveTo(pos.x, pos.y); 
+                // Sembunyikan error jika ada
+                if(canvasId === 'signPelapor') document.getElementById('signError').classList.add('hidden');
+                if(canvasId === 'signAction') document.getElementById('signActionError').classList.add('hidden');
+            };
+            
+            const move = (e) => { 
+                if(!drawing) return; 
+                e.preventDefault(); 
+                const pos = getPos(e); 
+                ctx.lineTo(pos.x, pos.y); 
+                ctx.stroke(); 
+            };
+            
+            const end = () => { drawing = false; };
+
+            // Event tetikus
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            
+            // Event sentuhan (Mobile)
+            canvas.addEventListener('touchstart', start, {passive: false});
+            canvas.addEventListener('touchmove', move, {passive: false});
+            window.addEventListener('touchend', end);
+        }
+
+        function clearCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if(canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function isCanvasBlank(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if(!canvas) return true;
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width;
+            blank.height = canvas.height;
+            return canvas.toDataURL() === blank.toDataURL();
+        }
+
+        // --- Logik Borang ---
+        function updateSubKategori() {
+            const kat = document.getElementById('kategori').value;
+            const subSelect = document.getElementById('subKategori');
+            subSelect.innerHTML = '<option value="">Pilih Sub-Kategori...</option>';
+            
+            if(kat && amalanData[kat]) {
+                amalanData[kat].forEach(sub => {
+                    subSelect.innerHTML += `<option value="${sub.name}" data-mark="${sub.mark}">${sub.name} (+${sub.mark}M)</option>`;
+                });
+            }
+        }
+
+        function saveRecord(e) {
+            e.preventDefault();
+            
+            // Validasi Tandatangan tanpa menggunakan alert()
+            if (isCanvasBlank('signPelapor') && !document.getElementById('editId').value) {
+                document.getElementById('signError').classList.remove('hidden');
+                return;
+            }
+
+            const id = document.getElementById('editId').value || Date.now().toString();
+            const kat = document.getElementById('kategori').value;
+            const subOpt = document.getElementById('subKategori').options[document.getElementById('subKategori').selectedIndex];
+            
+            const record = {
+                id: id,
+                guru: document.getElementById('guruPelapor').value,
+                murid: document.getElementById('namaMurid').value,
+                kelas: document.getElementById('kelas').value,
+                tarikhKejadian: document.getElementById('tarikhKejadian').value,
+                tarikhRekod: new Date().toISOString().split('T')[0],
+                tempat: document.querySelector('input[name="tempat"]:checked').value,
+                kategori: kat,
+                subKategori: subOpt.value,
+                markah: parseInt(subOpt.getAttribute('data-mark') || 0),
+                keterangan: document.getElementById('keterangan').value,
+                signPelapor: document.getElementById('signPelapor').toDataURL(),
+                status: { semak: false, signSemak: null, sah: false, signSah: null }
+            };
+
+            let data = [];
+            try { data = JSON.parse(localStorage.getItem('skpk_records')) || []; } catch(err) { data = []; }
+            
+            if(document.getElementById('editId').value) {
+                const index = data.findIndex(x => x.id === id);
+                if(index !== -1) {
+                    record.status = data[index].status || record.status;
+                    if(isCanvasBlank('signPelapor')) record.signPelapor = data[index].signPelapor;
+                    data[index] = record;
+                }
+            } else {
+                data.push(record);
+            }
+
+            localStorage.setItem('skpk_records', JSON.stringify(data));
+            
+            // Reset Borang
+            e.target.reset();
+            document.getElementById('editId').value = "";
+            clearCanvas('signPelapor');
+            updateSubKategori();
+            document.getElementById('tarikhKejadian').valueAsDate = new Date();
+            
+            // Tukar tab ke senarai
+            switchTab('record');
+            renderTable();
+            renderLeaderboard();
+        }
+
+        // --- Logik Paparan Jadual & Fungsi Butang ---
+        function renderTable() {
+            let data = [];
+            try { data = JSON.parse(localStorage.getItem('skpk_records')) || []; } catch(err) { data = []; }
+            
+            const tbody = document.getElementById('recordTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const filterText = document.getElementById('filterMurid') ? document.getElementById('filterMurid').value.toLowerCase() : '';
+            
+            const filteredData = filterText ? data.filter(x => x.murid?.toLowerCase().includes(filterText)) : data;
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = filteredData.reverse().map(r => {
+                // Keserasian ke belakang jika data status hilang
+                const s = r.status || { semak: false, sah: false }; 
+                
+                return `
+                <tr class="hover:bg-slate-800/50 transition border-b border-slate-800">
+                    <td class="p-4 align-top">
+                        <div class="font-bold text-white mb-2">${r.tarikhKejadian || '-'}</div>
+                        <div class="flex flex-col gap-1 text-[10px]">
+                            <span class="bg-green-900/50 text-green-400 border border-green-800 px-2 py-1 rounded inline-block text-center shadow-sm">Sign Pelapor ✓</span>
+                            ${s.semak 
+                                ? '<span class="bg-blue-900/50 text-blue-400 border border-blue-800 px-2 py-1 rounded inline-block text-center shadow-sm">Disemak ✓</span>' 
+                                : `<span class="bg-yellow-900/50 text-yellow-400 border border-yellow-800 px-2 py-1 rounded inline-block text-center cursor-pointer hover:bg-yellow-800 transition" onclick="openEsign('${r.id}', 'semak')">Blm Disemak ✎</span>`
+                            }
+                            ${s.sah 
+                                ? '<span class="bg-purple-900/50 text-purple-400 border border-purple-800 px-2 py-1 rounded inline-block text-center shadow-sm">Disahkan ✓</span>' 
+                                : `<span class="bg-red-900/50 text-red-400 border border-red-800 px-2 py-1 rounded inline-block text-center cursor-pointer hover:bg-red-800 transition" onclick="openEsign('${r.id}', 'sah')">Blm Disahkan ✎</span>`
+                            }
+                        </div>
+                    </td>
+                    <td class="p-4 align-top">
+                        <div class="font-bold text-lg text-[#00ff41] uppercase">${r.murid || '-'}</div>
+                        <div class="text-xs text-gray-400 mb-1">Kelas: ${r.kelas || '-'} | Oleh: ${r.guru || '-'}</div>
+                        <div class="text-xs mt-2 p-2 bg-slate-900 rounded border border-slate-700">
+                            <span class="text-gray-500">Kat:</span> ${r.kategori || '-'}<br>
+                            <span class="text-gray-500">Sub:</span> ${r.subKategori || '-'}
+                        </div>
+                    </td>
+                    <td class="p-4 align-middle text-center">
+                        <span class="text-2xl font-bold cyber-font text-[#00ff41]">${r.markah || 0}</span><br>
+                        <span class="text-[10px] text-gray-500">Markah</span>
+                    </td>
+                    <td class="p-4 align-middle text-center">
+                        <div class="flex flex-col gap-2">
+                            <button onclick="viewRecord('${r.id}')" class="bg-blue-600/20 hover:bg-blue-500/40 text-blue-400 border border-blue-500/50 py-1.5 px-3 rounded text-sm transition font-semibold">Lihat</button>
+                            <button onclick="editRecord('${r.id}')" class="bg-yellow-600/20 hover:bg-yellow-500/40 text-yellow-400 border border-yellow-500/50 py-1.5 px-3 rounded text-sm transition font-semibold">Edit</button>
+                            <button onclick="promptDelete('${r.id}')" class="bg-red-600/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 py-1.5 px-3 rounded text-sm transition font-semibold">Padam</button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function viewRecord(id) {
+            const data = JSON.parse(localStorage.getItem('skpk_records') || '[]');
+            const r = data.find(x => x.id === id);
+            if(!r) return;
+
+            const tbody = document.getElementById('pdfTableBody');
+            tbody.innerHTML = `
+                <tr><td class="border border-black p-3 font-bold w-1/3 bg-gray-100">Nama Murid</td><td class="border border-black p-3 uppercase">${r.murid}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Kelas</td><td class="border border-black p-3 uppercase">${r.kelas}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Tarikh Kejadian</td><td class="border border-black p-3">${r.tarikhKejadian}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Tarikh Direkod</td><td class="border border-black p-3">${r.tarikhRekod}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Tempat</td><td class="border border-black p-3">${r.tempat}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Kategori Amalan Baik</td><td class="border border-black p-3">${r.kategori}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Sub-Kategori / Keterangan</td><td class="border border-black p-3">${r.subKategori} <br><br> ${r.keterangan ? '<em>"'+r.keterangan+'"</em>' : '-'}</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100 text-lg">Markah Diperoleh</td><td class="border border-black p-3 font-bold text-lg">${r.markah} Markah</td></tr>
+                <tr><td class="border border-black p-3 font-bold bg-gray-100">Guru Pelapor</td><td class="border border-black p-3 uppercase">${r.guru}</td></tr>
+            `;
+
+            const s = r.status || {semak: false, sah: false};
+            const semakStatus = document.getElementById('viewSemakState');
+            const sahStatus = document.getElementById('viewSahState');
+            
+            semakStatus.innerHTML = s.semak 
+                ? `<img src="${s.signSemak}" class="h-20 mx-auto object-contain sign-black" alt="Sign PK HEM"><span class="text-black border border-black px-2 py-0.5 rounded-full mt-1 inline-block text-[10px]">Disemak Secara Digital</span>` 
+                : `<div class="h-16 mb-2 flex items-center justify-center text-gray-400/50 italic text-xs border border-dashed border-gray-400/30 rounded w-32 mx-auto cursor-pointer hover:bg-gray-100 no-print" onclick="openEsign('${r.id}', 'semak')" title="Klik untuk e-Sign">Tandatangan</div><span class="text-gray-500 text-[10px] print:block print:mt-12">[ Belum Disemak ]</span>`;
+                
+            sahStatus.innerHTML = s.sah 
+                ? `<img src="${s.signSah}" class="h-20 mx-auto object-contain sign-black" alt="Sign GB"><span class="text-black border border-black px-2 py-0.5 rounded-full mt-1 inline-block text-[10px]">Disahkan Secara Digital</span>` 
+                : `<div class="h-16 mb-2 flex items-center justify-center text-gray-400/50 italic text-xs border border-dashed border-gray-400/30 rounded w-32 mx-auto cursor-pointer hover:bg-gray-100 no-print" onclick="openEsign('${r.id}', 'sah')" title="Klik untuk e-Sign">Tandatangan</div><span class="text-gray-500 text-[10px] print:block print:mt-12">[ Belum Disahkan ]</span>`;
+
+            switchTab('view');
+        }
+
+        function editRecord(id) {
+            const data = JSON.parse(localStorage.getItem('skpk_records') || '[]');
+            const r = data.find(x => x.id === id);
+            if(!r) return;
+
+            document.getElementById('editId').value = r.id;
+            document.getElementById('namaMurid').value = r.murid || '';
+            document.getElementById('kelas').value = r.kelas || '';
+            document.getElementById('tarikhKejadian').value = r.tarikhKejadian || '';
+            
+            const radio = document.querySelector(`input[name="tempat"][value="${r.tempat}"]`);
+            if(radio) radio.checked = true;
+            
+            document.getElementById('guruPelapor').value = r.guru || '';
+            document.getElementById('keterangan').value = r.keterangan || "";
+            
+            const katSelect = document.getElementById('kategori');
+            katSelect.value = r.kategori || '';
+            updateSubKategori();
+            document.getElementById('subKategori').value = r.subKategori || '';
+
+            clearCanvas('signPelapor');
+            switchTab('form');
+            window.scrollTo(0,0);
+        }
+
+        // --- Logik Pemadaman ---
+        function promptDelete(id) {
+            deleteTargetId = id;
+            document.getElementById('deletePassword').value = '';
+            document.getElementById('deleteError').classList.add('hidden');
+            document.getElementById('modal-delete').classList.remove('hidden');
+            document.getElementById('modal-delete').classList.add('flex');
+            // Auto focus
+            setTimeout(() => document.getElementById('deletePassword').focus(), 100);
+        }
+
+        function confirmDelete() {
+            const pwd = document.getElementById('deletePassword').value;
+            if(pwd === 'GDSyba4112') {
+                let data = JSON.parse(localStorage.getItem('skpk_records') || '[]');
+                data = data.filter(x => x.id !== deleteTargetId);
+                localStorage.setItem('skpk_records', JSON.stringify(data));
+                closeModal('modal-delete');
+                renderTable();
+                renderLeaderboard();
+            } else {
+                document.getElementById('deleteError').classList.remove('hidden');
+            }
+        }
+
+        // --- Logik e-Sign Pengesahan (Modal) ---
+        function openEsign(id, type) {
+            actionTarget = { id, type };
+            document.getElementById('esignTitle').innerText = type === 'semak' ? "Tandatangan PK HEM (Semakan)" : "Tandatangan Guru Besar (Pengesahan)";
+            document.getElementById('signActionError').classList.add('hidden');
+            
+            document.getElementById('modal-esign').classList.remove('hidden');
+            document.getElementById('modal-esign').classList.add('flex');
+            
+            // Resize canvas mengikut modal yang baru muncul
+            setTimeout(() => {
+                const canvas = document.getElementById('signAction');
+                canvas.width = canvas.parentElement.getBoundingClientRect().width;
+                clearCanvas('signAction');
+            }, 50);
+        }
+
+        function saveActionSign() {
+            if(isCanvasBlank('signAction')) {
+                document.getElementById('signActionError').classList.remove('hidden');
+                return;
+            }
+            
+            const signData = document.getElementById('signAction').toDataURL();
+            let data = JSON.parse(localStorage.getItem('skpk_records') || '[]');
+            const index = data.findIndex(x => x.id === actionTarget.id);
+            
+            if(index !== -1) {
+                if(!data[index].status) data[index].status = {}; // Fallback
+                
+                if(actionTarget.type === 'semak') {
+                    data[index].status.semak = true;
+                    data[index].status.signSemak = signData;
+                } else {
+                    data[index].status.sah = true;
+                    data[index].status.signSah = signData;
+                }
+                localStorage.setItem('skpk_records', JSON.stringify(data));
+            }
+            
+            closeModal('modal-esign');
+            renderTable();
+            
+            // Refresh view mode if it is open
+            if(!document.getElementById('tab-view').classList.contains('hidden')) {
+                viewRecord(actionTarget.id);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).classList.remove('flex');
+        }
+
+        // --- Logik Leaderboard ---
+        function renderLeaderboard() {
+            let data = [];
+            try { data = JSON.parse(localStorage.getItem('skpk_records')) || []; } catch(err) { data = []; }
+            
+            const tbody = document.getElementById('leaderboardTableBody');
+            const emptyState = document.getElementById('emptyLeaderboard');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            const studentMarks = {};
+            data.forEach(r => {
+                if (!studentMarks[r.murid]) studentMarks[r.murid] = { kelas: r.kelas, total: 0 };
+                studentMarks[r.murid].total += (r.markah || 0);
+            });
+
+            const sortedStudents = Object.keys(studentMarks).map(name => ({
+                name, kelas: studentMarks[name].kelas, total: studentMarks[name].total
+            })).sort((a, b) => b.total - a.total);
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = sortedStudents.map((s, index) => {
+                let rankVisual = `<span class="text-gray-400 font-bold">${index + 1}</span>`;
+                if (index === 0) rankVisual = `<span class="text-yellow-400 font-bold text-xl">🥇 1</span>`;
+                else if (index === 1) rankVisual = `<span class="text-slate-300 font-bold text-lg">🥈 2</span>`;
+                else if (index === 2) rankVisual = `<span class="text-orange-500 font-bold text-lg">🥉 3</span>`;
+
+                return `
+                <tr class="hover:bg-slate-800/50 transition print:bg-white print:border-b print:border-black">
+                    <td class="p-4 print:p-2 print:border print:border-black align-middle text-center">${rankVisual}</td>
+                    <td class="p-4 print:p-2 print:border print:border-black align-middle font-bold text-white uppercase print:text-black">${s.name}</td>
+                    <td class="p-4 print:p-2 print:border print:border-black align-middle text-gray-400 uppercase print:text-black">${s.kelas}</td>
+                    <td class="p-4 print:p-2 print:border print:border-black align-middle text-center">
+                        <span class="text-xl font-bold cyber-font text-[#00ff41] print:text-black">${s.total}</span>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        // --- Logik Pengurusan Tab ---
+        function switchTab(tab) {
+            ['form', 'record', 'leaderboard', 'view'].forEach(t => {
+                document.getElementById(`tab-${t}`)?.classList.add('hidden');
+                document.getElementById(`nav-${t}`)?.classList.remove('active');
+            });
+            
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            if (tab !== 'view') document.getElementById(`nav-${tab}`)?.classList.add('active');
+            if (tab === 'leaderboard') renderLeaderboard();
+            if (tab === 'record') renderTable();
+            
+            // Scroll ke atas bila tukar tab
+            window.scrollTo(0,0);
+        }
+    </script>
+</body>
+</html>
