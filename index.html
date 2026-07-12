@@ -1,1059 +1,143 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="ms" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rekod Disiplin SKPK Miri</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- Google Fonts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050505;
-            color: #ffffff;
-            overflow-x: hidden;
-        }
-
-        .cyber-font {
-            font-family: 'Share Tech Mono', monospace;
-        }
-
-        /* Latar Belakang Grid Coruscant/Cyberpunk */
-        .cyber-grid {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        .cyber-glow {
-            position: fixed;
-            top: 50%; left: 50%; width: 100vw; height: 100vh;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(176,38,255,0.1) 0%, rgba(0,0,0,0) 70%);
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* Gaya Kad Neon */
-        .cyber-card {
-            background: rgba(10, 10, 15, 0.8);
-            border: 1px solid #333;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .cyber-card:hover {
-            transform: translateY(-5px);
-            border-color: #0ff;
-            box-shadow: 0 10px 30px -10px rgba(0, 255, 255, 0.4);
-        }
-
-        .cyber-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
-            transition: all 0.5s ease;
-        }
-
-        .cyber-card:hover::before {
-            left: 100%;
-        }
-
-        /* Variasi Warna Kad */
-        .card-magenta:hover { border-color: #b026ff; box-shadow: 0 10px 30px -10px rgba(176, 38, 255, 0.4); }
-        .card-green:hover { border-color: #39ff14; box-shadow: 0 10px 30px -10px rgba(57, 255, 20, 0.4); }
-        .card-red:hover { border-color: #ff003c; box-shadow: 0 10px 30px -10px rgba(255, 0, 60, 0.4); }
-        .card-yellow:hover { border-color: #fcee0a; box-shadow: 0 10px 30px -10px rgba(252, 238, 10, 0.4); }
-
-        /* Hiasan UI */
-        .decor-bar {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 3px;
-            background: linear-gradient(90deg, transparent, currentColor, transparent);
-            opacity: 0.5;
-        }
-
-        /* Gaya Input Borang */
-        .cyber-input {
-            background: rgba(0,0,0,0.5);
-            border: 1px dashed #444;
-            color: #fff;
-            transition: all 0.3s ease;
-        }
-        .cyber-input:focus {
-            outline: none;
-            border-color: #39ff14;
-            border-style: solid;
-            box-shadow: 0 0 10px rgba(57,255,20,0.2);
-            background: rgba(10,20,10,0.8);
-        }
-        
-        .cyber-btn {
-            background: transparent;
-            border: 1px solid currentColor;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #fff; }
+        .grid-bg { background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px); background-size: 40px 40px; }
+        .neon-card { background: rgba(15, 15, 20, 0.8); border: 1px solid #333; transition: all 0.3s ease; }
+        .neon-card:hover { transform: translateY(-5px); border-color: currentColor; box-shadow: 0 0 20px currentColor; }
+        .font-tech { font-family: 'Orbitron', sans-serif; }
+        canvas { touch-action: none; background: #000; border: 1px dashed #333; cursor: crosshair; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center">
+<body class="min-h-screen grid-bg">
 
-    <!-- Latar Belakang & Efek -->
-    <div class="cyber-grid"></div>
-    <div class="cyber-glow"></div>
-
-    <header class="w-full p-4 md:p-6 flex items-center justify-center gap-4 border-b border-gray-800 bg-black/60 backdrop-blur-md z-20 shadow-[0_0_20px_rgba(0,255,255,0.1)] sticky top-0">
-        <!-- Logo Sekolah (Placeholder) -->
-        <div class="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-[#0ff] shadow-[0_0_15px_rgba(0,255,255,0.5)] overflow-hidden bg-black flex items-center justify-center">
-            <img src="https://placehold.co/100x100/000000/00ffff?text=SKPK" alt="Logo SKPK" class="w-full h-full object-cover">
-        </div>
-        <h1 class="text-2xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#0ff] via-[#39ff14] to-[#b026ff] cyber-font tracking-wider text-center drop-shadow-[0_0_10px_rgba(0,255,255,0.3)]">
-            REKOD DISIPLIN SKPK MIRI
+    <header id="main-header" class="p-8 flex flex-col items-center justify-center gap-6">
+        <img src="logo.png" alt="Logo SKPK Miri" class="w-24 h-24 rounded-full border-4 border-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.5)] object-cover" onerror="this.onerror=null;this.src='https://placehold.co/100x100/000/06b6d4?text=SKPK';">
+        <h1 class="text-3xl md:text-5xl font-tech font-bold tracking-wider text-center">
+            <span class="text-cyan-400">REKOD</span>
+            <span class="text-green-400"> DISIPLIN</span>
+            <span class="text-gray-400"> SKPK</span>
+            <span class="text-purple-400"> MIRI</span>
         </h1>
     </header>
 
-    <!-- Modal Kata Laluan (Asalnya Tersembunyi) -->
-    <div id="passwordModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm px-4 transition-opacity">
-        <div class="cyber-card p-8 w-full max-w-md flex flex-col items-center border-[#0ff] shadow-[0_0_30px_rgba(0,255,255,0.2)]">
-            <div class="w-16 h-16 rounded-full bg-[rgba(0,255,255,0.1)] flex items-center justify-center mb-4 border border-[#0ff]">
-                <i class="ph ph-lock-key text-3xl text-[#0ff]"></i>
-            </div>
-            <h2 class="text-2xl font-bold cyber-font text-white mb-2">AKSES SULIT</h2>
-            <p class="text-gray-400 text-sm text-center mb-6">Sila masukkan kata laluan untuk mengakses Laporan Disiplin.</p>
-            
-            <input type="password" id="passwordInput" placeholder="KATA LALUAN" class="w-full bg-black/50 border border-gray-600 rounded px-4 py-3 text-center text-white focus:outline-none focus:border-[#0ff] focus:shadow-[0_0_15px_rgba(0,255,255,0.3)] mb-4 tracking-widest font-mono">
-            <p id="errorMsg" class="text-red-500 text-sm mb-4 hidden cyber-font">KATA LALUAN SALAH!</p>
-            
-            <div class="flex gap-4 w-full">
-                <button onclick="closePasswordModal()" class="w-1/2 cyber-btn text-gray-400 border-gray-600 hover:text-white hover:border-white py-2">Batal</button>
-                <button onclick="verifyPassword()" class="w-1/2 cyber-btn text-[#0ff] border-[#0ff] hover:bg-[#0ff] hover:text-black py-2 font-bold">Akses</button>
-            </div>
+    <main id="main-grid" class="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="neon-card p-8 rounded-2xl text-center border-purple-500 text-purple-500 cursor-pointer">
+            <div class="text-5xl mb-4">👥</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Pengurusan Disiplin</h2>
+            <p class="text-gray-400">Carta Organisasi, Maklumat & Senarai Pengawas.</p>
         </div>
-    </div>
-
-    <!-- Modal Buang Rekod (Delete Auth) -->
-    <div id="deleteAuthModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80 backdrop-blur-sm px-4 transition-opacity">
-        <div class="cyber-card card-red p-8 w-full max-w-md flex flex-col items-center border-[#ff003c] shadow-[0_0_30px_rgba(255,0,60,0.2)]">
-            <div class="w-16 h-16 rounded-full bg-[rgba(255,0,60,0.1)] flex items-center justify-center mb-4 border border-[#ff003c]">
-                <i class="ph ph-trash text-3xl text-[#ff003c]"></i>
-            </div>
-            <h2 class="text-2xl font-bold cyber-font text-white mb-2 text-center">PENGESAHAN GURU DISIPLIN</h2>
-            <p class="text-gray-400 text-sm text-center mb-6">Masukkan kata laluan (920307136255) untuk memadam rekod ini.</p>
-            
-            <input type="password" id="deletePasswordInput" placeholder="KATA LALUAN" class="w-full bg-black/50 border border-gray-600 rounded px-4 py-3 text-center text-white focus:outline-none focus:border-[#ff003c] focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] mb-4 tracking-widest font-mono">
-            <p id="deleteErrorMsg" class="text-red-500 text-sm mb-4 hidden cyber-font">KATA LALUAN SALAH!</p>
-            <input type="hidden" id="deleteRowId">
-            
-            <div class="flex gap-4 w-full">
-                <button onclick="closeDeleteModal()" class="w-1/2 cyber-btn text-gray-400 border-gray-600 hover:text-white hover:border-white py-2">Batal</button>
-                <button onclick="verifyDeletePassword()" class="w-1/2 cyber-btn text-[#ff003c] border-[#ff003c] hover:bg-[#ff003c] hover:text-black py-2 font-bold">Padam</button>
-            </div>
+        <div class="neon-card p-8 rounded-2xl text-center border-cyan-500 text-cyan-500 cursor-pointer" onclick="checkPassword()">
+            <div class="text-5xl mb-4">🛡️</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Laporan Disiplin</h2>
+            <p class="text-gray-400">Akses Laporan Bulanan & Tahunan.</p>
         </div>
-    </div>
-
-    <!-- Modal Paparan PDF (Fit In Page) -->
-    <div id="pdfModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90 backdrop-blur-md p-4 md:p-8 transition-opacity">
-        <div class="bg-white text-black w-full max-w-3xl h-full max-h-[95vh] overflow-y-auto rounded shadow-[0_0_50px_rgba(255,255,255,0.2)] relative flex flex-col font-serif">
-            <!-- Toolbar Cyberpunk sikit kat atas -->
-            <div class="sticky top-0 bg-gray-200 border-b border-gray-400 p-4 flex justify-between items-center z-10 shadow">
-                <span class="font-sans font-bold text-gray-700 flex items-center gap-2"><i class="ph ph-printer text-xl"></i> PAPARAN CETAKAN DOKUMEN</span>
-                <div class="flex gap-2 font-sans">
-                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded shadow text-sm font-bold">Cetak / Simpan PDF</button>
-                    <button onclick="closePDFModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded shadow text-sm font-bold">Tutup</button>
-                </div>
-            </div>
-            
-            <!-- Kandungan Ala-ala Kertas A4 -->
-            <div id="pdfContent" class="p-8 md:p-12 bg-white">
-                <!-- Data akan dimasukkan oleh JavaScript -->
-            </div>
+        <div class="neon-card p-8 rounded-2xl text-center border-green-500 text-green-500 cursor-pointer" onclick="showAmalanBaik()">
+            <div class="text-5xl mb-4">⭐</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Rekod Amalan Baik</h2>
+            <p class="text-gray-400">Daftar kelakuan positif murid mengikut MOEIS.</p>
         </div>
-    </div>
-
-    <div class="w-full min-h-screen flex flex-col items-center p-4 md:p-8 relative">
-        
-        <!-- Paparan Menu Utama -->
-        <div id="dashboardView" class="w-full max-w-6xl z-10 transition-opacity duration-500">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                
-                <!-- 1. Laporan Disiplin (Sembunyi) -->
-                <div class="cyber-card p-6 flex flex-col justify-center items-center text-center group cursor-pointer" onclick="openPasswordModal()">
-                    <div class="decor-bar text-[#0ff]"></div>
-                    <div class="w-16 h-16 rounded-full border border-gray-600 flex items-center justify-center mb-4 group-hover:border-[#0ff] group-hover:shadow-[0_0_15px_#0ff] transition-all">
-                        <i class="ph ph-shield-warning text-3xl text-gray-400 group-hover:text-[#0ff] transition-colors"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-[#0ff] transition-colors">Laporan Disiplin</h3>
-                    <p class="text-gray-400 text-sm mt-2">Akses Laporan Bulanan & Tahunan.</p>
-                    <p class="text-[10px] text-[#0ff] mt-3 border border-[#0ff]/30 rounded px-2 py-1 bg-[#0ff]/10">SLT & Guru Disiplin Sahaja</p>
-                </div>
-
-                <!-- 2. Rekod Amalan Baik (Paparan Sama) -->
-                <div onclick="openAmalanBaik()" class="cyber-card card-green p-6 flex flex-col justify-center items-center text-center group cursor-pointer">
-                    <div class="decor-bar text-[#39ff14]"></div>
-                    <div class="w-16 h-16 rounded-full border border-[#39ff14] flex items-center justify-center mb-4 group-hover:bg-[#39ff14]/10 transition-all shadow-[0_0_10px_rgba(57,255,20,0.3)]">
-                        <i class="ph ph-star text-3xl text-[#39ff14]"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-[#39ff14] transition-colors">Rekod Amalan Baik</h3>
-                    <p class="text-gray-400 text-sm mt-2">Daftar kelakuan positif murid mengikut MOEIS.</p>
-                </div>
-
-                <!-- 3. Rekod Salah Laku -->
-                <a href="#" class="cyber-card card-red p-6 flex flex-col justify-center items-center text-center group cursor-pointer block">
-                    <div class="decor-bar text-[#ff003c]"></div>
-                    <div class="w-16 h-16 rounded-full border border-[#ff003c] flex items-center justify-center mb-4 group-hover:bg-[#ff003c]/10 transition-all shadow-[0_0_10px_rgba(255,0,60,0.3)]">
-                        <i class="ph ph-warning-octagon text-3xl text-[#ff003c]"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-[#ff003c] transition-colors">Rekod Salah Laku</h3>
-                    <p class="text-gray-400 text-sm mt-2">Daftar pelanggaran disiplin murid.</p>
-                </a>
-
-                <!-- 4. Pengurusan Disiplin -->
-                <a href="#" class="cyber-card card-magenta p-6 flex flex-col justify-center items-center text-center group cursor-pointer block">
-                    <div class="decor-bar text-[#b026ff]"></div>
-                    <div class="w-16 h-16 rounded-full border border-[#b026ff] flex items-center justify-center mb-4 group-hover:bg-[#b026ff]/10 transition-all">
-                        <i class="ph ph-users-three text-3xl text-[#b026ff]"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-[#b026ff] transition-colors">Pengurusan Disiplin</h3>
-                    <p class="text-gray-400 text-sm mt-2">Carta Organisasi, Maklumat & Senarai Pengawas.</p>
-                </a>
-
-                <!-- 5. Buku Pengurusan Disiplin -->
-                <a href="#" class="cyber-card card-yellow p-6 flex flex-col justify-center items-center text-center group cursor-pointer block">
-                    <div class="decor-bar text-[#fcee0a]"></div>
-                    <div class="w-16 h-16 rounded-full border border-[#fcee0a] flex items-center justify-center mb-4 group-hover:bg-[#fcee0a]/10 transition-all">
-                        <i class="ph ph-book-open text-3xl text-[#fcee0a]"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-[#fcee0a] transition-colors">Buku Pengurusan</h3>
-                    <p class="text-gray-400 text-sm mt-2">Rujukan buku panduan disiplin sekolah.</p>
-                </a>
-
-                <!-- 6. Carta Kedudukan Murid -->
-                <a href="#" class="cyber-card p-6 flex flex-col justify-center items-center text-center group cursor-pointer block">
-                    <div class="decor-bar text-blue-400"></div>
-                    <div class="w-16 h-16 rounded-full border border-blue-400 flex items-center justify-center mb-4 group-hover:bg-blue-400/10 transition-all">
-                        <i class="ph ph-chart-bar text-3xl text-blue-400"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">Carta Kedudukan</h3>
-                    <p class="text-gray-400 text-sm mt-2">Analisis data salah laku & amalan baik.</p>
-                </a>
-
-                <!-- 7. Unit BnK -->
-                <a href="#" class="cyber-card p-6 flex flex-col justify-center items-center text-center group cursor-pointer block md:col-span-2 lg:col-span-3 hover:border-pink-500">
-                    <div class="decor-bar text-pink-500"></div>
-                    <div class="w-16 h-16 rounded-full border border-pink-500 flex items-center justify-center mb-4 group-hover:bg-pink-500/10 transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)]">
-                        <i class="ph ph-hands-clapping text-3xl text-pink-500"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-pink-500 transition-colors">Unit BnK</h3>
-                    <p class="text-gray-400 text-sm mt-2">Senarai murid dirujuk ke bimbingan dan kaunseling.</p>
-                </a>
-
-            </div>
+        <div class="neon-card p-8 rounded-2xl text-center border-red-500 text-red-500 cursor-pointer">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Rekod Salah Laku</h2>
+            <p class="text-gray-400">Daftar pelanggaran disiplin murid.</p>
         </div>
+        <div class="neon-card p-8 rounded-2xl text-center border-yellow-500 text-yellow-500 cursor-pointer">
+            <div class="text-5xl mb-4">📖</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Buku Pengurusan</h2>
+            <p class="text-gray-400">Manual & SOP Disiplin Terkini.</p>
+        </div>
+        <div class="neon-card p-8 rounded-2xl text-center border-blue-500 text-blue-500 cursor-pointer">
+            <div class="text-5xl mb-4">📊</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Carta Kedudukan</h2>
+            <p class="text-gray-400">Analisis data & ranking bulanan.</p>
+        </div>
+        <div class="neon-card p-8 rounded-2xl text-center border-orange-500 text-orange-500 cursor-pointer lg:col-span-3 md:col-span-2">
+            <div class="text-5xl mb-4">🧠</div>
+            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Rujuk ke BnK</h2>
+            <p class="text-gray-400">Rujukan Unit Bimbingan dan Kaunseling.</p>
+        </div>
+    </main>
 
-        <div id="amalanBaikView" class="w-full max-w-4xl hidden relative z-10 transition-opacity duration-500 opacity-0 mb-20">
-            
-            <!-- Butang Kembali Ke Menu -->
-            <button onclick="closeAmalanBaik()" class="cyber-btn border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14] hover:text-black hover:shadow-[0_0_15px_#39ff14] mb-6 px-4 py-2 flex items-center gap-2 w-fit">
-                <i class="ph ph-arrow-left font-bold"></i> KEMBALI KE MENU
-            </button>
-
-            <!-- Navigasi Tab (Borang vs Senarai) -->
-            <div class="flex flex-wrap gap-4 mb-6">
-                <button onclick="switchAmalanTab('borang')" id="tabBorang" class="cyber-btn border-[#39ff14] bg-[#39ff14] text-black px-6 py-2 font-bold shadow-[0_0_15px_#39ff14] transition-all">BORANG BAHARU</button>
-                <button onclick="switchAmalanTab('senarai')" id="tabSenarai" class="cyber-btn border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14]/20 px-6 py-2 font-bold transition-all">SENARAI REKOD</button>
-            </div>
-
-            <!-- SEKSYEN 1: BORANG (Sedia Ada) -->
-            <div id="borangAmalanSect" class="cyber-card border-[#39ff14] p-6 md:p-10 shadow-[0_0_20px_rgba(57,255,20,0.1)] transition-all duration-300">
-                <div class="decor-bar text-[#39ff14]"></div>
-                
-                <div class="flex items-center gap-4 mb-8 border-b border-gray-700 pb-4">
-                    <div class="w-12 h-12 rounded bg-[#39ff14]/20 flex items-center justify-center border border-[#39ff14]">
-                        <i class="ph ph-star text-2xl text-[#39ff14]"></i>
+    <section id="amalan-section" class="hidden max-w-4xl mx-auto p-6">
+        <button onclick="hideAmalanBaik()" class="mb-6 flex items-center gap-2 border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-500 hover:text-white transition">
+            ← KEMBALI KE MENU
+        </button>
+        <div class="flex gap-4 mb-6">
+            <button class="bg-green-500 text-black px-6 py-2 rounded-lg font-bold">BORANG BAHARU</button>
+            <button class="border border-green-500 text-green-500 px-6 py-2 rounded-lg">SENARAI REKOD</button>
+        </div>
+        <div class="neon-card p-8 rounded-2xl border-green-500">
+            <h2 class="text-2xl font-tech text-green-400 mb-6">REKOD AMALAN BAIK</h2>
+            <form class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select class="bg-gray-900 border border-gray-700 p-3 rounded-lg"><option>Pilih Guru Pelapor...</option></select>
+                    <input type="text" placeholder="Nama Murid" class="bg-gray-900 border border-gray-700 p-3 rounded-lg">
+                    <input type="text" placeholder="Kelas" class="bg-gray-900 border border-gray-700 p-3 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="date" class="bg-gray-900 border border-gray-700 p-3 rounded-lg">
+                    <input type="date" value="2026-07-12" class="bg-gray-900 border border-gray-700 p-3 rounded-lg" disabled>
+                </div>
+                <div class="flex gap-4">
+                    <label><input type="radio" name="tempat" checked> Dalam Sekolah</label>
+                    <label><input type="radio" name="tempat"> Luar Sekolah</label>
+                </div>
+                <textarea class="w-full bg-gray-900 border border-gray-700 p-4 rounded-lg" rows="4" placeholder="Sila perincikan kejadian amalan baik..."></textarea>
+                <div class="grid grid-cols-3 gap-4">
+                    <canvas id="sig-guru" class="w-full h-32"></canvas>
+                    <div class="border border-green-500 p-4 rounded-lg text-center flex flex-col justify-center">
+                        <span class="text-xs text-green-500">DISEMAK OLEH (PK HEM)</span>
+                        <span class="font-tech mt-2">LING MEE CHOO</span>
                     </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-white cyber-font">REKOD AMALAN BAIK</h2>
-                        <p class="text-[#39ff14] text-sm">Sistem Pangkalan Data MOEIS / idMe</p>
+                    <div class="border border-green-500 p-4 rounded-lg text-center flex flex-col justify-center">
+                        <span class="text-xs text-green-500">DISAHKAN OLEH</span>
+                        <span class="font-tech mt-2">AZIZ BIN TAHIR</span>
                     </div>
                 </div>
+                <button type="button" class="w-full py-4 border-2 border-green-500 text-green-500 font-bold hover:bg-green-500 hover:text-black transition">SIMPAN REKOD</button>
+            </form>
+        </div>
+    </section>
 
-                <form onsubmit="submitAmalanBaik(event)" class="space-y-6">
-                    
-                    <!-- 1. Guru Pelapor, Nama & Kelas -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Nama Guru Pelapor</label>
-                            <select id="guruPelapor" required class="w-full cyber-input rounded-md px-4 py-3 text-white appearance-none">
-                                <option value="" disabled selected>Memuatkan data CSV...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Nama Murid</label>
-                            <select id="namaMurid" required class="w-full cyber-input rounded-md px-4 py-3 text-white appearance-none">
-                                <option value="" disabled selected>Pilih Murid...</option>
-                                <option value="Ahmad bin Abu">Ahmad bin Abu</option>
-                                <option value="Siti Nurhaliza">Siti Nurhaliza</option>
-                                <option value="Chong Wei Ling">Chong Wei Ling</option>
-                                <!-- Senarai ini akan dihubungkan ke fail CSV kelak -->
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Kelas</label>
-                            <select id="kelasMurid" required class="w-full cyber-input rounded-md px-4 py-3 text-white appearance-none">
-                                <option value="" disabled selected>Pilih Kelas...</option>
-                                <option value="1 Amanah">1 Amanah</option>
-                                <option value="1 Bestari">1 Bestari</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 2 & 3. Tarikh -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Tarikh Kejadian</label>
-                            <input type="date" required class="w-full cyber-input rounded-md px-4 py-3 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Tarikh Direkodkan</label>
-                            <input type="date" id="tarikhRekod" readonly class="w-full bg-gray-900 border border-gray-700 rounded-md px-4 py-3 text-gray-500 cursor-not-allowed">
-                        </div>
-                    </div>
-
-                    <!-- 4. Tempat -->
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-2">Tempat Kejadian</label>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="tempat" value="dalam" required class="accent-[#39ff14] w-5 h-5">
-                                <span class="group-hover:text-[#39ff14] transition-colors">Dalam Sekolah</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="tempat" value="luar" required class="accent-[#39ff14] w-5 h-5">
-                                <span class="group-hover:text-[#39ff14] transition-colors">Luar Sekolah</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- 5. Kategori & Sub-Kategori MOEIS -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Kategori Amalan Baik</label>
-                            <select id="kategoriAmalan" required class="w-full cyber-input rounded-md px-4 py-3 text-white appearance-none" onchange="updateSubKategori()">
-                                <option value="" disabled selected>Pilih Kategori...</option>
-                                <!-- Pilihan dijana melalui JavaScript -->
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Sub-kategori Amalan Baik</label>
-                            <select id="subKategoriAmalan" required class="w-full cyber-input rounded-md px-4 py-3 text-white appearance-none disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <option value="" disabled selected>Pilih Sub-kategori...</option>
-                                <!-- Pilihan dijana bergantung kepada Kategori -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 6. Keterangan -->
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-2">Keterangan Guru (Pilihan)</label>
-                        <textarea rows="3" placeholder="Sila perincikan kejadian amalan baik..." class="w-full cyber-input rounded-md px-4 py-3 text-white resize-none"></textarea>
-                    </div>
-
-                    <!-- 7. Eviden -->
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-2">Muat Naik Eviden (Gambar/Video) - Pilihan <span class="text-xs text-[#fcee0a] ml-2 font-bold bg-[#fcee0a]/20 px-2 py-1 rounded border border-[#fcee0a]/50">Max 1000MB</span></label>
-                        <input type="file" id="evidenFile" accept="image/*,video/*" onchange="checkFileSize(this)" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-bold file:bg-[#39ff14]/20 file:text-[#39ff14] hover:file:bg-[#39ff14]/40 hover:file:shadow-[0_0_10px_rgba(57,255,20,0.5)] cursor-pointer transition-all">
-                        <p id="fileSizeError" class="text-[#ff003c] text-sm mt-2 hidden cyber-font border border-[#ff003c] bg-[#ff003c]/10 px-3 py-2 rounded">
-                            <i class="ph ph-warning-circle inline-block mr-1"></i> <b>AMARAN:</b> Saiz fail melebihi had 1000MB!
-                        </p>
-                    </div>
-
-                    <!-- 8. Pengesahan & Tandatangan -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <label class="block text-sm text-gray-400">Tandatangan Pelapor (Guru)</label>
-                            <button type="button" onclick="clearSignature()" class="text-xs text-[#39ff14] hover:underline">Padam Tandatangan</button>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
-                            
-                            <!-- Box Tandatangan Guru -->
-                            <div class="relative col-span-1 border border-gray-600 rounded-md bg-[#050505]">
-                                <canvas id="signaturePad" class="w-full h-[120px] cursor-crosshair touch-none shadow-inner"></canvas>
-                                <p class="absolute bottom-2 left-3 text-[10px] text-gray-600 pointer-events-none cyber-font">TANDATANGAN DI SINI</p>
-                            </div>
-                            
-                            <!-- Box Disemak Oleh -->
-                            <div class="flex flex-col items-center justify-center p-4 bg-[#39ff14]/5 border border-[#39ff14]/30 rounded-md">
-                                <p class="text-xs text-gray-400 text-center uppercase tracking-widest mb-2">Disemak Oleh (PK HEM)</p>
-                                <div class="flex-grow flex items-center justify-center">
-                                    <p class="font-bold text-[#39ff14] text-center text-lg cyber-font tracking-widest uppercase">LING MEE CHOO</p>
-                                </div>
-                            </div>
-
-                            <!-- Box Disahkan Oleh -->
-                            <div class="flex flex-col items-center justify-center p-4 bg-[#39ff14]/5 border border-[#39ff14]/30 rounded-md">
-                                <p class="text-xs text-gray-400 text-center uppercase tracking-widest mb-2">Disahkan Oleh</p>
-                                <div class="flex-grow flex items-center justify-center">
-                                    <p class="font-bold text-[#39ff14] text-center text-lg cyber-font tracking-widest uppercase">AZIZ BIN TAHIR</p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- Butang Hantar -->
-                    <button type="submit" id="btnSubmitForm" class="w-full cyber-btn border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14] hover:text-black hover:shadow-[0_0_20px_#39ff14] py-4 mt-8 font-bold text-lg tracking-widest transition-all">
-                        SIMPAN REKOD
-                    </button>
-                </form>
-            </div>
-
-            <!-- SEKSYEN 2: SENARAI REKOD -->
-            <div id="senaraiAmalanSect" class="cyber-card border-[#39ff14] p-6 md:p-10 shadow-[0_0_20px_rgba(57,255,20,0.1)] hidden transition-all duration-300">
-                <div class="decor-bar text-[#39ff14]"></div>
-                
-                <div class="flex items-center gap-4 mb-8 border-b border-gray-700 pb-4">
-                    <div class="w-12 h-12 rounded bg-[#39ff14]/20 flex items-center justify-center border border-[#39ff14]">
-                        <i class="ph ph-list-numbers text-2xl text-[#39ff14]"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-white cyber-font">SENARAI AMALAN BAIK</h2>
-                        <p class="text-[#39ff14] text-sm">Rekod pendaftaran terkini amalan baik murid</p>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
-                        <thead>
-                            <tr class="border-b border-[#39ff14] text-[#39ff14] cyber-font text-sm">
-                                <th class="py-3 px-4">Tarikh</th>
-                                <th class="py-3 px-4">Nama Murid</th>
-                                <th class="py-3 px-4">Kelas</th>
-                                <th class="py-3 px-4">Kategori Amalan</th>
-                                <th class="py-3 px-4 text-center">Markah</th>
-                                <th class="py-3 px-4 text-center">Tindakan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rekodTableBody" class="text-gray-300 text-sm">
-                            <tr id="rekod-1" class="border-b border-gray-800 hover:bg-[#39ff14]/5 transition-colors group">
-                                <td class="py-3 px-4">12 Jul 2026</td>
-                                <td class="py-3 px-4 font-bold text-white">Ahmad bin Abu</td>
-                                <td class="py-3 px-4">1 Amanah</td>
-                                <td class="py-3 px-4 text-xs">PENAMPILAN DIRI<br><span class="text-gray-500">Menjaga kekemasan diri secara menyeluruh</span></td>
-                                <td class="py-3 px-4 text-center font-bold text-[#39ff14] text-lg val-markah">1</td>
-                                <td class="py-3 px-4">
-                                    <div class="flex justify-center gap-3 mt-1">
-                                        <button type="button" onclick="viewPDF('rekod-1')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition-all" title="Lihat Laporan PDF"><i class="ph ph-file-pdf text-2xl"></i></button>
-                                        <button type="button" onclick="editRekod('rekod-1')" class="text-yellow-400 hover:text-yellow-300 hover:scale-110 transition-all" title="Edit Rekod"><i class="ph ph-pencil-simple text-2xl"></i></button>
-                                        <button type="button" onclick="promptDelete('rekod-1')" class="text-red-500 hover:text-red-400 hover:scale-110 transition-all" title="Padam Rekod (Sulit)"><i class="ph ph-trash text-2xl"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr id="rekod-2" class="border-b border-gray-800 hover:bg-[#39ff14]/5 transition-colors group">
-                                <td class="py-3 px-4">10 Jul 2026</td>
-                                <td class="py-3 px-4 font-bold text-white">Siti Nurhaliza</td>
-                                <td class="py-3 px-4">1 Bestari</td>
-                                <td class="py-3 px-4 text-xs">TOLONG-MENOLONG<br><span class="text-gray-500">Menawarkan dan memberi bantuan...</span></td>
-                                <td class="py-3 px-4 text-center font-bold text-[#39ff14] text-lg val-markah">3</td>
-                                <td class="py-3 px-4">
-                                    <div class="flex justify-center gap-3 mt-1">
-                                        <button type="button" onclick="viewPDF('rekod-2')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition-all" title="Lihat Laporan PDF"><i class="ph ph-file-pdf text-2xl"></i></button>
-                                        <button type="button" onclick="editRekod('rekod-2')" class="text-yellow-400 hover:text-yellow-300 hover:scale-110 transition-all" title="Edit Rekod"><i class="ph ph-pencil-simple text-2xl"></i></button>
-                                        <button type="button" onclick="promptDelete('rekod-2')" class="text-red-500 hover:text-red-400 hover:scale-110 transition-all" title="Padam Rekod (Sulit)"><i class="ph ph-trash text-2xl"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr id="rekod-3" class="border-b border-gray-800 hover:bg-[#39ff14]/5 transition-colors group">
-                                <td class="py-3 px-4">08 Jul 2026</td>
-                                <td class="py-3 px-4 font-bold text-white">Chong Wei Ling</td>
-                                <td class="py-3 px-4">1 Amanah</td>
-                                <td class="py-3 px-4 text-xs">KEPIMPINAN<br><span class="text-gray-500">Merancang, mengurus aktiviti...</span></td>
-                                <td class="py-3 px-4 text-center font-bold text-[#39ff14] text-lg val-markah">5</td>
-                                <td class="py-3 px-4">
-                                    <div class="flex justify-center gap-3 mt-1">
-                                        <button type="button" onclick="viewPDF('rekod-3')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition-all" title="Lihat Laporan PDF"><i class="ph ph-file-pdf text-2xl"></i></button>
-                                        <button type="button" onclick="editRekod('rekod-3')" class="text-yellow-400 hover:text-yellow-300 hover:scale-110 transition-all" title="Edit Rekod"><i class="ph ph-pencil-simple text-2xl"></i></button>
-                                        <button type="button" onclick="promptDelete('rekod-3')" class="text-red-500 hover:text-red-400 hover:scale-110 transition-all" title="Padam Rekod (Sulit)"><i class="ph ph-trash text-2xl"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-[#39ff14]/10 border-t border-[#39ff14]">
-                                <td colspan="4" class="py-4 px-4 text-right font-bold text-white uppercase cyber-font">Jumlah Markah Keseluruhan:</td>
-                                <td id="jumlahMarkahTotal" class="py-4 px-4 text-center font-bold text-3xl text-[#fcee0a]">0</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-        </div> <!-- Penamat div Pembungkus Paparan Amalan Baik -->
-        
-        <script>
-        // -----------------------------------------
-        // 1. PENGENDALIAN KATA LALUAN MODAL
-        // -----------------------------------------
-        function openPasswordModal() {
-            const modal = document.getElementById('passwordModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    <script>
+        function showAmalanBaik() {
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('main-grid').classList.add('hidden');
+            document.getElementById('amalan-section').classList.remove('hidden');
+        }
+        function hideAmalanBaik() {
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('main-grid').classList.remove('hidden');
+            document.getElementById('amalan-section').classList.add('hidden');
+        }
+        function checkPassword() {
+            const pass = prompt("Masukkan Kata Laluan Laporan:");
+            if(pass === "GDSyba4112") alert("Akses Diberikan!");
+            else alert("Kata Laluan Salah!");
         }
 
-        function closePasswordModal() {
-            const modal = document.getElementById('passwordModal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('errorMsg').classList.add('hidden');
-            }, 300);
-        }
-
-        function verifyPassword() {
-            const pwd = document.getElementById('passwordInput').value;
-            if(pwd === 'GDSyba4112') {
-                const card = document.querySelector('#passwordModal .cyber-card');
-                card.innerHTML = `
-                    <div class="w-16 h-16 rounded-full bg-[#39ff14]/20 flex items-center justify-center mb-4 border border-[#39ff14]">
-                        <i class="ph ph-check-circle text-3xl text-[#39ff14]"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold cyber-font text-white mb-2">AKSES DIBENARKAN</h2>
-                    <p class="text-gray-400 text-sm text-center mb-6">Sistem laporan akan tersedia kelak.</p>
-                    <button onclick="location.reload()" class="w-full cyber-btn text-[#0ff] border-[#0ff] hover:bg-[#0ff] hover:text-black py-2 font-bold">Tutup</button>
-                `;
-            } else {
-                document.getElementById('errorMsg').classList.remove('hidden');
-            }
-        }
-
-        // -----------------------------------------
-        // 2. SISTEM PENGHALAAN (SPA - PAPARAN SAMA)
-        // -----------------------------------------
-        const dashboardView = document.getElementById('dashboardView');
-        const amalanBaikView = document.getElementById('amalanBaikView');
-
-        function openAmalanBaik() {
-            // Sembunyikan dashboard, tunjuk borang
-            if(dashboardView) {
-                dashboardView.classList.add('opacity-0');
-                setTimeout(() => {
-                    dashboardView.classList.add('hidden');
-                    if(amalanBaikView) {
-                        amalanBaikView.classList.remove('hidden');
-                        setTimeout(() => amalanBaikView.classList.remove('opacity-0'), 50);
-                    }
-                }, 300); // Tunggu animasi pudar selesai
-            }
-            
-            // Set tarikh rekod kepada hari ini secara automatik
-            const tarikhInput = document.getElementById('tarikhRekod');
-            if (tarikhInput) tarikhInput.valueAsDate = new Date();
-            
-            // Mula hidupkan fungsi canvas tandatangan selepas elemen dipaparkan sepenuhnya
-            setTimeout(() => {
-                initSignaturePad();
-            }, 350);
-        }
-
-        function closeAmalanBaik() {
-            // Sembunyikan borang, tunjuk dashboard semula
-            if(amalanBaikView) {
-                amalanBaikView.classList.add('opacity-0');
-                setTimeout(() => {
-                    amalanBaikView.classList.add('hidden');
-                    if(dashboardView) {
-                        dashboardView.classList.remove('hidden');
-                        setTimeout(() => dashboardView.classList.remove('opacity-0'), 50);
-                    }
-                    
-                    // Reset tab kembali kepada paparan borang untuk sesi seterusnya
-                    if(typeof switchAmalanTab === 'function') switchAmalanTab('borang');
-                }, 300);
-            }
-        }
-
-        // -----------------------------------------
-        // FUNGSI TUKAR TAB AMALAN BAIK (BORANG / SENARAI)
-        // -----------------------------------------
-        function switchAmalanTab(tab) {
-            const borangSect = document.getElementById('borangAmalanSect');
-            const senaraiSect = document.getElementById('senaraiAmalanSect');
-            const tabBorang = document.getElementById('tabBorang');
-            const tabSenarai = document.getElementById('tabSenarai');
-
-            if (!borangSect || !senaraiSect) return;
-
-            if (tab === 'borang') {
-                borangSect.classList.remove('hidden');
-                senaraiSect.classList.add('hidden');
-                
-                // Kemas kini butang tab
-                tabBorang.classList.add('bg-[#39ff14]', 'text-black', 'shadow-[0_0_15px_#39ff14]');
-                tabBorang.classList.remove('text-[#39ff14]', 'hover:bg-[#39ff14]/20');
-                
-                tabSenarai.classList.remove('bg-[#39ff14]', 'text-black', 'shadow-[0_0_15px_#39ff14]');
-                tabSenarai.classList.add('text-[#39ff14]', 'hover:bg-[#39ff14]/20');
-            } else if (tab === 'senarai') {
-                borangSect.classList.add('hidden');
-                senaraiSect.classList.remove('hidden');
-                
-                // Kemas kini butang tab
-                tabSenarai.classList.add('bg-[#39ff14]', 'text-black', 'shadow-[0_0_15px_#39ff14]');
-                tabSenarai.classList.remove('text-[#39ff14]', 'hover:bg-[#39ff14]/20');
-                
-                tabBorang.classList.remove('bg-[#39ff14]', 'text-black', 'shadow-[0_0_15px_#39ff14]');
-                tabBorang.classList.add('text-[#39ff14]', 'hover:bg-[#39ff14]/20');
-            }
-        }
-
-        // -----------------------------------------
-        // 3. PENGENDALIAN HANTAR BORANG
-        // -----------------------------------------
-        function submitAmalanBaik(e) {
-            e.preventDefault(); // Elak page refresh
-            const formContainer = e.target.parentElement;
-            
-            // Paparkan mesej kejayaan menggantikan borang
-            formContainer.innerHTML = `
-                <div class="decor-bar text-[#39ff14]"></div>
-                <div class="flex flex-col items-center justify-center py-20 text-center min-h-[50vh]">
-                    <div class="w-24 h-24 rounded-full border-4 border-[#39ff14] flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(57,255,20,0.5)]">
-                        <i class="ph ph-check text-6xl text-[#39ff14]"></i>
-                    </div>
-                    <h2 class="text-3xl font-bold text-[#39ff14] cyber-font mb-4">REKOD DISIMPAN!</h2>
-                    <p class="text-gray-300 max-w-md leading-relaxed">Data amalan baik murid telah berjaya didaftarkan ke dalam pangkalan data sistem.</p>
-                    <button type="button" onclick="location.reload()" class="mt-10 cyber-btn border-[#39ff14] text-[#39ff14] px-8 py-3 hover:bg-[#39ff14] hover:text-black font-bold tracking-widest">
-                        KEMBALI KE MENU UTAMA
-                    </button>
-                </div>
-            `;
-        }
-
-        // -----------------------------------------
-        // 4. SISTEM TANDATANGAN DIGITAL (CANVAS)
-        // -----------------------------------------
-        let canvas, ctx;
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        function initSignaturePad() {
-            canvas = document.getElementById('signaturePad');
-            if(!canvas) return; // Keluar jika tiada canvas
-            
-            ctx = canvas.getContext('2d');
-            
-            // Set responsif
-            const resizeCanvas = () => {
-                const rect = canvas.parentElement.getBoundingClientRect();
-                canvas.width = rect.width;
-                canvas.height = 150;
-                
-                // Gaya dakwat neon
-                ctx.strokeStyle = '#39ff14';
-                ctx.lineWidth = 2.5;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-            };
-            
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
-
-            // Tetapan Mouse
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
-
-            // Tetapan Sentuhan (Telefon Pintar / Tablet)
-            canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
-            canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
-            canvas.addEventListener('touchend', stopDrawing);
-        }
-
-        function startDrawing(e) {
-            isDrawing = true;
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
+        // Init Signature Pad
+        const canvas = document.getElementById('sig-guru');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        ctx.strokeStyle = '#39ff14';
+        ctx.lineWidth = 2;
+        canvas.onmousedown = () => drawing = true;
+        canvas.onmouseup = () => drawing = false;
+        canvas.onmousemove = (e) => {
+            if(!drawing) return;
             ctx.lineTo(e.offsetX, e.offsetY);
             ctx.stroke();
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-        }
-
-        // Fungsi sokongan sentuhan (Touch Devices)
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            isDrawing = true;
-            lastX = touch.clientX - rect.left;
-            lastY = touch.clientY - rect.top;
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            if (!isDrawing) return;
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const currentX = touch.clientX - rect.left;
-            const currentY = touch.clientY - rect.top;
-            
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(currentX, currentY);
-            ctx.stroke();
-            lastX = currentX;
-            lastY = currentY;
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-        }
-
-        function clearSignature() {
-            if(ctx && canvas) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-
-        // -----------------------------------------
-        // 5. DATA & LOGIK KATEGORI AMALAN BAIK MOEIS
-        // -----------------------------------------
-        const amalanData = {
-            "ADAB DAN BERBUDI BAHASA": [
-                "Menghargai diri",
-                "Menghargai orang lain serta menjaga sensitiviti antara kaum dan etnik",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "JATI DIRI": [
-                "Menzahirkan semangat patriotisme terhadap sekolah dan negara",
-                "Mempunyai daya tahan diri secara fizikal dan mental yang baik",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "TOLONG-MENOLONG": [
-                "Menawarkan dan memberi bantuan dalam bentuk tenaga, kepakaran, kemahiran atau khidmat nasihat yang bersesuaian kepada warga sekolah dan orang lain",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "KEBERSIHAN, KECERIAAN DAN KELESTARIAN SEKOLAH": [
-                "Menjaga kelestarian, kebersihan dan menggalakkan keceriaan sekolah",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "KEPIMPINAN": [
-                "Merancang, mengurus, memimpin dan mengawal sesuatu aktiviti atau program di dalam dan di luar bilik darjah",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "KEBERTANGGUNGJAWABAN DAN KEPRIHATINAN": [
-                "Bertanggungjawab terhadap kesan dan akibat sesuatu tindakan",
-                "Prihatin dan mempunyai rasa tanggungjawab untuk memaklumkan kes salah laku di dalam dan di luar sekolah kepada pihak sekolah",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "KEHADIRAN AKTIVITI": [
-                "Menghadirkan diri secara konsisten ke sekolah, aktiviti atau program kokurikulum",
-                "Menunjukkan peningkatan kehadiran ke sekolah, aktiviti atau program kokurikulum",
-                "Melibatkan diri dalam aktiviti atau program sekolah",
-                "Menepati masa dalam aktiviti atau program sekolah",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ],
-            "PENAMPILAN DIRI": [
-                "Memakai pakaian seragam sekolah, pakaian kokurikulum, pakaian sukan atau pakaian unit beruniform yang kemas, sopan, bersih dan lengkap mengikut peraturan sekolah",
-                "Menjaga kekemasan diri secara menyeluruh",
-                "Menunjukkan kesediaan diri untuk belajar",
-                "Menjadi pendorong dan suri teladan kepada orang lain"
-            ]
+            ctx.moveTo(e.offsetX, e.offsetY);
         };
-
-        // Skema Markah Amalan Baik Mengikut Sistem Cikgu
-        const markahSkema = {
-            "ADAB DAN BERBUDI BAHASA": 3,
-            "JATI DIRI": 4,
-            "TOLONG-MENOLONG": 3,
-            "KEBERSIHAN, KECERIAAN DAN KELESTARIAN SEKOLAH": 3,
-            "KEPIMPINAN": 5,
-            "KEBERTANGGUNGJAWABAN DAN KEPRIHATINAN": 3,
-            "KEHADIRAN AKTIVITI": 2,
-            "PENAMPILAN DIRI": 1
-        };
-
-        // Masukkan senarai Kategori bila sistem sedia
-        document.addEventListener("DOMContentLoaded", () => {
-            const kategoriSelect = document.getElementById('kategoriAmalan');
-            if(kategoriSelect) {
-                Object.keys(amalanData).forEach(kat => {
-                    const opt = document.createElement('option');
-                    opt.value = kat;
-                    opt.textContent = `${kat} (${markahSkema[kat]} Markah)`; // Papar Markah di dropdown
-                    kategoriSelect.appendChild(opt);
-                });
-            }
-            
-            // Muat turun senarai guru dari fail CSV Google Sheet
-            fetchGuruCSV();
-            
-            // Kira jumlah markah bagi data yang dipaparkan dalam jadual
-            kiraJumlahMarkah();
-        });
-        
-        // Fungsi menarik data CSV Google Sheets (Menggunakan Fetch API)
-        async function fetchGuruCSV() {
-            const select = document.getElementById('guruPelapor');
-            const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdF191iBW-AeowPV7V7Y8cOtViagbtuIkf4GivqTWFpxApaA9K9EuIcD5cot664hNH8vcHqOsxvJU2/pub?output=csv';
-            
-            try {
-                const response = await fetch(csvUrl);
-                if(!response.ok) throw new Error("Gagal hubungi CSV");
-                
-                const csvText = await response.text();
-                const rows = csvText.split('\n'); // Pisah baris mengikut *enter*
-                
-                select.innerHTML = '<option value="" disabled selected>Pilih Guru Pelapor...</option>';
-                
-                rows.forEach((row, index) => {
-                    // Ambil ruang pertama sahaja, elakkan simbol quote (")
-                    let namaGuru = row.split(',')[0].replace(/['"]/g, '').trim(); 
-                    if(namaGuru && index > 0) { // Tolak tajuk (header) di baris pertama
-                        const opt = document.createElement('option');
-                        opt.value = namaGuru;
-                        opt.textContent = namaGuru;
-                        select.appendChild(opt);
-                    }
-                });
-            } catch (error) {
-                console.error("Amaran Sistem: Gagal memuat turun CSV Guru.", error);
-                select.innerHTML = '<option value="" disabled selected>CSV Gagal Dimuatkan. (Data Simulas)</option>';
-                
-                // Fallback (Data sementara jika CSV disekat oleh CORS pelayar)
-                ['Guru Alpha (Mock)', 'Guru Beta (Mock)'].forEach(nama => {
-                    const opt = document.createElement('option');
-                    opt.value = nama;
-                    opt.textContent = nama;
-                    select.appendChild(opt);
-                });
-            }
-        }
-
-        // Fungsi buka Sub-kategori bergantung pada Kategori yang dipilih
-        function updateSubKategori() {
-            const kat = document.getElementById('kategoriAmalan').value;
-            const subSelect = document.getElementById('subKategoriAmalan');
-            
-            // Reset subkategori
-            subSelect.innerHTML = '<option value="" disabled selected>Pilih Sub-kategori...</option>';
-            
-            if(kat && amalanData[kat]) {
-                amalanData[kat].forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    opt.textContent = sub;
-                    subSelect.appendChild(opt);
-                });
-                subSelect.disabled = false;
-                subSelect.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else {
-                subSelect.disabled = true;
-                subSelect.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        // -----------------------------------------
-        // 6. SEMAKAN SAIZ FAIL (MAX 1000MB)
-        // -----------------------------------------
-        function checkFileSize(input) {
-            const errorMsg = document.getElementById('fileSizeError');
-            if (input.files && input.files[0]) {
-                // Kiraan 1000MB dalam bait (1000 * 1024 * 1024)
-                const maxBytes = 1000 * 1024 * 1024;
-                if (input.files[0].size > maxBytes) {
-                    // Tunjuk mesej amaran
-                    errorMsg.classList.remove('hidden');
-                    // Kosongkan semula ruangan fail
-                    input.value = ''; 
-                } else {
-                    // Sorok mesej amaran jika fail sah
-                    errorMsg.classList.add('hidden');
-                }
-            }
-        }
-
-        // -----------------------------------------
-        // 7. FUNGSI SUNTING, PADAM, DAN PAPARAN PDF
-        // -----------------------------------------
-
-        // A. Kira Jumlah Markah Keseluruhan di Jadual
-        function kiraJumlahMarkah() {
-            let total = 0;
-            document.querySelectorAll('.val-markah').forEach(td => {
-                total += parseInt(td.textContent) || 0;
-            });
-            const elementJumlah = document.getElementById('jumlahMarkahTotal');
-            if(elementJumlah) elementJumlah.textContent = total;
-        }
-
-        // B. Fungsi Sunting (Edit)
-        function editRekod(rowId) {
-            // Kembali ke tab borang
-            switchAmalanTab('borang');
-            
-            // Ubah suai rupa dan teks butang Hantar untuk menandakan 'Mod Kemas Kini'
-            const btn = document.getElementById('btnSubmitForm');
-            if(btn) {
-                btn.innerHTML = '<i class="ph ph-arrows-clockwise font-bold text-xl mr-2"></i> KEMAS KINI REKOD';
-                btn.classList.remove('border-[#39ff14]', 'text-[#39ff14]', 'hover:bg-[#39ff14]', 'hover:shadow-[0_0_20px_#39ff14]');
-                btn.classList.add('border-[#fcee0a]', 'text-[#fcee0a]', 'hover:bg-[#fcee0a]', 'hover:shadow-[0_0_20px_#fcee0a]');
-            }
-            
-            // Sistem DB sebenar akan memuatkan data rowId kembali ke dalam borang.
-            // Memandangkan ini prototaip tanpa DB, ini hanya pemberitahuan makluman.
-        }
-
-        // C. Fungsi Padam (Dilindungi Kata Laluan)
-        function promptDelete(rowId) {
-            document.getElementById('deleteRowId').value = rowId;
-            const modal = document.getElementById('deleteAuthModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
-
-        function closeDeleteModal() {
-            const modal = document.getElementById('deleteAuthModal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-                document.getElementById('deletePasswordInput').value = '';
-                document.getElementById('deleteErrorMsg').classList.add('hidden');
-            }, 300);
-        }
-
-        function verifyDeletePassword() {
-            const pwd = document.getElementById('deletePasswordInput').value;
-            if(pwd === '920307136255') {
-                // Sah - Teruskan Memadam
-                const rowId = document.getElementById('deleteRowId').value;
-                const row = document.getElementById(rowId);
-                if(row) {
-                    row.remove();
-                    kiraJumlahMarkah(); // Kemas kini jumlah lepas padam
-                }
-                closeDeleteModal();
-            } else {
-                // Salah Kata Laluan
-                document.getElementById('deleteErrorMsg').classList.remove('hidden');
-            }
-        }
-
-        // D. Fungsi Paparan PDF Fit In Page
-        function viewPDF(rowId) {
-            const row = document.getElementById(rowId);
-            if(!row) return;
-
-            // Baca teks terus dari jadual simulasi kita
-            const tarikh = row.cells[0].textContent;
-            const namaMurid = row.cells[1].textContent;
-            const kelas = row.cells[2].textContent;
-            const kategoriRaw = row.cells[3].innerHTML.split('<br>');
-            const kategori = kategoriRaw[0];
-            const subKategori = row.cells[3].innerText.replace(kategori, '').trim();
-            const markah = row.cells[4].textContent;
-
-            const modal = document.getElementById('pdfModal');
-            const content = document.getElementById('pdfContent');
-            
-            // Susun Reka Letak Serupa Dokumen Rasmi Kerajaan
-            content.innerHTML = `
-                <div class="text-center mb-8 border-b-2 border-black pb-4">
-                    <div class="w-20 h-20 mx-auto mb-4 border-2 border-black rounded-full overflow-hidden flex items-center justify-center">
-                        <img src="https://placehold.co/100x100/ffffff/000000?text=SKPK" alt="Logo" class="w-full">
-                    </div>
-                    <h1 class="text-2xl font-bold uppercase tracking-wide">REKOD PENGESAHAN AMALAN BAIK MURID</h1>
-                    <h2 class="text-lg font-bold uppercase">SEKOLAH KEBANGSAAN PENDIDIKAN KHAS MIRI (SKPK)</h2>
-                    <p class="text-sm mt-2 font-sans italic text-gray-600">Dokumen janaan sistem pada ${new Date().toLocaleDateString('ms-MY')}</p>
-                </div>
-                
-                <table class="w-full border-collapse border-2 border-black text-left text-sm mb-12">
-                    <tbody>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Nama Murid</th>
-                            <td class="border border-black p-3 uppercase font-bold text-base">${namaMurid}</td>
-                        </tr>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Kelas</th>
-                            <td class="border border-black p-3 uppercase">${kelas}</td>
-                        </tr>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Tarikh Direkodkan</th>
-                            <td class="border border-black p-3">${tarikh}</td>
-                        </tr>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Kategori IDMe / MOEIS</th>
-                            <td class="border border-black p-3 font-bold uppercase">${kategori}</td>
-                        </tr>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Pecahan Sub-Kategori</th>
-                            <td class="border border-black p-3">${subKategori}</td>
-                        </tr>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Jumlah Markah Diberikan</th>
-                            <td class="border border-black p-3 font-bold text-xl">${markah} Markah</td>
-                        </tr>
-                        <tr>
-                            <th class="border border-black p-3 w-1/3 bg-gray-100">Guru Pelapor</th>
-                            <td class="border border-black p-3 italic text-gray-700">Dimuat turun daripada CSV Sistem</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="grid grid-cols-2 gap-10 mt-20 text-center text-sm">
-                    <div>
-                        <p class="mb-20">Disemak Oleh,</p>
-                        <p class="font-bold uppercase border-t-2 border-dashed border-black pt-2 mx-8 text-base">LING MEE CHOO</p>
-                        <p class="italic text-gray-700">Penolong Kanan Hal Ehwal Murid (PK HEM)</p>
-                    </div>
-                    <div>
-                        <p class="mb-20">Disahkan Oleh,</p>
-                        <p class="font-bold uppercase border-t-2 border-dashed border-black pt-2 mx-8 text-base">AZIZ BIN TAHIR</p>
-                        <p class="italic text-gray-700">Guru Besar SKPK Miri</p>
-                    </div>
-                </div>
-            `;
-            
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
-
-        function closePDFModal() {
-            const modal = document.getElementById('pdfModal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
     </script>
 </body>
 </html>
