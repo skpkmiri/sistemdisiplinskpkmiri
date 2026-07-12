@@ -1,0 +1,96 @@
+<!-- ... existing code ... -->
+                    <!-- 8. Pengesahan & Tandatangan -->
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="block text-sm text-gray-400">Tandatangan Pelapor (Guru)</label>
+                            <button type="button" onclick="clearSignature()" class="text-xs text-[#39ff14] hover:underline">Padam Tandatangan</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                            
+                            <!-- Box Tandatangan Guru -->
+                            <div class="relative border border-gray-600 rounded-md bg-[#050505] p-2">
+                                <canvas id="signaturePad" class="w-full h-[120px] cursor-crosshair touch-none shadow-inner"></canvas>
+                                <p class="absolute bottom-2 left-3 text-[10px] text-gray-600 pointer-events-none cyber-font">TANDATANGAN GURU PELAPOR</p>
+                            </div>
+                            
+                            <!-- Box Disemak & Disahkan (PK HEM & GB) -->
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="p-4 bg-[#39ff14]/5 border border-[#39ff14]/30 rounded-md">
+                                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Disemak Oleh</p>
+                                    <p class="font-bold text-[#39ff14] text-sm cyber-font">LING MEE CHOO</p>
+                                    <p class="text-[10px] text-gray-500">PK HAL EHWAL MURID (HEM)</p>
+                                </div>
+                                <div class="p-4 bg-[#39ff14]/5 border border-[#39ff14]/30 rounded-md">
+                                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Disahkan Oleh</p>
+                                    <p class="font-bold text-[#39ff14] text-sm cyber-font">AZIZ BIN TAHIR</p>
+                                    <p class="text-[10px] text-gray-500">GURU BESAR SKPK MIRI</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+<!-- ... existing code ... -->
+            <!-- SEKSYEN 2: SENARAI REKOD -->
+            <div id="senaraiAmalanSect" class="cyber-card border-[#39ff14] p-6 md:p-10 shadow-[0_0_20px_rgba(57,255,20,0.1)] hidden transition-all duration-300">
+                
+                <!-- KAD RINGKASAN MARKAH MURID -->
+                <div class="mb-8 p-6 bg-[#39ff14]/10 border border-[#39ff14] rounded-lg">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2"><i class="ph ph-chart-bar"></i> RINGKASAN MARKAH MURID</h3>
+                    <div id="muridScoresGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <!-- Data Markah Murid akan dijana di sini oleh JS -->
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 mb-8 border-b border-gray-700 pb-4">
+<!-- ... existing code ... -->
+        // Fungsi untuk mengira markah murid individu
+        function updateMarkahMurid() {
+            const scores = {};
+            const rows = document.querySelectorAll('#rekodTableBody tr');
+            
+            rows.forEach(row => {
+                const nama = row.cells[1].textContent;
+                const markah = parseInt(row.cells[4].textContent) || 0;
+                scores[nama] = (scores[nama] || 0) + markah;
+            });
+
+            const grid = document.getElementById('muridScoresGrid');
+            grid.innerHTML = '';
+            
+            Object.keys(scores).forEach(nama => {
+                const div = document.createElement('div');
+                div.className = "bg-black p-3 rounded border border-[#39ff14]/30 text-center";
+                div.innerHTML = `
+                    <p class="text-[10px] text-gray-400 truncate">${nama}</p>
+                    <p class="text-xl font-bold text-[#fcee0a]">${scores[nama]}</p>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // Jalankan pengiraan markah setiap kali data berubah
+        function kiraJumlahMarkah() {
+            let total = 0;
+            document.querySelectorAll('.val-markah').forEach(td => {
+                total += parseInt(td.textContent) || 0;
+            });
+            const elementJumlah = document.getElementById('jumlahMarkahTotal');
+            if(elementJumlah) elementJumlah.textContent = total;
+            
+            // Kemaskini juga ringkasan murid
+            updateMarkahMurid();
+        }
+
+        // B. Fungsi Sunting (Edit)
+        function editRekod(rowId) {
+            switchAmalanTab('borang');
+            const btn = document.getElementById('btnSubmitForm');
+            if(btn) {
+                btn.innerHTML = '<i class="ph ph-arrows-clockwise font-bold text-xl mr-2"></i> KEMAS KINI REKOD';
+                btn.classList.add('border-[#fcee0a]', 'text-[#fcee0a]');
+            }
+        }
+<!-- ... existing code ... -->
+```
+
+Cikgu boleh terus *Preview* untuk melihat "Kad Markah Murid" yang baru muncul di atas senarai rekod. Sistem akan secara automatik mengumpul markah berdasarkan nama murid yang ada dalam senarai. Jika ada murid baharu ditambah, mereka akan terus muncul dalam ringkasan tersebut!
