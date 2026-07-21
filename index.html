@@ -1,143 +1,430 @@
 <!DOCTYPE html>
-<html lang="ms" class="dark">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekod Disiplin SKPK Miri</title>
+    <title>Sistem Pengurusan Disiplin Murid - Hal Ehwal Murid (HEM)</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Load Google Fonts: Orbitron for NFS UG feel, Inter for readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hr-bg': '#070A11', /* Deep space/night sky */
+                        'hr-gold': '#D4AF37', /* Elegant High Republic gold */
+                        'hr-gold-glow': '#F9E596',
+                        'hr-blue': '#0A1B3F', /* Jedi Temple Blue */
+                        'hr-kyber': '#4DEEEA', /* Bright Kyber crystal blue */
+                        'hr-white': '#F0F4F8', /* Pristine white/cream */
+                        'hr-panel': 'rgba(10, 27, 63, 0.7)', /* Translucent blue panel */
+                    },
+                    fontFamily: {
+                        'nfs': ['Orbitron', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'nfs-glow': '0 0 15px rgba(212, 175, 55, 0.6), 0 0 5px rgba(212, 175, 55, 0.3)',
+                        'kyber-glow': '0 0 15px rgba(77, 238, 234, 0.6)',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #fff; }
-        .grid-bg { background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px); background-size: 40px 40px; }
-        .neon-card { background: rgba(15, 15, 20, 0.8); border: 1px solid #333; transition: all 0.3s ease; }
-        .neon-card:hover { transform: translateY(-5px); border-color: currentColor; box-shadow: 0 0 20px currentColor; }
-        .font-tech { font-family: 'Orbitron', sans-serif; }
-        canvas { touch-action: none; background: #000; border: 1px dashed #333; cursor: crosshair; }
+        body {
+            --sky-hue: 0deg;
+            background-color: #070A11;
+            color: #F0F4F8;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Dedicated Sky Background Layer */
+        #sky-bg {
+            background-color: #070A11;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(77, 238, 234, 0.12) 0%, transparent 50%);
+            filter: hue-rotate(var(--sky-hue));
+            transition: filter 1.5s ease-in-out;
+        }
+
+        /* Ambient Effects Hue Sync */
+        #ambient-effects {
+            filter: hue-rotate(var(--sky-hue));
+            transition: filter 1.5s ease-in-out;
+        }
+
+        /* Ambient background animated elements simulating Coruscant traffic */
+        .traffic-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.8), transparent);
+            opacity: 0.3;
+            animation: moveTraffic 8s linear infinite;
+        }
+        .traffic-line.fast {
+            background: linear-gradient(90deg, transparent, rgba(77, 238, 234, 0.8), transparent);
+            animation-duration: 4s;
+        }
+
+        @keyframes moveTraffic {
+            0% { transform: translateX(-100vw) rotate(15deg); }
+            100% { transform: translateX(100vw) rotate(15deg); }
+        }
+
+        /* NFS Underground Style Menu Container */
+        .nfs-menu-container {
+            position: relative;
+            /* Angled container */
+            transform: skewX(-10deg);
+            padding-left: 20px;
+        }
+
+        /* Individual Menu Item styling */
+        .nfs-menu-item {
+            position: relative;
+            display: block;
+            margin-bottom: 1rem;
+            padding: 0.75rem 2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(240, 244, 248, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            /* Reverse the skew for the text so it stands straight */
+            transform: skewX(10deg);
+            background: transparent;
+            border: none;
+            text-align: left;
+            width: 100%;
+        }
+
+        /* The animated background block for menu items */
+        .nfs-menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0) 0%, rgba(212, 175, 55, 0.15) 100%);
+            border-right: 4px solid #D4AF37;
+            transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: -1;
+            /* Re-skew the background to match container */
+            transform: skewX(-10deg);
+            transform-origin: bottom left;
+        }
+
+        .nfs-menu-item:hover, .nfs-menu-item.active {
+            color: #D4AF37;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            padding-left: 3rem; /* Slide effect */
+        }
+
+        .nfs-menu-item:hover::before, .nfs-menu-item.active::before {
+            left: 0;
+            box-shadow: 5px 0 15px rgba(212, 175, 55, 0.4);
+        }
+        
+        .nfs-menu-item.active {
+            color: #4DEEEA; /* Active item uses Kyber Blue */
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.6);
+        }
+        
+        .nfs-menu-item.active::before {
+            background: linear-gradient(90deg, rgba(77, 238, 234, 0) 0%, rgba(77, 238, 234, 0.2) 100%);
+            border-right: 4px solid #4DEEEA;
+            box-shadow: 5px 0 15px rgba(77, 238, 234, 0.4);
+        }
+
+        /* Content Panel Styling */
+        .content-panel {
+            background: rgba(10, 27, 63, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 1rem;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            display: none; /* Hidden by default, JS will toggle */
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        /* Elegant High Republic border accent */
+        .content-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar styling for tables/content */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 27, 63, 0.5); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.5); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(212, 175, 55, 0.8); 
+        }
+
+        /* Custom Table Styling */
+        .hr-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+        .hr-table th {
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: #D4AF37;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .hr-table td {
+            padding: 1rem;
+            background: rgba(240, 244, 248, 0.05);
+            border-top: 1px solid transparent;
+            border-bottom: 1px solid transparent;
+        }
+        .hr-table tr {
+            transition: all 0.2s;
+        }
+        .hr-table tr:hover td {
+            background: rgba(77, 238, 234, 0.1);
+            border-color: rgba(77, 238, 234, 0.3);
+        }
+        .hr-table td:first-child { border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem; border-left: 1px solid transparent; }
+        .hr-table td:last-child { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; border-right: 1px solid transparent; }
+        .hr-table tr:hover td:first-child { border-left-color: rgba(77, 238, 234, 0.3); }
+        .hr-table tr:hover td:last-child { border-right-color: rgba(77, 238, 234, 0.3); }
+        
+        /* Stats Cards */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(10,27,63,0.8) 0%, rgba(7,10,17,0.9) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; width: 30%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.05));
+            transform: skewX(-20deg) translateX(50%);
+        }
+
     </style>
 </head>
-<body class="min-h-screen grid-bg">
+<body class="relative min-h-screen flex flex-col">
 
-    <header id="main-header" class="p-8 flex flex-col items-center justify-center gap-6">
-        <img src="logo.png" alt="Logo SKPK Miri" class="w-24 h-24 rounded-full border-4 border-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.5)] object-cover" onerror="this.onerror=null;this.src='https://placehold.co/100x100/000/06b6d4?text=SKPK';">
-        <h1 class="text-3xl md:text-5xl font-tech font-bold tracking-wider text-center">
-            <span class="text-cyan-400">REKOD</span>
-            <span class="text-green-400"> DISIPLIN</span>
-            <span class="text-gray-400"> SKPK</span>
-            <span class="text-purple-400"> MIRI</span>
-        </h1>
+    <!-- Sky Background Layer for Hue Rotation -->
+    <div id="sky-bg" class="fixed inset-0 pointer-events-none z-[-3]"></div>
+
+    <!-- School Background Image with Gradual Transparency (30% to 70%) -->
+    <div class="fixed inset-0 pointer-events-none z-[-2] bg-cover bg-center bg-no-repeat" style="
+        background-image: url('school.png');
+        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+        mask-image: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    "></div>
+
+    <!-- Background Ambient Effects (Coruscant Sky Traffic) -->
+    <div id="ambient-effects" class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div class="traffic-line w-1/3 top-[10%]" style="animation-delay: 0s;"></div>
+        <div class="traffic-line fast w-1/4 top-[25%]" style="animation-delay: 2s;"></div>
+        <div class="traffic-line w-1/2 top-[40%]" style="animation-delay: 5s;"></div>
+        <div class="traffic-line fast w-1/5 top-[65%]" style="animation-delay: 1s;"></div>
+        <div class="traffic-line w-1/3 top-[80%]" style="animation-delay: 4s;"></div>
+        <!-- Distant temple light pillar -->
+        <div class="absolute bottom-0 left-[20%] w-32 h-[60vh] bg-gradient-to-t from-hr-gold/20 to-transparent blur-3xl rounded-full"></div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="w-full p-6 flex justify-between items-center z-10 border-b border-hr-gold/20 bg-hr-bg/50 backdrop-blur-sm">
+        <div class="flex items-center gap-4">
+            <!-- Logo with Minimal Neon Effect -->
+            <img src="logo.png" alt="Logo SKPK Miri" class="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-[0_0_12px_rgba(77,238,234,0.7)]">
+            <div>
+                <h1 class="font-nfs text-2xl md:text-3xl text-hr-white tracking-widest drop-shadow-md">UNIT DISIPLIN <span class="text-hr-gold">SKPK MIRI</span></h1>
+                <p class="text-[10px] md:text-xs text-hr-gold/70 tracking-widest uppercase mt-1">Sistem Pengurusan Disiplin Murid • Hal Ehwal Murid (HEM)</p>
+            </div>
+        </div>
+        <div class="hidden md:flex flex-col items-end justify-center">
+            <div id="live-time" class="font-nfs text-hr-kyber text-2xl tracking-widest drop-shadow-[0_0_8px_rgba(77,238,234,0.8)]">00:00:00</div>
+            <div id="live-date" class="text-xs text-hr-white/70 font-semibold tracking-wider mt-1 uppercase">ISNIN, 1 JANUARI 2026</div>
+        </div>
     </header>
 
-    <main id="main-grid" class="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="neon-card p-8 rounded-2xl text-center border-purple-500 text-purple-500 cursor-pointer">
-            <div class="text-5xl mb-4">👥</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Pengurusan Disiplin</h2>
-            <p class="text-gray-400">Carta Organisasi, Maklumat & Senarai Pengawas.</p>
-        </div>
-        <div class="neon-card p-8 rounded-2xl text-center border-cyan-500 text-cyan-500 cursor-pointer" onclick="checkPassword()">
-            <div class="text-5xl mb-4">🛡️</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Laporan Disiplin</h2>
-            <p class="text-gray-400">Akses Laporan Bulanan & Tahunan.</p>
-        </div>
-        <div class="neon-card p-8 rounded-2xl text-center border-green-500 text-green-500 cursor-pointer" onclick="window.location.href='rekod_amalan_baik_skpk_miri.html'">
-            <div class="text-5xl mb-4">⭐</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Rekod Amalan Baik</h2>
-            <p class="text-gray-400">Daftar kelakuan positif murid mengikut MOEIS.</p>
-        </div>
-        <div class="neon-card p-8 rounded-2xl text-center border-red-500 text-red-500 cursor-pointer">
-            <div class="text-5xl mb-4">⚠️</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Rekod Salah Laku</h2>
-            <p class="text-gray-400">Daftar pelanggaran disiplin murid.</p>
-        </div>
-        <div class="neon-card p-8 rounded-2xl text-center border-yellow-500 text-yellow-500 cursor-pointer">
-            <div class="text-5xl mb-4">📖</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Buku Pengurusan</h2>
-            <p class="text-gray-400">Manual & SOP Disiplin Terkini.</p>
-        </div>
-        <div class="neon-card p-8 rounded-2xl text-center border-blue-500 text-blue-500 cursor-pointer">
-            <div class="text-5xl mb-4">📊</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Carta Kedudukan</h2>
-            <p class="text-gray-400">Analisis data & ranking bulanan.</p>
-        </div>
-        <div class="neon-card p-8 rounded-2xl text-center border-orange-500 text-orange-500 cursor-pointer lg:col-span-3 md:col-span-2">
-            <div class="text-5xl mb-4">🧠</div>
-            <h2 class="text-2xl font-bold mb-2 text-white font-tech">Rujuk ke BnK</h2>
-            <p class="text-gray-400">Rujukan Unit Bimbingan dan Kaunseling.</p>
-        </div>
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto px-4 pt-8 pb-20 flex flex-col lg:flex-row gap-8 lg:gap-12 z-10 relative">
+        
+        <!-- Navigation Sidebar (NFS UG Style) -->
+        <nav class="w-full lg:w-1/3 xl:w-1/4 flex-shrink-0">
+            <div class="nfs-menu-container mt-4">
+                <!-- Vertical decorative line -->
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-hr-gold/50 to-transparent"></div>
+                
+                <ul class="space-y-2">
+                    <li>
+                        <button class="nfs-menu-item active" onclick="showSection('dashboard')">
+                            <span class="relative z-10 flex items-center gap-3">
+                                <i class="fa-solid fa-gauge-high text-sm opacity-70"></i> Pengurusan Disiplin
+                            </span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nfs-menu-item" onclick="showSection('laporan')">
+                            <span class="relative z-10 flex items-center gap-3">
+                                <i class="fa-solid fa-file-signature text-sm opacity-70"></i> Laporan Disiplin
+                            </span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nfs-menu-item" onclick="showSection('amalan-baik')">
+                            <span class="relative z-10 flex items-center gap-3">
+                                <i class="fa-solid fa-star text-sm opacity-70"></i> Rekod Amalan Baik
+                            </span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nfs-menu-item" onclick="showSection('salah-laku')">
+                            <span class="relative z-10 flex items-center gap-3">
+                                <i class="fa-solid fa-triangle-exclamation text-sm opacity-70"></i> Rekod Salah Laku
+                            </span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nfs-menu-item" onclick="showSection('buku-pengurusan')">
+                            <span class="relative z-10 flex items-center gap-3">
+                                <i class="fa-solid fa-book text-sm opacity-70"></i> Buku Pengurusan
+                            </span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nfs-menu-item" onclick="showSection('carta')">
+                            <span class="relative z-10 flex items-center gap-3">
+                                <i class="fa-solid fa-ranking-star text-sm opacity-70"></i> Carta Kedudukan
+                            </span>
+                        </button>
+                    </li>
+                    <li class="mt-8 border-t border-hr-gold/20 pt-4">
+                        <button class="nfs-menu-item" onclick="showSection('rujuk-bk')">
+                            <span class="relative z-10 flex items-center gap-3 text-hr-kyber">
+                                <i class="fa-solid fa-handshake-angle text-sm opacity-70"></i> Rujuk ke B&K
+                            </span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
     </main>
 
-    <section id="amalan-section" class="hidden max-w-4xl mx-auto p-6">
-        <button onclick="hideAmalanBaik()" class="mb-6 flex items-center gap-2 border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-500 hover:text-white transition">
-            ← KEMBALI KE MENU
-        </button>
-        <div class="flex gap-4 mb-6">
-            <button class="bg-green-500 text-black px-6 py-2 rounded-lg font-bold">BORANG BAHARU</button>
-            <button class="border border-green-500 text-green-500 px-6 py-2 rounded-lg">SENARAI REKOD</button>
-        </div>
-        <div class="neon-card p-8 rounded-2xl border-green-500">
-            <h2 class="text-2xl font-tech text-green-400 mb-6">REKOD AMALAN BAIK</h2>
-            <form class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <select class="bg-gray-900 border border-gray-700 p-3 rounded-lg"><option>Pilih Guru Pelapor...</option></select>
-                    <input type="text" placeholder="Nama Murid" class="bg-gray-900 border border-gray-700 p-3 rounded-lg">
-                    <input type="text" placeholder="Kelas" class="bg-gray-900 border border-gray-700 p-3 rounded-lg">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="date" class="bg-gray-900 border border-gray-700 p-3 rounded-lg">
-                    <input type="date" value="2026-07-12" class="bg-gray-900 border border-gray-700 p-3 rounded-lg" disabled>
-                </div>
-                <div class="flex gap-4">
-                    <label><input type="radio" name="tempat" checked> Dalam Sekolah</label>
-                    <label><input type="radio" name="tempat"> Luar Sekolah</label>
-                </div>
-                <textarea class="w-full bg-gray-900 border border-gray-700 p-4 rounded-lg" rows="4" placeholder="Sila perincikan kejadian amalan baik..."></textarea>
-                <div class="grid grid-cols-3 gap-4">
-                    <canvas id="sig-guru" class="w-full h-32"></canvas>
-                    <div class="border border-green-500 p-4 rounded-lg text-center flex flex-col justify-center">
-                        <span class="text-xs text-green-500">DISEMAK OLEH (PK HEM)</span>
-                        <span class="font-tech mt-2">LING MEE CHOO</span>
-                    </div>
-                    <div class="border border-green-500 p-4 rounded-lg text-center flex flex-col justify-center">
-                        <span class="text-xs text-green-500">DISAHKAN OLEH</span>
-                        <span class="font-tech mt-2">AZIZ BIN TAHIR</span>
-                    </div>
-                </div>
-                <button type="button" class="w-full py-4 border-2 border-green-500 text-green-500 font-bold hover:bg-green-500 hover:text-black transition">SIMPAN REKOD</button>
-            </form>
-        </div>
-    </section>
+    <!-- Slogan (Low Middle) -->
+    <div class="fixed bottom-6 left-0 w-full text-center z-20 pointer-events-none">
+        <p class="font-nfs text-hr-gold text-sm md:text-base tracking-[0.4em] uppercase drop-shadow-[0_0_12px_rgba(212,175,55,0.7)]">Agar Dapat Turut Berbakti</p>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-4 right-4 bg-hr-blue border border-hr-kyber text-hr-white px-6 py-4 rounded shadow-kyber-glow transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fa-solid fa-circle-info text-hr-kyber"></i>
+        <span id="notification-msg">Mesej di sini</span>
+    </div>
 
     <script>
-        function showAmalanBaik() {
-            document.getElementById('main-header').classList.add('hidden');
-            document.getElementById('main-grid').classList.add('hidden');
-            document.getElementById('amalan-section').classList.remove('hidden');
-        }
-        function hideAmalanBaik() {
-            document.getElementById('main-header').classList.remove('hidden');
-            document.getElementById('main-grid').classList.remove('hidden');
-            document.getElementById('amalan-section').classList.add('hidden');
-        }
-        function checkPassword() {
-            const pass = prompt("Masukkan Kata Laluan Laporan:");
-            if(pass === "GDSyba4112") alert("Akses Diberikan!");
-            else alert("Kata Laluan Salah!");
+        // Function to handle switching between content sections
+        function showSection(sectionId) {
+            // 1. Remove active state from all menu buttons
+            const menuItems = document.querySelectorAll('.nfs-menu-item');
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // 2. Add active state to clicked button
+            const clickedButton = document.querySelector(`button[onclick="showSection('${sectionId}')"]`);
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+
+            // 3. Change sky hue dynamically
+            const randomHue = Math.floor(Math.random() * 360);
+            document.body.style.setProperty('--sky-hue', `${randomHue}deg`);
         }
 
-        // Init Signature Pad
-        const canvas = document.getElementById('sig-guru');
-        const ctx = canvas.getContext('2d');
-        let drawing = false;
-        ctx.strokeStyle = '#39ff14';
-        ctx.lineWidth = 2;
-        canvas.onmousedown = () => drawing = true;
-        canvas.onmouseup = () => drawing = false;
-        canvas.onmousemove = (e) => {
-            if(!drawing) return;
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-            ctx.moveTo(e.offsetX, e.offsetY);
-        };
+        // Live Clock and Date for Main Header
+        function updateClock() {
+            const now = new Date();
+            
+            // 24-Hour Time System
+            const timeString = now.toLocaleTimeString('ms-MY', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            const clockEl = document.getElementById('live-time');
+            if(clockEl) clockEl.textContent = timeString;
+
+            // Date and Day
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('ms-MY', options);
+            const dateEl = document.getElementById('live-date');
+            if(dateEl) dateEl.textContent = dateString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
+
+        // Custom Notification Function (Replacing alert)
+        function showNotification(message) {
+            const toast = document.getElementById('notification');
+            const msgEl = document.getElementById('notification-msg');
+            
+            msgEl.textContent = message;
+            
+            // Show
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
