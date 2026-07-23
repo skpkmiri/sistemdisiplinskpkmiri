@@ -36,6 +36,7 @@
             }
         }
     </script>
+    
     <style>
         body {
             --sky-hue: 0deg;
@@ -60,6 +61,18 @@
         #ambient-effects {
             filter: hue-rotate(var(--sky-hue));
             transition: filter 1.5s ease-in-out;
+        }
+
+        /* School Background Layer - Opacity set to 70% */
+        #school-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image: url('school.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.7;
         }
 
         /* Ambient background animated elements simulating Coruscant traffic */
@@ -149,120 +162,89 @@
             box-shadow: 5px 0 15px rgba(77, 238, 234, 0.4);
         }
 
-        /* Content Panel Styling */
-        .content-panel {
-            background: rgba(10, 27, 63, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 1rem;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
-            position: relative;
+        /* Warp Transition Effect Applied to UI Elements */
+        .warp-drive-ui {
+            animation: uiWarpEffect 0.7s cubic-bezier(0.75, 0, 0.25, 1) forwards;
+            pointer-events: none;
+        }
+
+        @keyframes uiWarpEffect {
+            0% { transform: scale(1); filter: blur(0) brightness(1); opacity: 1; }
+            20% { transform: scale(0.97); filter: blur(1px) brightness(0.8); opacity: 1; } /* Pull back slightly */
+            60% { transform: scale(1.8) translateZ(100px); filter: blur(15px) brightness(2.5); opacity: 0.5; } /* Shoot forward fast */
+            100% { transform: scale(3.5) translateZ(300px); filter: blur(25px) brightness(4); opacity: 0; } /* Vanish */
+        }
+
+        #warp-container {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            background-color: transparent;
+            transition: opacity 0.2s;
             overflow: hidden;
-            display: none; /* Hidden by default, JS will toggle */
-            animation: fadeIn 0.4s ease-out forwards;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
         }
-
-        .content-panel.active {
-            display: block;
-        }
-
-        /* Elegant High Republic border accent */
-        .content-panel::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #D4AF37, transparent);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Scrollbar styling for tables/content */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(10, 27, 63, 0.5); 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(212, 175, 55, 0.5); 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(212, 175, 55, 0.8); 
-        }
-
-        /* Custom Table Styling */
-        .hr-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 0.5rem;
-        }
-        .hr-table th {
-            text-transform: uppercase;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            color: #D4AF37;
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-        }
-        .hr-table td {
-            padding: 1rem;
-            background: rgba(240, 244, 248, 0.05);
-            border-top: 1px solid transparent;
-            border-bottom: 1px solid transparent;
-        }
-        .hr-table tr {
-            transition: all 0.2s;
-        }
-        .hr-table tr:hover td {
-            background: rgba(77, 238, 234, 0.1);
-            border-color: rgba(77, 238, 234, 0.3);
-        }
-        .hr-table td:first-child { border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem; border-left: 1px solid transparent; }
-        .hr-table td:last-child { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; border-right: 1px solid transparent; }
-        .hr-table tr:hover td:first-child { border-left-color: rgba(77, 238, 234, 0.3); }
-        .hr-table tr:hover td:last-child { border-right-color: rgba(77, 238, 234, 0.3); }
         
-        /* Stats Cards */
-        .stat-card {
-            background: linear-gradient(135deg, rgba(10,27,63,0.8) 0%, rgba(7,10,17,0.9) 100%);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
+        #warp-container.active {
+            opacity: 1;
+            pointer-events: auto;
         }
-        .stat-card::before {
-            content: '';
+        
+        .warp-streak {
             position: absolute;
-            top: 0; right: 0; width: 30%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.05));
-            transform: skewX(-20deg) translateX(50%);
+            width: 3px;
+            height: 20px;
+            background: #F0F4F8;
+            box-shadow: 0 0 15px #4DEEEA, 0 0 30px #4DEEEA; /* Intense glowing trails */
+            top: 50%;
+            left: 50%;
+            transform-origin: top center;
+            opacity: 0;
+            border-radius: 50%;
+            will-change: transform, opacity;
+        }
+        
+        #warp-container.active .warp-streak {
+            animation: warpSpeed 0.6s cubic-bezier(0.6, 0.04, 0.98, 0.33) forwards;
+        }
+        
+        @keyframes warpSpeed {
+            0% { transform: rotate(var(--angle)) translateY(20px) scaleY(1); opacity: 0; }
+            15% { transform: rotate(var(--angle)) translateY(50px) scaleY(10); opacity: 1; }
+            45% { transform: rotate(var(--angle)) translateY(400px) scaleY(150); opacity: 1; }
+            100% { transform: rotate(var(--angle)) translateY(3500px) scaleY(300); opacity: 0; }
+        }
+        
+        .warp-flash {
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            opacity: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+        
+        #warp-container.active .warp-flash {
+            animation: warpFlashAnim 0.7s ease-out forwards;
+        }
+        
+        @keyframes warpFlashAnim {
+            0% { opacity: 0; }
+            40% { opacity: 0; background: #4DEEEA; }
+            65% { opacity: 1; background: #ffffff; }
+            100% { opacity: 0; }
         }
 
     </style>
 </head>
-<body class="relative min-h-screen flex flex-col">
-
-    <!-- Sky Background Layer for Hue Rotation -->
-    <div id="sky-bg" class="fixed inset-0 pointer-events-none z-[-3]"></div>
-
-    <!-- School Background Image with Gradual Transparency (30% to 70%) -->
-    <div class="fixed inset-0 pointer-events-none z-[-2] bg-cover bg-center bg-no-repeat" style="
-        background-image: url('school.png');
-        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
-        mask-image: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
-    "></div>
+<body class="relative min-h-screen flex flex-col transition-all duration-700">
+    <!-- School Background Image Layer -->
+    <div id="school-bg" class="pointer-events-none"></div>
 
     <!-- Background Ambient Effects (Coruscant Sky Traffic) -->
     <div id="ambient-effects" class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
@@ -279,7 +261,7 @@
     <header class="w-full p-6 flex justify-between items-center z-10 border-b border-hr-gold/20 bg-hr-bg/50 backdrop-blur-sm">
         <div class="flex items-center gap-4">
             <!-- Logo with Minimal Neon Effect -->
-            <img src="logo.png" alt="Logo SKPK Miri" class="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-[0_0_12px_rgba(77,238,234,0.7)]">
+            <img src="logo.png" alt="Logo SKPK Miri" class="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-[0_0_12px_rgba(77,238,234,0.7)]" onerror="this.src='https://placehold.co/100x100/0A1B3F/4DEEEA?text=LOGO'">
             <div>
                 <h1 class="font-nfs text-2xl md:text-3xl text-hr-white tracking-widest drop-shadow-md">UNIT DISIPLIN <span class="text-hr-gold">SKPK MIRI</span></h1>
                 <p class="text-[10px] md:text-xs text-hr-gold/70 tracking-widest uppercase mt-1">Sistem Pengurusan Disiplin Murid • Hal Ehwal Murid (HEM)</p>
@@ -316,7 +298,7 @@
                         </button>
                     </li>
                     <li>
-                        <button class="nfs-menu-item" onclick="showSection('amalan-baik')">
+                        <button class="nfs-menu-item" onclick="handleNavigation(this, 'amalan_baik_system.html')">
                             <span class="relative z-10 flex items-center gap-3">
                                 <i class="fa-solid fa-star text-sm opacity-70"></i> Rekod Amalan Baik
                             </span>
@@ -368,23 +350,109 @@
     </div>
 
     <script>
-        // Function to handle switching between content sections
-        function showSection(sectionId) {
-            // 1. Remove active state from all menu buttons
-            const menuItems = document.querySelectorAll('.nfs-menu-item');
-            menuItems.forEach(item => {
-                item.classList.remove('active');
+        // Generate Warp stars on load
+        function initWarpDrive() {
+            const container = document.createElement('div');
+            container.id = 'warp-container';
+            
+            const flash = document.createElement('div');
+            flash.className = 'warp-flash';
+            container.appendChild(flash);
+
+            // Create 100 streaks for a dense warp effect
+            for (let i = 0; i < 100; i++) {
+                let streak = document.createElement('div');
+                streak.className = 'warp-streak';
+                let angle = Math.random() * 360; 
+                streak.style.setProperty('--angle', `${angle}deg`);
+                let delay = Math.random() * 0.1; // Very tight delay for a sudden burst
+                streak.style.animationDelay = `${delay}s`;
+                container.appendChild(streak);
+            }
+            document.body.appendChild(container);
+        }
+        
+        document.addEventListener('DOMContentLoaded', initWarpDrive);
+
+        // Core animation trigger for Warp
+        function doWarpTransition(callback) {
+            const container = document.getElementById('warp-container');
+            if (!container) {
+                if(callback) callback();
+                return;
+            }
+            
+            // Apply warp distortion to main UI elements
+            const uiElements = [
+                document.querySelector('main'),
+                document.querySelector('header'),
+                document.getElementById('school-bg'),
+                document.getElementById('ambient-effects')
+            ];
+            
+            uiElements.forEach(el => {
+                if(el) el.classList.add('warp-drive-ui');
             });
 
-            // 2. Add active state to clicked button
-            const clickedButton = document.querySelector(`button[onclick="showSection('${sectionId}')"]`);
-            if (clickedButton) {
-                clickedButton.classList.add('active');
-            }
+            container.classList.add('active');
+            
+            // Wait for flash peak (approx 600ms) to do the actual data/page switch
+            setTimeout(() => {
+                if (callback) callback();
+                
+                // Fade screen back in quickly
+                setTimeout(() => {
+                    container.classList.remove('active');
+                    uiElements.forEach(el => {
+                        if(el) el.classList.remove('warp-drive-ui');
+                    });
+                }, 100);
+            }, 600);
+        }
 
-            // 3. Change sky hue dynamically
-            const randomHue = Math.floor(Math.random() * 360);
-            document.body.style.setProperty('--sky-hue', `${randomHue}deg`);
+        // Function to handle switching between menu items
+        function showSection(sectionId) {
+            doWarpTransition(() => {
+                // 1. Remove active state from all menu buttons
+                const menuItems = document.querySelectorAll('.nfs-menu-item');
+                menuItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // 2. Add active state to clicked button
+                const clickedButton = document.querySelector(`button[onclick="showSection('${sectionId}')"]`);
+                if (clickedButton) {
+                    clickedButton.classList.add('active');
+                }
+
+                // 3. Change sky hue dynamically
+                const randomHue = Math.floor(Math.random() * 360);
+                document.body.style.setProperty('--sky-hue', `${randomHue}deg`);
+            });
+        }
+
+        // Function to handle navigation to external pages
+        function handleNavigation(buttonEl, url) {
+            doWarpTransition(() => {
+                // Remove active from all
+                document.querySelectorAll('.nfs-menu-item').forEach(item => item.classList.remove('active'));
+                // Add active to this button
+                buttonEl.classList.add('active');
+                // Hue change
+                document.body.style.setProperty('--sky-hue', `${Math.floor(Math.random() * 360)}deg`);
+                
+                try {
+                    // Check if we are in an iframe (preview environment)
+                    if(window.self !== window.top) {
+                        showNotification("Simulasi Navigasi: Sila buka fail " + url + " di editor anda.");
+                    } else {
+                        window.location.href = url;
+                    }
+                } catch (error) {
+                    console.warn("Navigasi disekat:", error);
+                    showNotification("Simulasi Navigasi: Sila buka fail " + url + " di editor anda.");
+                }
+            });
         }
 
         // Live Clock and Date for Main Header

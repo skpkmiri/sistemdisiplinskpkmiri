@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rekod Amalan Baik - High Republic x Persona</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --hr-gold: #D4AF37;
+            --hr-gold-light: #F3E5AB;
+            --hr-teal: #0D2818;
+            --hr-white: #FDFBF7;
+            --p6-accent: #04E762; /* Vibrant green for Persona pop */
+            --bg-dark: #051614;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--hr-white);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        #bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -3;
+            background-image: url('school2.png');
+            background-size: cover;
+            background-position: center;
+            /* Gradient mask for smooth 30% to 70% opacity blending */
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+        }
+
+        h1, h2, h3, .cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Persona UI Elements */
+        .persona-bg-text {
+            position: fixed;
+            top: 10%;
+            left: -5%;
+            font-size: 15vw;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            color: rgba(212, 175, 55, 0.03);
+            white-space: nowrap;
+            transform: rotate(-10deg);
+            z-index: -1;
+            pointer-events: none;
+            line-height: 0.8;
+        }
+
+        .clip-diagonal {
+            clip-path: polygon(20px 0, 100% 0, calc(100% - 20px) 100%, 0 100%);
+        }
+
+        .clip-panel {
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+        }
+
+        .btn-persona {
+            position: relative;
+            background: var(--hr-gold);
+            color: var(--hr-teal);
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            clip-path: polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%);
+        }
+
+        .btn-persona:hover {
+            background: var(--p6-accent);
+            color: #000;
+            transform: scale(1.05) skewX(-5deg);
+            box-shadow: 0 0 15px var(--p6-accent);
+        }
+
+        .input-persona {
+            background: rgba(253, 251, 247, 0.05);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            color: var(--hr-white);
+            transition: all 0.3s;
+            clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+        }
+
+        .input-persona:focus {
+            background: rgba(253, 251, 247, 0.1);
+            border-color: var(--hr-gold);
+            outline: none;
+            box-shadow: -5px 5px 0px rgba(212, 175, 55, 0.2);
+        }
+        
+        select option {
+            background: var(--bg-dark);
+            color: var(--hr-white);
+        }
+
+        /* Form Container Styling */
+        .glass-panel {
+            background: rgba(13, 40, 24, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-left: 5px solid var(--hr-gold);
+        }
+
+        /* Signature Pads */
+        .signature-wrapper {
+            background: #fff;
+            border: 3px solid var(--hr-gold);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        canvas.signature-pad {
+            width: 100%;
+            height: 150px;
+            cursor: crosshair;
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px) skewX(10deg); }
+            to { opacity: 1; transform: translateX(0) skewX(0); }
+        }
+        .animate-enter {
+            animation: slideInRight 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* PDF Template (Hidden from UI) */
+        #pdf-template {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            width: 794px; /* A4 width at 96 DPI */
+            min-height: 1123px; /* A4 height */
+            background: white;
+            color: black;
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+            z-index: -100;
+        }
+        
+        .pdf-header { text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .pdf-signatures { display: flex; justify-content: space-between; margin-top: 40px; }
+        .pdf-sig-box { width: 30%; text-align: center; }
+        .pdf-sig-img { max-width: 100%; height: 80px; object-fit: contain; border-bottom: 1px solid #000; margin-bottom: 5px;}
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--hr-gold); }
+
+        /* Glitch Effect */
+        #glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            z-index: 99999;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .glitch-active {
+            pointer-events: all !important;
+            animation: glitch-anim-screen 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes glitch-anim-screen {
+            0% { opacity: 0; clip-path: inset(0 0 0 0); background-color: var(--p6-accent); }
+            10% { opacity: 1; clip-path: inset(10% 0 80% 0); background-color: var(--hr-gold); }
+            20% { clip-path: inset(80% 0 10% 0); background-color: #ff003c; }
+            30% { clip-path: inset(40% 0 40% 0); background-color: var(--p6-accent); }
+            40% { clip-path: inset(0 0 0 0); background-color: #000; transform: scale(1.05); }
+            50% { opacity: 1; background-color: #000; }
+            60% { clip-path: inset(20% 0 50% 0); background-color: var(--hr-gold); transform: skew(-20deg); }
+            70% { clip-path: inset(0 0 0 0); background-color: #000; transform: skew(0deg); }
+            100% { opacity: 1; background-color: #000; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-5px, 5px) rotate(-1deg); }
+            40% { transform: translate(5px, -5px) rotate(1deg); }
+            60% { transform: translate(-5px, -5px) rotate(-1deg); }
+            80% { transform: translate(5px, 5px) rotate(1deg); }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col relative">
+
+    <!-- Glitch Overlay -->
+    <div id="glitch-overlay"></div>
+
+    <div id="bg-image"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Background text for Persona vibe -->
+    <div class="persona-bg-text">
+        REKOD<br>AMALAN<br>BAIK
+    </div>
+
+    <header class="p-6 flex flex-col md:flex-row justify-between items-center border-b border-[rgba(212,175,55,0.2)] bg-[rgba(5,22,20,0.8)] backdrop-blur-md sticky top-0 z-50">
+        <div class="flex items-center gap-4 mb-4 md:mb-0">
+            <img src="logo.png" alt="SKPK Miri Logo" class="w-14 h-14 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
+            <div>
+                <h1 class="text-2xl font-bold cinzel text-[#D4AF37] tracking-wider">SISTEM AMALAN BAIK</h1>
+                <p class="text-xs text-gray-400 tracking-widest uppercase">Unit Disiplin SKPK Miri</p>
+            </div>
+        </div>
+        
+        <nav class="flex gap-4">
+            <button onclick="switchTab('form-tab')" id="nav-form" class="btn-persona px-6 py-2 text-sm shadow-lg">Borang Rekod</button>
+            <button onclick="switchTab('list-tab')" id="nav-list" class="btn-persona px-6 py-2 text-sm bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0D2818]">Senarai Merit</button>
+            <button onclick="triggerGlitchTransition()" class="btn-persona px-6 py-2 text-sm bg-transparent border-2 border-[#ff003c] text-[#ff003c] hover:bg-[#ff003c] hover:text-white ml-2 md:ml-6">Kembali</button>
+        </nav>
+    </header>
+
+    <main class="flex-grow p-4 md:p-8 relative z-10 w-full max-w-7xl mx-auto">
+        
+        <!-- TAB 1: FORM -->
+        <section id="form-tab" class="animate-enter space-y-6">
+            <div class="glass-panel clip-panel p-6 md:p-8">
+                <h2 class="text-3xl cinzel text-[#D4AF37] mb-6 flex items-center gap-3">
+                    <span class="inline-block w-2 h-8 bg-[#04E762] skew-x-[-15deg]"></span>
+                    Laporan Amalan Baik Baharu
+                </h2>
+
+                <form id="amalan-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- 1. Student Name & Class -->
+                    <div class="md:col-span-1 space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">1. Nama Murid</label>
+                        <select id="student-select" required class="input-persona w-full p-3 text-lg cursor-pointer">
+                            <option value="">-- Memuat turun senarai dari CSV... --</option>
+                        </select>
+                        <input type="hidden" id="student-name">
+                    </div>
+                    <div class="md:col-span-1 space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">Kelas</label>
+                        <input type="text" id="student-class" readonly class="input-persona w-full p-3 text-lg text-[#D4AF37] font-bold bg-[rgba(0,0,0,0.3)] cursor-not-allowed border-[rgba(212,175,55,0.1)]" placeholder="Pilih nama murid dahulu">
+                    </div>
+
+                    <!-- 2 & 3. Dates -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">2. Tarikh Direkodkan</label>
+                        <input type="date" id="date-recorded" required class="input-persona w-full p-3" readonly>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">3. Tarikh Kejadian</label>
+                        <input type="date" id="date-incident" required class="input-persona w-full p-3">
+                    </div>
+
+                    <!-- 4. Location -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">4. Tempat</label>
+                        <select id="location" required class="input-persona w-full p-3">
+                            <option value="Dalam Sekolah">Dalam Sekolah</option>
+                            <option value="Luar Sekolah">Luar Sekolah</option>
+                        </select>
+                    </div>
+
+                    <!-- 8. Reporter (Moved up for better flow) -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">8. Nama Pelapor</label>
+                        <select id="reporter-name" required class="input-persona w-full p-3">
+                            <option value="">-- Memilih dari senarai --</option>
+                        </select>
+                    </div>
+
+                    <!-- 5. Category & Marks -->
+                    <div class="md:col-span-2 space-y-4 p-4 border border-[rgba(212,175,55,0.2)] bg-[rgba(0,0,0,0.3)]">
+                        <h3 class="text-xl cinzel text-[#D4AF37]">5. Kategori dan Pecahan Amalan Baik</h3>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase">Kategori Utama</label>
+                            <select id="category-select" required class="input-persona w-full p-3 font-bold text-[#D4AF37]">
+                                <option value="">-- Pilih Kategori --</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase">Pecahan Amalan</label>
+                            <select id="subcategory-select" required class="input-persona w-full p-3" disabled>
+                                <option value="">-- Pilih Kategori Utama Dahulu --</option>
+                            </select>
+                        </div>
+
+                        <div id="mark-selection-container" class="hidden bg-[rgba(4,231,98,0.1)] p-4 border-l-4 border-[#04E762]">
+                            <label class="block text-sm font-bold text-[#04E762] mb-2 uppercase">Sila Pilih Markah Merit (Julat Ditentukan):</label>
+                            <div id="mark-radios" class="flex gap-4">
+                                <!-- Radios injected via JS -->
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 mt-2">
+                            <span class="text-gray-400 uppercase text-sm">Markah Merit Auto:</span>
+                            <span id="display-mark" class="text-3xl font-black text-[#D4AF37]">0</span>
+                            <input type="hidden" id="final-mark" value="0">
+                        </div>
+                    </div>
+
+                    <!-- 6. Teacher Description -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">6. Keterangan Guru</label>
+                        <textarea id="description" rows="3" class="input-persona w-full p-3" placeholder="Sila nyatakan butiran kejadian..."></textarea>
+                    </div>
+
+                    <!-- 7. Evidence -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">7. Eviden (Gambar/Video)</label>
+                        <input type="file" id="evidence-file" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:clip-diagonal file:border-0 file:text-sm file:font-bold file:bg-[#D4AF37] file:text-[#0D2818] hover:file:bg-[#04E762] hover:file:text-black transition-all cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">*Hanya imej akan disertakan dalam PDF. Fail besar mungkin tidak disimpan di pangkalan data.</p>
+                    </div>
+
+                    <!-- 9 & 10. Signatures -->
+                    <div class="md:col-span-2 mt-6">
+                        <h3 class="text-xl cinzel text-[#D4AF37] mb-4 border-b border-[#D4AF37] pb-2">Tandatangan Pengesahan</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">9. Pelapor</label>
+                                <div class="signature-wrapper"><canvas id="sig-reporter" class="signature-pad"></canvas></div>
+                                <button type="button" onclick="clearPad('reporter')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">10. Disemak Oleh<br><span class="text-[10px] text-gray-500">Ling Mee Choo (PK HEM)</span></label>
+                                <div class="signature-wrapper"><canvas id="sig-pk" class="signature-pad"></canvas></div>
+                                <button type="button" onclick="clearPad('pk')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">10. Disahkan Oleh<br><span class="text-[10px] text-gray-500">Aziz bin Tahir (Guru Besar)</span></label>
+                                <div class="signature-wrapper"><canvas id="sig-gb" class="signature-pad"></canvas></div>
+                                <button type="button" onclick="clearPad('gb')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="md:col-span-2 flex flex-col md:flex-row gap-4 mt-8">
+                        <button type="submit" class="btn-persona flex-1 py-4 text-lg">Simpan Rekod & Jana PDF</button>
+                        <button type="button" onclick="resetForm()" class="px-8 py-4 bg-transparent border-2 border-gray-500 text-gray-300 hover:bg-gray-800 font-bold uppercase clip-diagonal transition-colors">Batal</button>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: RECORD LIST -->
+        <section id="list-tab" class="hidden animate-enter space-y-6">
+            <div class="glass-panel clip-panel p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
+                    <h2 class="text-3xl cinzel text-[#D4AF37] flex items-center gap-3">
+                        <span class="inline-block w-2 h-8 bg-[#04E762] skew-x-[-15deg]"></span>
+                        Senarai Merit Murid
+                    </h2>
+                    <div class="w-full md:w-1/3">
+                        <input type="text" id="search-student" placeholder="Tapis nama murid..." class="input-persona w-full p-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[rgba(212,175,55,0.1)] text-[#D4AF37] uppercase text-sm border-b-2 border-[#D4AF37]">
+                                <th class="p-4 font-bold">Nama Murid</th>
+                                <th class="p-4 font-bold">Kelas</th>
+                                <th class="p-4 font-bold text-center">Jumlah Merit (Terkumpul)</th>
+                                <th class="p-4 font-bold text-right">Bil. Kes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merit-table-body" class="text-gray-200">
+                            <tr>
+                                <td colspan="4" class="p-8 text-center text-gray-500">Memuatkan data dari pangkalan...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- HIDDEN PDF TEMPLATE (A4 format, clean styling for print) -->
+    <div id="pdf-template">
+        <div class="pdf-header">
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0;">LAPORAN AMALAN BAIK MURID</h1>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">Sistem Pengurusan Disiplin & Sahsiah</p>
+        </div>
+        
+        <table class="pdf-table">
+            <tr>
+                <td width="30%"><strong>Nama Murid</strong></td>
+                <td width="70%" id="pdf-nama"></td>
+            </tr>
+            <tr>
+                <td><strong>Kelas</strong></td>
+                <td id="pdf-kelas"></td>
+            </tr>
+            <tr>
+                <td><strong>Tarikh Direkodkan</strong></td>
+                <td id="pdf-tarikh-rekod"></td>
+            </tr>
+            <tr>
+                <td><strong>Tarikh Kejadian</strong></td>
+                <td id="pdf-tarikh-kejadian"></td>
+            </tr>
+            <tr>
+                <td><strong>Tempat</strong></td>
+                <td id="pdf-tempat"></td>
+            </tr>
+            <tr>
+                <td><strong>Kategori</strong></td>
+                <td id="pdf-kategori"></td>
+            </tr>
+            <tr>
+                <td><strong>Pecahan Amalan</strong></td>
+                <td id="pdf-pecahan"></td>
+            </tr>
+            <tr>
+                <td><strong>Markah Merit</strong></td>
+                <td id="pdf-markah"></td>
+            </tr>
+            <tr>
+                <td><strong>Keterangan Guru</strong></td>
+                <td id="pdf-keterangan"></td>
+            </tr>
+            <tr>
+                <td><strong>Nama Pelapor</strong></td>
+                <td id="pdf-pelapor"></td>
+            </tr>
+        </table>
+
+        <div style="margin-top: 20px;">
+            <strong>Eviden:</strong>
+            <div id="pdf-evidence-container" style="margin-top: 10px; max-height: 200px; overflow: hidden; display: none;">
+                <img id="pdf-evidence-img" src="" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+            </div>
+            <p id="pdf-evidence-none" style="font-style: italic; color: #666;">Tiada eviden gambar disertakan.</p>
+        </div>
+
+        <div class="pdf-signatures">
+            <div class="pdf-sig-box">
+                <img id="pdf-sig-img-reporter" class="pdf-sig-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                <div style="font-size: 12px; font-weight: bold;">Tandatangan Pelapor</div>
+                <div style="font-size: 10px;" id="pdf-nama-pelapor-bawah"></div>
+            </div>
+            <div class="pdf-sig-box">
+                <img id="pdf-sig-img-pk" class="pdf-sig-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                <div style="font-size: 12px; font-weight: bold;">Disemak Oleh</div>
+                <div style="font-size: 10px;">Ling Mee Choo<br>PK Hal Ehwal Murid</div>
+            </div>
+            <div class="pdf-sig-box">
+                <img id="pdf-sig-img-gb" class="pdf-sig-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                <div style="font-size: 12px; font-weight: bold;">Disahkan Oleh</div>
+                <div style="font-size: 10px;">Aziz bin Tahir<br>Guru Besar</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment variables
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
+        let db, auth, currentUser;
+
+        async function initFirebase() {
+            try {
+                if (typeof __firebase_config !== 'undefined') {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    if (typeof __initial_auth_token !== 'undefined') {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    currentUser = auth.currentUser;
+                    console.log("Firebase Auth Success:", currentUser.uid);
+                    
+                    // Load data for dashboard
+                    loadRecords();
+                } else {
+                    console.warn("Firebase config not found. App will run in local-only mode.");
+                }
+            } catch (e) {
+                console.error("Firebase Init Error:", e);
+            }
+        }
+
+        const amalanCategories = {
+            "ADAB DAN BERBUDI BAHASA": {
+                items: [
+                    "Menghargai diri",
+                    "Menghargai orang lain serta menjaga sensitiviti antara kaum dan etnik",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [2, 2] 
+            },
+            "JATI DIRI": {
+                items: [
+                    "Menzahirkan semangat patriotisme terhadap sekolah dan negara",
+                    "Mempunyai daya tahan diri secara fizikal dan mental yang baik",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [3, 3] 
+            },
+            "TOLONG-MENOLONG": {
+                items: [
+                    "Menawarkan dan memberi bantuan dalam bentuk tenaga, kepakaran, kemahiran atau khidmat nasihat",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [2, 3] 
+            },
+            "KEBERSIHAN, KECERIAAN DAN KELESTARIAN SEKOLAH": {
+                items: [
+                    "Menjaga kelestarian, kebersihan dan menggalakkan keceriaan sekolah",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [2, 2]
+            },
+            "KEPIMPINAN": {
+                items: [
+                    "Merancang, mengurus, memimpin dan mengawal sesuatu aktiviti",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [4, 5] 
+            },
+            "KEBERTANGGUNGJAWABAN DAN KEPRIHATINAN": {
+                items: [
+                    "Bertanggungjawab terhadap kesan dan akibat sesuatu tindakan",
+                    "Prihatin memaklumkan kes salah laku di dalam dan di luar sekolah",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [3, 4]
+            },
+            "KEHADIRAN AKTIVITI": {
+                items: [
+                    "Menghadirkan diri secara konsisten ke sekolah/aktiviti",
+                    "Menunjukkan peningkatan kehadiran",
+                    "Melibatkan diri dalam aktiviti atau program sekolah",
+                    "Menepati masa dalam aktiviti atau program",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [1, 2]
+            },
+            "PENAMPILAN DIRI": {
+                items: [
+                    "Memakai pakaian seragam/sukan/unit beruniform yang kemas",
+                    "Menjaga kekemasan diri secara menyeluruh",
+                    "Menunjukkan kesediaan diri untuk belajar",
+                    "Menjadi pendorong dan suri teladan kepada orang lain"
+                ],
+                marks: [1, 1]
+            }
+        };
+
+        // UI State & Instances
+        let sigPadReporter, sigPadPk, sigPadGb;
+        let studentsData = [];
+        let base64Evidence = "";
+
+        // Elements
+        const catSelect = document.getElementById('category-select');
+        const subSelect = document.getElementById('subcategory-select');
+        const markContainer = document.getElementById('mark-selection-container');
+        const markRadios = document.getElementById('mark-radios');
+        const finalMarkInput = document.getElementById('final-mark');
+        const displayMark = document.getElementById('display-mark');
+        const evidenceFile = document.getElementById('evidence-file');
+
+        window.onload = async () => {
+            initAnimatedBackground();
+
+            await initFirebase();
+
+            // Set today's date
+            document.getElementById('date-recorded').valueAsDate = new Date();
+            
+            // Init Signatures
+            const canvasOpts = { backgroundColor: 'rgb(255, 255, 255)' };
+            sigPadReporter = new SignaturePad(document.getElementById('sig-reporter'), canvasOpts);
+            sigPadPk = new SignaturePad(document.getElementById('sig-pk'), canvasOpts);
+            sigPadGb = new SignaturePad(document.getElementById('sig-gb'), canvasOpts);
+
+            const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv";
+            
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processCSVData(results.data);
+                },
+                error: function(err) {
+                    console.error("CSV Parse Error:", err);
+                    document.getElementById('student-select').innerHTML = '<option value="">Ralat memuat senarai. Sila isikan manual jika perlu (hubungi admin).</option>';
+                }
+            });
+
+            // Populate Categories
+            Object.keys(amalanCategories).forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                catSelect.appendChild(opt);
+            });
+
+            // Handle Evidence file conversion to base64 for PDF
+            evidenceFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(readerEvent) {
+                        base64Evidence = readerEvent.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    base64Evidence = "";
+                }
+            });
+        };
+
+        function processCSVData(data) {
+            const studentSelect = document.getElementById('student-select');
+            const reporterSelect = document.getElementById('reporter-name');
+            studentSelect.innerHTML = '<option value="">-- Pilih Murid --</option>';
+            reporterSelect.innerHTML = '<option value="">-- Pilih Guru Pelapor --</option>';
+
+            const teachers = new Set();
+            studentsData = [];
+
+            // Guessing column names dynamically since we don't know exact CSV structure
+            if (data.length > 0) {
+                const keys = Object.keys(data[0]);
+                // Very basic heuristic: find keys that might mean Name, Class, Teacher
+                let nameKey = keys.find(k => k.toLowerCase().includes('nama') && !k.toLowerCase().includes('guru')) || keys[0];
+                let classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan')) || keys[1] || "";
+                let teacherKey = keys.find(k => k.toLowerCase().includes('guru') || k.toLowerCase().includes('pelapor'));
+
+                data.forEach(row => {
+                    if (row[nameKey]) {
+                        const name = row[nameKey].trim();
+                        const className = classKey ? (row[classKey] || "").trim() : "";
+                        studentsData.push({ name, class: className });
+                        
+                        const opt = document.createElement('option');
+                        opt.value = JSON.stringify({ name, class: className });
+                        opt.textContent = name;
+                        studentSelect.appendChild(opt);
+                    }
+                    
+                    if (teacherKey && row[teacherKey]) {
+                        teachers.add(row[teacherKey].trim());
+                    }
+                });
+
+                // Populate teachers if column found, else mock some or use students column if it's a mixed list
+                if (teachers.size > 0) {
+                    teachers.forEach(t => {
+                        if (t) {
+                            const opt = document.createElement('option');
+                            opt.value = t;
+                            opt.textContent = t;
+                            reporterSelect.appendChild(opt);
+                        }
+                    });
+                } else {
+                    // Fallback generic teachers
+                    ['Guru A', 'Guru B', 'Guru C'].forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t;
+                        opt.textContent = t;
+                        reporterSelect.appendChild(opt);
+                    });
+                }
+            }
+        }
+
+        // Category Selection Logic
+        catSelect.addEventListener('change', (e) => {
+            const cat = e.target.value;
+            subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
+            markContainer.classList.add('hidden');
+            setMark(0);
+
+            if (cat && amalanCategories[cat]) {
+                subSelect.disabled = false;
+                amalanCategories[cat].items.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item;
+                    opt.textContent = item;
+                    subSelect.appendChild(opt);
+                });
+            } else {
+                subSelect.disabled = true;
+            }
+        });
+
+        // Subcategory Selection Logic
+        subSelect.addEventListener('change', (e) => {
+            const cat = catSelect.value;
+            if (!cat || !e.target.value) {
+                markContainer.classList.add('hidden');
+                setMark(0);
+                return;
+            }
+
+            const marks = amalanCategories[cat].marks;
+            if (marks[0] === marks[1]) {
+                // Fixed mark
+                markContainer.classList.add('hidden');
+                setMark(marks[0]);
+            } else {
+                // Range, need user selection
+                markContainer.classList.remove('hidden');
+                markRadios.innerHTML = '';
+                for (let i = marks[0]; i <= marks[1]; i++) {
+                    const label = document.createElement('label');
+                    label.className = "flex items-center gap-2 cursor-pointer bg-[rgba(255,255,255,0.1)] px-4 py-2 rounded-full hover:bg-[rgba(4,231,98,0.2)] transition";
+                    label.innerHTML = `
+                        <input type="radio" name="merit_choice" value="${i}" class="w-4 h-4 text-[#04E762] bg-gray-800 border-gray-600 focus:ring-[#04E762]" required onchange="window.setMark(${i})">
+                        <span class="text-white font-bold">${i} Markah</span>
+                    `;
+                    markRadios.appendChild(label);
+                }
+                setMark(0); // Reset until chosen
+            }
+        });
+
+        window.setMark = (val) => {
+            finalMarkInput.value = val;
+            displayMark.textContent = val;
+        }
+
+        window.clearPad = (type) => {
+            if (type === 'reporter' && sigPadReporter) sigPadReporter.clear();
+            else if (type === 'pk' && sigPadPk) sigPadPk.clear();
+            else if (type === 'gb' && sigPadGb) sigPadGb.clear();
+        }
+
+        // Student Data Split
+        document.getElementById('student-select').addEventListener('change', (e) => {
+            if(e.target.value) {
+                const data = JSON.parse(e.target.value);
+                document.getElementById('student-name').value = data.name;
+                document.getElementById('student-class').value = data.class;
+            } else {
+                document.getElementById('student-name').value = '';
+                document.getElementById('student-class').value = '';
+            }
+        });
+
+        document.getElementById('amalan-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (parseInt(finalMarkInput.value) === 0) {
+                alert("Sila lengkapkan pilihan kategori untuk menjana markah merit.");
+                return;
+            }
+
+            if (sigPadReporter.isEmpty() || sigPadPk.isEmpty() || sigPadGb.isEmpty()) {
+                alert("Sila lengkapkan ketiga-tiga tandatangan pengesahan.");
+                return;
+            }
+
+            // Gather Data
+            const formData = {
+                studentName: document.getElementById('student-name').value,
+                studentClass: document.getElementById('student-class').value,
+                dateRecorded: document.getElementById('date-recorded').value,
+                dateIncident: document.getElementById('date-incident').value,
+                location: document.getElementById('location').value,
+                reporter: document.getElementById('reporter-name').value,
+                category: document.getElementById('category-select').value,
+                subcategory: document.getElementById('subcategory-select').value,
+                mark: parseInt(finalMarkInput.value),
+                description: document.getElementById('description').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // Save to Firebase (Public Data Rule 1)
+            if (db && currentUser) {
+                try {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
+                    await addDoc(colRef, formData);
+                    console.log("Record saved to Firestore");
+                } catch (err) {
+                    console.error("Error saving to Firestore:", err);
+                }
+            }
+
+            // Generate PDF
+            generatePDF(formData);
+        });
+
+        async function generatePDF(data) {
+            const btn = document.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = "Menjana PDF... Sila Tunggu";
+            btn.disabled = true;
+
+            // Populate Template
+            document.getElementById('pdf-nama').textContent = data.studentName;
+            document.getElementById('pdf-kelas').textContent = data.studentClass;
+            document.getElementById('pdf-tarikh-rekod').textContent = data.dateRecorded;
+            document.getElementById('pdf-tarikh-kejadian').textContent = data.dateIncident;
+            document.getElementById('pdf-tempat').textContent = data.location;
+            document.getElementById('pdf-kategori').textContent = data.category;
+            document.getElementById('pdf-pecahan').textContent = data.subcategory;
+            document.getElementById('pdf-markah').textContent = data.mark;
+            document.getElementById('pdf-keterangan').textContent = data.description || "Tiada";
+            document.getElementById('pdf-pelapor').textContent = data.reporter;
+            document.getElementById('pdf-nama-pelapor-bawah').textContent = data.reporter;
+
+            // Handle Evidence Image
+            const evContainer = document.getElementById('pdf-evidence-container');
+            const evImg = document.getElementById('pdf-evidence-img');
+            const evNone = document.getElementById('pdf-evidence-none');
+            
+            if (base64Evidence) {
+                evImg.src = base64Evidence;
+                evContainer.style.display = 'block';
+                evNone.style.display = 'none';
+            } else {
+                evContainer.style.display = 'none';
+                evNone.style.display = 'block';
+            }
+
+            // Populate Signatures
+            document.getElementById('pdf-sig-img-reporter').src = sigPadReporter.toDataURL();
+            document.getElementById('pdf-sig-img-pk').src = sigPadPk.toDataURL();
+            document.getElementById('pdf-sig-img-gb').src = sigPadGb.toDataURL();
+
+            // Wait a tick for images to load into DOM
+            await new Promise(r => setTimeout(r, 500));
+
+            // html2canvas
+            const element = document.getElementById('pdf-template');
+            
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Higher resolution
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: 794 // Force A4 width context
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                
+                // jsPDF A4 portrait
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`Amalan_Baik_${data.studentName.replace(/\s+/g, '_')}.pdf`);
+                
+                // Switch to list and reload
+                resetForm();
+                loadRecords();
+                switchTab('list-tab');
+
+            } catch (err) {
+                console.error("PDF Gen Error:", err);
+                alert("Ralat semasa menjana PDF.");
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function loadRecords() {
+            if (!db || !currentUser) return;
+            
+            const tbody = document.getElementById('merit-table-body');
+            
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
+                // No complex queries as per Rule 2, fetching all and sorting locally
+                const q = query(colRef);
+                const querySnapshot = await getDocs(q);
+                
+                const aggregated = {};
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const key = `${data.studentName}|${data.studentClass}`;
+                    
+                    if (!aggregated[key]) {
+                        aggregated[key] = {
+                            name: data.studentName,
+                            class: data.studentClass,
+                            totalMark: 0,
+                            count: 0
+                        };
+                    }
+                    aggregated[key].totalMark += data.mark || 0;
+                    aggregated[key].count += 1;
+                });
+
+                // Convert to array and sort by marks descending
+                window.allRecords = Object.values(aggregated).sort((a, b) => b.totalMark - a.totalMark);
+                renderTable(window.allRecords);
+
+            } catch (err) {
+                console.error("Error loading records:", err);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Ralat memuat data pangkalan.</td></tr>`;
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('merit-table-body');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Tiada rekod dijumpai.</td></tr>`;
+                return;
+            }
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-[rgba(212,175,55,0.1)] hover:bg-[rgba(255,255,255,0.05)] transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-white">${row.name}</td>
+                    <td class="p-4 text-gray-300">${row.class || '-'}</td>
+                    <td class="p-4 text-center font-black text-[#04E762] text-xl">${row.totalMark}</td>
+                    <td class="p-4 text-right text-gray-400">${row.count} rekod</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Search Filter Logic
+        document.getElementById('search-student').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if (window.allRecords) {
+                const filtered = window.allRecords.filter(r => 
+                    r.name.toLowerCase().includes(term) || 
+                    (r.class && r.class.toLowerCase().includes(term))
+                );
+                renderTable(filtered);
+            }
+        });
+
+        // Utilities
+        window.switchTab = (tabId) => {
+            document.getElementById('form-tab').classList.add('hidden');
+            document.getElementById('list-tab').classList.add('hidden');
+            
+            document.getElementById('nav-form').classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
+            document.getElementById('nav-form').classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
+            
+            document.getElementById('nav-list').classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
+            document.getElementById('nav-list').classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
+
+            const activeBtn = tabId === 'form-tab' ? 'nav-form' : 'nav-list';
+            document.getElementById(activeBtn).classList.remove('bg-transparent', 'text-[#D4AF37]');
+            document.getElementById(activeBtn).classList.add('bg-[#D4AF37]', 'text-[#0D2818]');
+
+            document.getElementById(tabId).classList.remove('hidden');
+        };
+
+        window.resetForm = () => {
+            document.getElementById('amalan-form').reset();
+            sigPadReporter.clear();
+            sigPadPk.clear();
+            sigPadGb.clear();
+            base64Evidence = "";
+            setMark(0);
+            markContainer.classList.add('hidden');
+            subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
+            subSelect.disabled = true;
+            document.getElementById('date-recorded').valueAsDate = new Date();
+        };
+
+        window.triggerGlitchTransition = () => {
+            const overlay = document.getElementById('glitch-overlay');
+            overlay.classList.add('glitch-active');
+            
+            // Apply slight shake to the main body content
+            document.body.style.animation = "shake 0.4s ease-in-out";
+
+            setTimeout(() => {
+                try {
+                    // This works perfectly on a real server/local folder
+                    window.location.href = 'index.html';
+                } catch (e) {
+                    // Fallback for sandboxed preview environments that block relative URLs
+                    console.warn("Sandboxed environment detected. Falling back to page reload.");
+                    window.location.reload();
+                }
+            }, 600); // Wait for the glitch animation to complete before redirecting
+        };
+
+        // Initialize active tab styling properly on load
+        window.switchTab('form-tab');
+
+        function initAnimatedBackground() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 1.5;
+                    this.vy = (Math.random() - 0.5) * 1.5;
+                    this.size = Math.random() * 2 + 0.5;
+                    // Colors matching the High Republic theme (Gold and Teal variations)
+                    const colors = ['rgba(212, 175, 55, 0.6)', 'rgba(4, 231, 98, 0.4)', 'rgba(13, 40, 24, 0.8)'];
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Wrap around edges
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                    if (this.y > canvas.height) this.y = 0;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            // Create particles
+            const particleCount = Math.min(100, window.innerWidth / 10);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw connecting lines (network effect)
+                ctx.lineWidth = 0.5;
+                for(let i=0; i<particles.length; i++) {
+                    for(let j=i+1; j<particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if(distance < 120) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(212, 175, 55, ${0.2 * (1 - distance/120)})`;
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+    </script>
+</body>
+</html>
