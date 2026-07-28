@@ -83,6 +83,23 @@
             0% { text-shadow: 0 0 10px rgba(255,255,255,0.2), 0 0 20px rgba(204,0,0,0.4); }
             100% { text-shadow: 0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(204,0,0,0.9), 0 0 40px rgba(204,0,0,0.4); }
         }
+
+        @keyframes laserGlitch {
+            0% { clip-path: inset(50% 0 50% 0); opacity: 0.8; }
+            20% { clip-path: inset(10% 0 60% 0); opacity: 1; transform: translateX(-10px); background-color: #ff0000; }
+            40% { clip-path: inset(80% 0 5% 0); opacity: 0.9; transform: translateX(10px); background-color: #cc0000; }
+            60% { clip-path: inset(30% 0 30% 0); opacity: 1; transform: translateX(-5px); background-color: #8b0000; }
+            80% { clip-path: inset(0% 0 80% 0); opacity: 0.9; transform: translateX(5px); background-color: #ff3333; }
+            100% { clip-path: inset(0 0 0 0); opacity: 1; transform: translateX(0); background-color: #0a0a0a; }
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translateX(0); filter: none; }
+            20% { transform: translateX(-5px) skewX(-2deg); filter: hue-rotate(90deg) contrast(1.5); }
+            40% { transform: translateX(5px) skewX(2deg); filter: hue-rotate(-90deg) contrast(1.5); }
+            60% { transform: translateX(-5px) skewX(-2deg); filter: invert(0.2) drop-shadow(0 0 10px red); }
+            80% { transform: translateX(5px) skewX(2deg); filter: contrast(2) drop-shadow(0 0 20px red); }
+        }
         
         /* RDR2 Menu Style Navigation */
         .rdr2-nav {
@@ -192,7 +209,7 @@
 
     <header class="flex flex-col items-center justify-center py-6 bg-imperial-black border-b border-imperial-darkgray relative overflow-hidden">
         
-        <button onclick="history.back()" class="absolute top-4 left-4 md:top-6 md:left-8 z-50 flex items-center space-x-2 text-imperial-lightgray hover:text-imperial-red transition-all group cursor-pointer">
+        <button onclick="goBackWithGlitch()" class="absolute top-4 left-4 md:top-6 md:left-8 z-50 flex items-center space-x-2 text-imperial-lightgray hover:text-imperial-red transition-all group cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -357,13 +374,13 @@
                             </div>
                             <!-- PK HEM Signature -->
                             <div class="space-y-2 text-center">
-                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disemak Oleh:<br><span class="text-imperial-white font-imperial text-sm">Ling Mee Choo (PK HEM)</span></label>
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disemak Oleh (Pilihan):<br><span class="text-imperial-white font-imperial text-sm">Ling Mee Choo (PK HEM)</span></label>
                                 <canvas id="pad-pk" class="signature-canvas"></canvas>
                                 <button type="button" onclick="clearPad('pk')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
                             </div>
                             <!-- Guru Besar Signature -->
                             <div class="space-y-2 text-center">
-                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disahkan Oleh:<br><span class="text-imperial-white font-imperial text-sm">Aziz bin Tahir (Guru Besar)</span></label>
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disahkan Oleh (Pilihan):<br><span class="text-imperial-white font-imperial text-sm">Aziz bin Tahir (Guru Besar)</span></label>
                                 <canvas id="pad-gb" class="signature-canvas"></canvas>
                                 <button type="button" onclick="clearPad('gb')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
                             </div>
@@ -780,6 +797,32 @@
 
         function closeModal() {
             document.getElementById('custom-modal').style.display = 'none';
+        }
+
+        // Glitch Transition Function
+        function goBackWithGlitch() {
+            // Trigger screen shake on body
+            document.body.style.animation = 'screenShake 0.4s ease-in-out';
+            
+            // Create and append laser glitch overlay
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.backgroundColor = '#cc0000';
+            overlay.style.zIndex = '999999';
+            overlay.style.pointerEvents = 'none';
+            overlay.style.backgroundImage = 'repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0, 0, 0, 0.3) 4px, rgba(0, 0, 0, 0.3) 8px)';
+            overlay.style.animation = 'laserGlitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards';
+            
+            document.body.appendChild(overlay);
+            
+            // Redirect after animation completes
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 450);
         }
 
         // Live Clock initialization and logic
