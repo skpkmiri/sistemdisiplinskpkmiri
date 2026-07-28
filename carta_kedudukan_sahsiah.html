@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta Kedudukan Sahsiah - Kaminoan Databank</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;600;700&family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'kamino': ['Jura', 'sans-serif'],
+                        'tech': ['Orbitron', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        kamino: {
+                            cyan: '#00f0ff',
+                            deepblue: '#00101c',
+                            blue: '#002a4a',
+                            white: '#e6ffff',
+                            glow: 'rgba(0, 240, 255, 0.6)'
+                        },
+                        merit: '#00ffaa',
+                        demerit: '#ff0055'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bar-height: 50px;
+            --bar-gap: 12px;
+        }
+
+        body {
+            background-color: theme('colors.kamino.deepblue');
+            color: theme('colors.kamino.white');
+            overflow-x: hidden;
+            overflow-y: auto; /* Allow scrolling for Top 20 list */
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Holographic Kaminoan Background */
+        .holo-bg-container {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #001a33 0%, #000811 100%);
+        }
+
+        .holo-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.1) inset, 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .ring-1 {
+            width: 120vw;
+            height: 120vw;
+            border-top-color: rgba(0, 240, 255, 0.3);
+            border-bottom-color: rgba(0, 240, 255, 0.3);
+            animation: spin 60s linear infinite;
+        }
+
+        .ring-2 {
+            width: 100vw;
+            height: 100vw;
+            border-left-color: rgba(0, 240, 255, 0.2);
+            border-right-color: rgba(0, 240, 255, 0.2);
+            border-style: dashed;
+            animation: spin-reverse 45s linear infinite;
+        }
+
+        .ring-3 {
+            width: 80vw;
+            height: 80vw;
+            border-top-color: rgba(0, 255, 170, 0.2);
+            border-bottom-color: rgba(0, 240, 255, 0.2);
+            border-style: dotted;
+            border-width: 4px;
+            animation: spin 30s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
+
+        .holo-grid {
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.2) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(75deg);
+            transform-origin: center center;
+            animation: gridMove 20s linear infinite;
+            perspective: 1000px;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 50px; }
+        }
+
+        /* Hologram Effects */
+        .hologram-container {
+            position: relative;
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.3;
+        }
+
+        .hologram-flicker {
+            animation: flicker 4s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; text-shadow: 0 0 10px var(--kamino-cyan); }
+            20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.8; text-shadow: none; }
+        }
+
+        /* Sleek UI Elements */
+        .glass-panel {
+            background: rgba(0, 42, 74, 0.3);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05), 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 8px theme('colors.kamino.cyan');
+        }
+
+        /* Projector Base */
+        .projector-base {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 40px;
+            background: radial-gradient(ellipse at center, theme('colors.kamino.cyan') 0%, transparent 70%);
+            opacity: 0.3;
+            filter: blur(10px);
+            z-index: 0;
+            animation: pulse-base 3s infinite alternate;
+        }
+
+        @keyframes pulse-base {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.2; }
+            100% { transform: translateX(-50%) scale(1.05); opacity: 0.4; }
+        }
+
+        /* Holy Teleportation Effect */
+        #holy-teleport-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999999;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            background: transparent;
+            transition: background 1s ease-in;
+        }
+
+        .holy-beam {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0vw;
+            height: 100vh;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), #ffffff, rgba(255,255,255,0.9), transparent);
+            box-shadow: 0 0 80px 40px rgba(255,255,230,0.8);
+            opacity: 0;
+        }
+
+        .teleport-active {
+            pointer-events: all !important;
+            animation: teleportFlash 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .teleport-active .holy-beam {
+            animation: holyBeamExpand 1.5s ease-in forwards;
+        }
+
+        @keyframes holyBeamExpand {
+            0% { width: 0vw; opacity: 0; }
+            20% { width: 5vw; opacity: 1; }
+            80% { width: 100vw; opacity: 1; }
+            100% { width: 200vw; opacity: 1; }
+        }
+
+        @keyframes teleportFlash {
+            0% { opacity: 0; background: transparent; }
+            50% { opacity: 1; background: rgba(255, 255, 255, 0.5); }
+            90% { opacity: 1; background: #ffffff; }
+            100% { opacity: 1; background: #ffffff; }
+        }
+
+        /* Bar Chart Race Styles */
+        #chart-container {
+            position: relative;
+            height: 650px; /* Reduced to accommodate top 10 rows */
+            width: 100%;
+            margin-top: 2rem;
+            perspective: 1000px;
+            overflow: hidden; /* Hide anything outside Top 10 */
+        }
+
+        .bar-row {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            height: var(--bar-height);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            background: linear-gradient(90deg, rgba(0, 42, 74, 0.6) 0%, transparent 100%);
+            border-left: 3px solid theme('colors.kamino.cyan');
+            border-radius: 0 25px 25px 0;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            /* Subtle 3D tilt for hologram feel */
+            transform-style: preserve-3d;
+        }
+
+        .rank-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            width: 40px;
+            color: theme('colors.kamino.cyan');
+            text-shadow: 0 0 5px theme('colors.kamino.cyan');
+            opacity: 0.8;
+        }
+
+        .student-name {
+            font-family: 'Jura', sans-serif;
+            font-weight: 600;
+            width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: #ffffff;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.8);
+        }
+
+        .bar-track {
+            flex-grow: 1;
+            height: 12px;
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 6px;
+            margin: 0 1rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: theme('colors.kamino.cyan');
+            box-shadow: 0 0 10px theme('colors.kamino.cyan');
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* Subtle animated sheen on the bar */
+        .bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: sheen 3s infinite;
+        }
+
+        @keyframes sheen {
+            100% { left: 200%; }
+        }
+
+        .score-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900;
+            width: 80px;
+            text-align: right;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 12px theme('colors.kamino.cyan'), 0 0 20px theme('colors.kamino.cyan');
+        }
+
+        /* Metric Breakdown tooltips */
+        .metrics-breakdown {
+            font-size: 0.7rem;
+            font-family: 'Inter', sans-serif;
+            color: rgba(230, 255, 255, 0.7);
+            display: flex;
+            flex-direction: column;
+            width: 80px;
+            text-align: right;
+            margin-right: 1rem;
+        }
+        .metrics-breakdown span.m { color: theme('colors.merit'); text-shadow: 0 0 5px theme('colors.merit'); }
+        .metrics-breakdown span.d { color: theme('colors.demerit'); text-shadow: 0 0 5px theme('colors.demerit'); }
+
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-center relative p-4 lg:p-8">
+
+    <!-- Holy Teleportation Overlay -->
+    <div id="holy-teleport-overlay">
+        <div class="holy-beam"></div>
+    </div>
+
+    <!-- Holographic Background -->
+    <div class="holo-bg-container">
+        <div class="holo-ring ring-1"></div>
+        <div class="holo-ring ring-2"></div>
+        <div class="holo-ring ring-3"></div>
+        <div class="holo-grid"></div>
+    </div>
+    <div class="scanlines"></div>
+
+    <div class="w-full max-w-6xl z-10 flex flex-col h-full relative hologram-container">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row items-center justify-between p-6 glass-panel mb-8 relative overflow-hidden">
+            <!-- Decorative border lines -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-kamino-cyan to-transparent opacity-50"></div>
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-kamino-cyan to-transparent opacity-50"></div>
+
+            <div class="flex items-center gap-6 mb-4 md:mb-0">
+                <div class="relative">
+                    <!-- Rotating rings around logo -->
+                    <div class="absolute inset-0 rounded-full border border-kamino-cyan opacity-30 animate-[spin_10s_linear_infinite]"></div>
+                    <div class="absolute inset-[-10px] rounded-full border-t border-b border-kamino-cyan opacity-20 animate-[spin_15s_linear_infinite_reverse]"></div>
+                    <img src="logo.png" alt="Logo Sekolah" class="w-20 h-20 object-contain relative z-10 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" onerror="this.src='https://placehold.co/100x100/00101c/00f0ff?text=LOGO'">
+                </div>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-tech tracking-widest text-white text-glow uppercase hologram-flicker font-bold drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]">Carta Kedudukan Sahsiah</h1>
+                    <h2 class="text-lg md:text-xl font-kamino text-kamino-cyan uppercase tracking-wider mt-1 opacity-100 font-semibold drop-shadow-md">Hal Ehwal Murid SK Pendidikan Khas Miri</h2>
+                    <p class="text-sm font-body italic text-gray-300 mt-2 tracking-widest uppercase">"Agar Dapat Turut Berbakti"</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-4">
+                <button onclick="triggerHolyTeleport()" class="px-6 py-2 border border-[rgba(0,240,255,0.5)] text-kamino-cyan font-tech tracking-widest hover:bg-kamino-cyan hover:text-black hover:shadow-[0_0_15px_#00f0ff] transition-all rounded uppercase text-sm glass-panel shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+                    &lt; Kembali
+                </button>
+                <div class="text-right bg-[rgba(0,20,40,0.5)] p-4 rounded-xl border border-[rgba(0,240,255,0.2)]">
+                    <div id="live-time" class="text-2xl font-tech text-glow text-kamino-cyan tracking-widest">00:00:00</div>
+                    <div id="live-date" class="text-sm font-tech text-gray-400 tracking-wider mt-1">00.00.0000</div>
+                    <div class="mt-2 text-[10px] text-kamino-cyan uppercase tracking-[0.2em] opacity-60 flex items-center justify-end gap-2">
+                        <span class="w-2 h-2 rounded-full bg-kamino-cyan animate-ping"></span>
+                        Live Data Feed
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Chart Area -->
+        <main class="flex-grow glass-panel p-6 md:p-8 relative">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 border-b border-[rgba(0,240,255,0.2)] pb-4 gap-4">
+                <div>
+                    <h3 class="font-tech text-xl text-kamino-cyan tracking-widest uppercase flex items-center gap-2 mb-1 font-bold drop-shadow-md">
+                        <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Top 10 Sahsiah
+                    </h3>
+                    <div class="text-sm font-kamino tracking-widest text-white font-semibold drop-shadow-md">Formula: 100 + <span class="text-merit font-bold drop-shadow-[0_0_5px_#00ffaa]">Merit</span> - <span class="text-demerit font-bold drop-shadow-[0_0_5px_#ff0055]">Demerit</span> = Skor Akhir</div>
+                </div>
+
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="search-filter" placeholder="Tapis nama atau kelas..."
+                           class="w-full bg-[rgba(0,42,74,0.5)] border border-[rgba(0,240,255,0.4)] rounded-lg px-4 py-2 text-kamino-cyan font-tech focus:outline-none focus:border-kamino-cyan focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] placeholder-kamino-cyan placeholder-opacity-50 transition-all text-sm">
+                    <svg class="w-5 h-5 absolute right-3 top-2.5 text-kamino-cyan opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div id="chart-container">
+                <!-- Bars will be injected here via JS -->
+            </div>
+
+            <!-- Holographic Projector Base Visual -->
+            <div class="projector-base"></div>
+        </main>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Make function globally available for HTML inline handlers
+        window.triggerHolyTeleport = function() {
+            const overlay = document.getElementById('holy-teleport-overlay');
+            overlay.classList.add('teleport-active');
+            
+            setTimeout(() => {
+                try {
+                    window.location.href = 'index.html'; 
+                } catch(e) {
+                    window.location.reload();
+                }
+            }, 1800); 
+        };
+
+        // Live Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-time').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('live-date').textContent = now.toLocaleDateString('en-GB').replace(/\//g, '.');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- Data Aggregation Logic ---
+        
+        let students = [];
+        const chartContainer = document.getElementById('chart-container');
+        const rowHeight = 62; // var(--bar-height) + gap
+        const barElements = {}; 
+        
+        let amalanBaikData = [];
+        let disciplineData = [];
+
+        function processAggregatedData() {
+            const studentsMap = new Map();
+
+            // 1. Process Amalan Baik (Merits)
+            amalanBaikData.forEach(doc => {
+                const name = doc.studentName;
+                if (!name) return;
+                if (!studentsMap.has(name)) {
+                    studentsMap.set(name, { 
+                        id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
+                        name: name, 
+                        class: doc.studentClass || 'N/A', 
+                        merit: 0, 
+                        demerit: 0, 
+                        score: 100 // Starting base marks
+                    });
+                }
+                studentsMap.get(name).merit += (doc.mark || 0);
+            });
+
+            // 2. Process Imperial Discipline (Demerits)
+            disciplineData.forEach(doc => {
+                const name = doc.studentName;
+                if (!name) return;
+                if (!studentsMap.has(name)) {
+                    studentsMap.set(name, { 
+                        id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
+                        name: name, 
+                        class: doc.studentClass || 'N/A', 
+                        merit: 0, 
+                        demerit: 0, 
+                        score: 100 // Starting base marks
+                    });
+                }
+                studentsMap.get(name).demerit += (doc.totalMarks || 0);
+            });
+
+            // Calculate final scores
+            studentsMap.forEach(student => {
+                student.score = 100 + student.merit - student.demerit;
+            });
+
+            // Convert to array and sort
+            students = Array.from(studentsMap.values());
+            students.sort((a, b) => b.score - a.score);
+
+            syncDOM();
+        }
+
+        // Initialize / Sync DOM Elements
+        function syncDOM() {
+            students.forEach((student) => {
+                if (!barElements[student.id]) {
+                    const row = document.createElement('div');
+                    row.className = 'bar-row';
+                    row.id = `bar-${student.id}`;
+                    row.style.transform = `translateY(1000px) translateZ(0)`; // Start off-screen
+                    row.style.opacity = '0';
+
+                    row.innerHTML = `
+                        <div class="rank-number">--</div>
+                        <div class="student-name">
+                            ${student.name}
+                            <div class="text-[0.65rem] text-kamino-cyan opacity-70 tracking-widest uppercase font-tech mt-0.5">${student.class}</div>
+                        </div>
+                        <div class="metrics-breakdown">
+                            <span class="m">+<span class="m-val">${student.merit}</span></span>
+                            <span class="d">-<span class="d-val">${student.demerit}</span></span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="score-display">
+                            <span class="score-val">${student.score}</span>
+                        </div>
+                    `;
+
+                    chartContainer.appendChild(row);
+
+                    barElements[student.id] = {
+                        row: row,
+                        rankEl: row.querySelector('.rank-number'),
+                        meritEl: row.querySelector('.m-val'),
+                        demeritEl: row.querySelector('.d-val'),
+                        barFill: row.querySelector('.bar-fill'),
+                        scoreEl: row.querySelector('.score-val')
+                    };
+                }
+            });
+
+            // Render updates
+            renderChart();
+        }
+
+        // Update DOM based on current array state
+        function renderChart() {
+            const maxScore = Math.max(...students.map(s => Math.max(0, s.score)), 50); 
+            const filterInput = document.getElementById('search-filter');
+            const filterTerm = filterInput ? filterInput.value.toLowerCase() : '';
+
+            let displayIndex = 0;
+
+            students.forEach((student, globalIndex) => {
+                const els = barElements[student.id];
+                if(!els) return;
+                
+                // Search matching
+                const match = student.name.toLowerCase().includes(filterTerm) || 
+                              student.class.toLowerCase().includes(filterTerm);
+
+                if (match && displayIndex < 10) {
+                    // Animate position (The "Race" effect)
+                    els.row.style.transform = `translateY(${displayIndex * rowHeight}px) translateZ(0)`;
+                    els.row.style.opacity = '1';
+                    els.row.style.pointerEvents = 'auto';
+                    els.rankEl.textContent = (globalIndex + 1).toString().padStart(2, '0');
+                    displayIndex++;
+                } else {
+                    // Hide off-screen
+                    els.row.style.transform = `translateY(${12 * rowHeight}px) translateZ(0)`;
+                    els.row.style.opacity = '0';
+                    els.row.style.pointerEvents = 'none';
+                }
+                
+                // Update text values (merit/demerit)
+                els.meritEl.textContent = student.merit;
+                els.demeritEl.textContent = student.demerit;
+                
+                // Animate number counting for total score if changed
+                const currentScore = parseInt(els.scoreEl.textContent) || 0;
+                if (currentScore !== student.score) {
+                    animateValue(els.scoreEl, currentScore, student.score, 800);
+                }
+
+                // Calculate percentage for width (prevent negative width)
+                const percentage = Math.max(0, (student.score / maxScore) * 100);
+                els.barFill.style.width = `${percentage}%`;
+
+                // Color coding based on rank
+                if (match && displayIndex === 1) { // 1st visible
+                    els.barFill.style.background = '#00f0ff'; 
+                    els.barFill.style.boxShadow = '0 0 15px #00f0ff';
+                    els.rankEl.style.color = '#00f0ff';
+                } else if (match && displayIndex > 1 && displayIndex <= 3) { // 2nd & 3rd visible
+                    els.barFill.style.background = 'rgba(0, 240, 255, 0.8)';
+                    els.barFill.style.boxShadow = '0 0 10px rgba(0, 240, 255, 0.8)';
+                    els.rankEl.style.color = 'rgba(0, 240, 255, 0.8)';
+                } else {
+                    els.barFill.style.background = 'rgba(0, 240, 255, 0.5)';
+                    els.barFill.style.boxShadow = 'none';
+                    els.rankEl.style.color = 'rgba(0, 240, 255, 0.5)';
+                }
+            });
+        }
+
+        // Utility to animate number counting
+        function animateValue(obj, start, end, duration) {
+            if(start === end) {
+                obj.innerHTML = end;
+                return;
+            }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Load LocalStorage Demerits (Imperial Discipline Datapad)
+        function loadLocalDemerits() {
+            const raw = localStorage.getItem('imperialDisciplineRecords');
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    // Check if data changed to avoid redundant renders
+                    if (JSON.stringify(parsed) !== JSON.stringify(disciplineData)) {
+                        disciplineData = parsed;
+                        processAggregatedData();
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // Initialize Firebase for Merits (Amalan Baik System)
+        async function initFirebase() {
+            try {
+                if (typeof __firebase_config !== 'undefined') {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    const db = getFirestore(app);
+                    const auth = getAuth(app);
+
+                    if (typeof __initial_auth_token !== 'undefined') {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
+                    
+                    // Real-time listener
+                    onSnapshot(query(colRef), (snapshot) => {
+                        amalanBaikData = [];
+                        snapshot.forEach(doc => {
+                            amalanBaikData.push(doc.data());
+                        });
+                        processAggregatedData();
+                    }, (error) => {
+                        console.error("Firebase Snapshot Error:", error);
+                    });
+                } else {
+                    console.warn("Firebase not configured. Merits will remain 0.");
+                }
+            } catch(e) {
+                console.error("Firebase Init Error:", e);
+            }
+        }
+        
+        // Listen for filter input
+        document.getElementById('search-filter').addEventListener('input', renderChart);
+
+        // Bootstrap App
+        loadLocalDemerits(); // Initial local load
+        setInterval(loadLocalDemerits, 2000); // Poll local storage for cross-tab updates
+        initFirebase(); // Initialize cloud connection
+
+    </script>
+</body>
+</html>
