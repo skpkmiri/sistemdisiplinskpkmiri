@@ -624,9 +624,11 @@
             sigPadPk = new SignaturePad(document.getElementById('sig-pk'), canvasOpts);
             sigPadGb = new SignaturePad(document.getElementById('sig-gb'), canvasOpts);
 
-            const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv";
+            const studentCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv";
+            const reporterCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSdF191iBW-AeowPV7V7Y8cOtViagbtuIkf4GivqTWFpxApaA9K9EuIcD5cot664hNH8vcHqOsxvJU2/pub?output=csv";
             
-            Papa.parse(csvUrl, {
+            // Fetch Students CSV
+            Papa.parse(studentCsvUrl, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
@@ -635,7 +637,21 @@
                 },
                 error: function(err) {
                     console.error("CSV Parse Error:", err);
-                    document.getElementById('student-select').innerHTML = '<option value="">Ralat memuat senarai. Sila isikan manual jika perlu (hubungi admin).</option>';
+                    document.getElementById('student-select').innerHTML = '<option value="">Ralat memuat senarai murid. Sila isikan manual jika perlu (hubungi admin).</option>';
+                }
+            });
+
+            // Fetch Reporters CSV
+            Papa.parse(reporterCsvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processReporterCSVData(results.data);
+                },
+                error: function(err) {
+                    console.error("CSV Parse Error (Reporters):", err);
+                    document.getElementById('reporter-name').innerHTML = '<option value="">Ralat memuat senarai guru.</option>';
                 }
             });
 
@@ -664,20 +680,16 @@
 
         function processCSVData(data) {
             const studentSelect = document.getElementById('student-select');
-            const reporterSelect = document.getElementById('reporter-name');
             studentSelect.innerHTML = '<option value="">-- Pilih Murid --</option>';
-            reporterSelect.innerHTML = '<option value="">-- Pilih Guru Pelapor --</option>';
 
-            const teachers = new Set();
             studentsData = [];
 
             // Guessing column names dynamically since we don't know exact CSV structure
             if (data.length > 0) {
                 const keys = Object.keys(data[0]);
-                // Very basic heuristic: find keys that might mean Name, Class, Teacher
+                // Very basic heuristic: find keys that might mean Name, Class
                 let nameKey = keys.find(k => k.toLowerCase().includes('nama') && !k.toLowerCase().includes('guru')) || keys[0];
                 let classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan')) || keys[1] || "";
-                let teacherKey = keys.find(k => k.toLowerCase().includes('guru') || k.toLowerCase().includes('pelapor'));
 
                 data.forEach(row => {
                     if (row[nameKey]) {
@@ -690,31 +702,28 @@
                         opt.textContent = name;
                         studentSelect.appendChild(opt);
                     }
-                    
-                    if (teacherKey && row[teacherKey]) {
-                        teachers.add(row[teacherKey].trim());
+                });
+            }
+        }
+
+        function processReporterCSVData(data) {
+            const reporterSelect = document.getElementById('reporter-name');
+            reporterSelect.innerHTML = '<option value="">-- Pilih Guru Pelapor --</option>';
+
+            if (data.length > 0) {
+                const keys = Object.keys(data[0]);
+                // Assumes the first column or a column with 'nama' contains the names
+                let nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[0];
+
+                data.forEach(row => {
+                    if (row[nameKey]) {
+                        const name = row[nameKey].trim();
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        reporterSelect.appendChild(opt);
                     }
                 });
-
-                // Populate teachers if column found, else mock some or use students column if it's a mixed list
-                if (teachers.size > 0) {
-                    teachers.forEach(t => {
-                        if (t) {
-                            const opt = document.createElement('option');
-                            opt.value = t;
-                            opt.textContent = t;
-                            reporterSelect.appendChild(opt);
-                        }
-                    });
-                } else {
-                    // Fallback generic teachers
-                    ['Guru A', 'Guru B', 'Guru C'].forEach(t => {
-                        const opt = document.createElement('option');
-                        opt.value = t;
-                        opt.textContent = t;
-                        reporterSelect.appendChild(opt);
-                    });
-                }
             }
         }
 
@@ -800,8 +809,9 @@
                 return;
             }
 
-            if (sigPadReporter.isEmpty() || sigPadPk.isEmpty() || sigPadGb.isEmpty()) {
-                alert("Sila lengkapkan ketiga-tiga tandatangan pengesahan.");
+            // Only validate reporter signature now. PK & GB are optional.
+            if (sigPadReporter.isEmpty()) {
+                alert("Sila lengkapkan tandatangan pelapor.");
                 return;
             }
 
