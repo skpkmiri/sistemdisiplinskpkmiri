@@ -284,7 +284,6 @@
                         </button>
                     </li>
                     <li>
-                        <!-- SAMBUNGAN DIREKODKAN DI SINI -->
                         <button class="nfs-menu-item" onclick="handleNavigation(this, 'imperial_discipline_datapad.html')">
                             <span class="relative z-10 flex items-center gap-3">
                                 <i class="fa-solid fa-triangle-exclamation text-sm opacity-70"></i> Rekod Salah Laku
@@ -299,7 +298,8 @@
                         </button>
                     </li>
                     <li>
-                        <button class="nfs-menu-item" onclick="showSection('carta')">
+                        <!-- SAMBUNGAN DIREKODKAN DI SINI -->
+                        <button class="nfs-menu-item" onclick="handleNavigation(this, 'carta_kedudukan_sahsiah.html')">
                             <span class="relative z-10 flex items-center gap-3">
                                 <i class="fa-solid fa-ranking-star text-sm opacity-70"></i> Carta Kedudukan
                             </span>
@@ -398,20 +398,16 @@
             });
         }
 
-        // FUNGSI NAVIGASI YANG TELAH DIBAIKI SEPENUHNYA
         function handleNavigation(buttonEl, url) {
             doWarpTransition(() => {
                 document.querySelectorAll('.nfs-menu-item').forEach(item => item.classList.remove('active'));
                 buttonEl.classList.add('active');
                 document.body.style.setProperty('--sky-hue', `${Math.floor(Math.random() * 360)}deg`);
                 
-                // Tambah sedikit penangguhan (delay) supaya sistem dapat beralih halaman secara paksa
                 setTimeout(() => {
                     try {
-                        // Paksa penyemak imbas menavigasi
                         window.location.href = url;
                         
-                        // Sistem keselamatan tambahan jika halangan (iframe sandbox) dikesan
                         const forceLink = document.createElement('a');
                         forceLink.href = url;
                         forceLink.style.display = 'none';
