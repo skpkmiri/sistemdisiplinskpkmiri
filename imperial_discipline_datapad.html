@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imperial Discipline Datapad</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'imperial': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Share Tech Mono', 'monospace'],
+                    },
+                    colors: {
+                        imperial: {
+                            red: '#cc0000',
+                            darkred: '#8b0000',
+                            black: '#0a0a0a',
+                            darkgray: '#1a1a1a',
+                            gray: '#2d2d2d',
+                            lightgray: '#888888',
+                            white: '#e0e0e0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            background-image: 
+                linear-gradient(rgba(204, 0, 0, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(204, 0, 0, 0.15) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: bgScroll 15s linear infinite;
+        }
+
+        /* --- Animations --- */
+        @keyframes bgScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 30px 30px; }
+        }
+
+        .laser-scanner {
+            position: fixed;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff3333;
+            box-shadow: 0 0 20px 5px rgba(204, 0, 0, 0.8), 0 0 40px 10px rgba(204, 0, 0, 0.4);
+            z-index: 9999;
+            pointer-events: none;
+            animation: laserScan 6s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes laserScan {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        .neon-text {
+            animation: neonPulse 2s alternate infinite;
+        }
+
+        @keyframes neonPulse {
+            0% { text-shadow: 0 0 10px rgba(255,255,255,0.2), 0 0 20px rgba(204,0,0,0.4); }
+            100% { text-shadow: 0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(204,0,0,0.9), 0 0 40px rgba(204,0,0,0.4); }
+        }
+        
+        /* RDR2 Menu Style Navigation */
+        .rdr2-nav {
+            display: flex;
+            justify-content: center;
+            border-bottom: 2px solid #2d2d2d;
+            background: rgba(10, 10, 10, 0.9);
+            padding-top: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+        .rdr2-tab {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.5rem 2rem;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .rdr2-tab:hover {
+            color: #fff;
+        }
+        .rdr2-tab.active {
+            color: #cc0000;
+        }
+        .rdr2-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #cc0000;
+            box-shadow: 0 0 10px #cc0000;
+        }
+
+        /* Imperial Form Elements */
+        .imperial-input {
+            background-color: rgba(26, 26, 26, 0.8);
+            border: 1px solid #2d2d2d;
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .imperial-input:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 8px rgba(204, 0, 0, 0.4);
+        }
+        
+        .signature-canvas {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            border: 2px solid #2d2d2d;
+            width: 100%;
+            height: 150px;
+            touch-action: none;
+        }
+
+        .checkbox-imperial {
+            appearance: none;
+            width: 1.2rem;
+            height: 1.2rem;
+            background: #1a1a1a;
+            border: 1px solid #cc0000;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .checkbox-imperial:checked::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: calc(100% - 4px);
+            height: calc(100% - 4px);
+            background: #cc0000;
+            box-shadow: 0 0 5px #cc0000;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #2d2d2d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cc0000; }
+
+        .hidden-print { display: block; }
+        .show-print { display: none; }
+
+        #custom-modal {
+            display: none;
+        }
+    </style>
+</head>
+<body class="font-imperial antialiased min-h-screen flex flex-col relative">
+
+    <div class="laser-scanner"></div>
+
+    <header class="flex flex-col items-center justify-center py-6 bg-imperial-black border-b border-imperial-darkgray relative overflow-hidden">
+        
+        <button onclick="history.back()" class="absolute top-4 left-4 md:top-6 md:left-8 z-50 flex items-center space-x-2 text-imperial-lightgray hover:text-imperial-red transition-all group cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-mono uppercase tracking-widest font-bold text-sm">Kembali</span>
+        </button>
+
+        <!-- Live Clock Display -->
+        <div class="absolute top-4 right-4 md:top-6 md:right-8 z-50 text-right pointer-events-none">
+            <div id="live-time" class="text-imperial-red font-mono text-sm md:text-base tracking-widest font-bold drop-shadow-[0_0_8px_rgba(204,0,0,0.8)]">00:00:00</div>
+            <div id="live-date" class="text-imperial-lightgray font-mono text-xs md:text-sm tracking-wider">00.00.0000</div>
+        </div>
+
+        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background: repeating-linear-gradient(0deg, transparent, transparent 2px, #cc0000 2px, #cc0000 4px);"></div>
+        
+        <img src="logo.png" alt="Logo Unit Disiplin" class="h-24 w-auto mb-4 relative z-10 drop-shadow-[0_0_15px_rgba(204,0,0,0.8)] object-contain transition-transform hover:scale-105 duration-300" onerror="this.src='https://placehold.co/150x150/0a0a0a/cc0000?text=LOGO'">
+        
+        <h1 class="neon-text text-4xl md:text-5xl font-bold tracking-widest text-imperial-white relative z-10 text-center uppercase">HAL EHWAL MURID</h1>
+        <h2 class="text-xl md:text-2xl tracking-widest text-imperial-red mt-2 font-mono relative z-10 text-center uppercase">UNIT DISIPLIN</h2>
+    </header>
+
+    <nav class="rdr2-nav">
+        <button id="tab-record" class="rdr2-tab active" onclick="switchTab('record')">Incident Report</button>
+        <button id="tab-archive" class="rdr2-tab" onclick="switchTab('archive')">Databank Archive</button>
+    </nav>
+
+    <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full">
+        
+        <!-- Custom Modal for Alerts -->
+        <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div class="bg-imperial-darkgray border-2 border-imperial-red p-6 rounded-md shadow-[0_0_20px_#cc0000] max-w-md w-full text-center">
+                <h3 class="text-2xl font-bold text-imperial-red mb-4 uppercase tracking-wider" id="modal-title">Attention</h3>
+                <p class="text-imperial-white font-mono mb-6" id="modal-message">Message goes here.</p>
+                <button onclick="closeModal()" class="px-6 py-2 bg-imperial-red text-white font-bold rounded hover:bg-imperial-darkred transition-colors w-full uppercase tracking-widest">Acknowledge</button>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 1: NEW RECORD FORM ==================== -->
+        <section id="section-record" class="block">
+            <div id="pdf-content" class="bg-imperial-black border border-imperial-gray rounded-lg p-6 shadow-2xl relative">
+                
+                <div class="text-center mb-8 border-b border-imperial-gray pb-4">
+                    <h2 class="text-3xl font-bold text-imperial-white uppercase tracking-widest">Borang Rekod Salah Laku Disiplin</h2>
+                    <p class="text-imperial-lightgray font-mono mt-2 uppercase tracking-widest">Agar Dapat Turut Berbakti</p>
+                </div>
+
+                <form id="discipline-form" class="space-y-6">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 1. Nama Murid -->
+                        <div class="space-y-2">
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider flex items-center justify-between">
+                                <span>1. Nama Murid</span>
+                                <span id="student-status" class="text-xs font-mono text-yellow-500">Memuat turun data CSV...</span>
+                            </label>
+                            <select id="student-name" class="imperial-input w-full p-3" required onchange="updateClassField()">
+                                <option value="">-- Peringkat Data: Memuat turun --</option>
+                            </select>
+                        </div>
+
+                        <!-- 1b. Kelas -->
+                        <div class="space-y-2">
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">Kelas</label>
+                            <input type="text" id="student-class" class="imperial-input w-full p-3 bg-black/30" required readonly placeholder="-">
+                        </div>
+
+                        <!-- 2. Tarikh Direkodkan -->
+                        <div class="space-y-2">
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">2. Tarikh Direkodkan</label>
+                            <input type="date" id="date-recorded" class="imperial-input w-full p-3" required readonly>
+                        </div>
+
+                        <!-- 3. Tarikh Kejadian -->
+                        <div class="space-y-2">
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">3. Tarikh Kejadian</label>
+                            <input type="date" id="date-incident" class="imperial-input w-full p-3" required>
+                        </div>
+
+                        <!-- 4. Tempat -->
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">4. Tempat Kejadian</label>
+                            <div class="flex space-x-6 p-3 bg-imperial-darkgray border border-imperial-gray rounded">
+                                <label class="flex items-center space-x-2 cursor-pointer hover:text-imperial-red transition-colors">
+                                    <input type="radio" name="location" value="Dalam Sekolah" class="form-radio text-imperial-red bg-transparent border-imperial-red focus:ring-imperial-red" required>
+                                    <span class="font-mono">Dalam Sekolah</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer hover:text-imperial-red transition-colors">
+                                    <input type="radio" name="location" value="Luar Sekolah" class="form-radio text-imperial-red bg-transparent border-imperial-red focus:ring-imperial-red">
+                                    <span class="font-mono">Luar Sekolah</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. A. REKOD SALAH LAKU DISIPLIN -->
+                    <div class="mt-8 border-t border-imperial-gray pt-6">
+                        <label class="block text-imperial-red uppercase text-xl font-bold tracking-wider mb-4 flex items-center">
+                            <span class="mr-2">5. Rekod Salah Laku Disiplin</span>
+                            <span class="flex-grow h-px bg-gradient-to-r from-imperial-red to-transparent"></span>
+                        </label>
+                        
+                        <div class="bg-imperial-darkgray p-4 rounded mb-4 text-sm font-mono border-l-4 border-imperial-red">
+                            <p class="text-imperial-white mb-2 font-bold">CADANGAN MARKAH DEMERIT DALAMAN SEKOLAH</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 text-imperial-lightgray">
+                                <div>1 pt: Kesalahan sangat ringan</div>
+                                <div>6 pt: Kesalahan serius</div>
+                                <div>2 pt: Kesalahan ringan</div>
+                                <div>7 pt: Kesalahan berisiko tinggi</div>
+                                <div>3 pt: Ringan - perlu tindakan</div>
+                                <div>8 pt: Kesalahan sangat serius</div>
+                                <div>4 pt: Kesalahan sederhana</div>
+                                <div>9 pt: Kesalahan kritikal</div>
+                                <div>5 pt: Sederhana serius</div>
+                                <div>10 pt: Amat berat / rujukan segera</div>
+                            </div>
+                        </div>
+
+                        <!-- Offenses Container -->
+                        <div id="offenses-container" class="space-y-4">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- 6. Keterangan guru -->
+                    <div class="space-y-2 mt-6">
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">6. Keterangan Guru (Laporan Kejadian)</label>
+                        <textarea id="teacher-desc" rows="4" class="imperial-input w-full p-3" placeholder="Sila nyatakan kronologi kejadian..." required></textarea>
+                    </div>
+
+                    <!-- 7. Eviden -->
+                    <div class="space-y-2">
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">7. Eviden (Gambar/Dokumen)</label>
+                        <input type="file" id="evidence-file" accept="image/*" class="imperial-input w-full p-2 text-sm">
+                        <div id="evidence-preview" class="mt-2 hidden">
+                            <img id="preview-img" src="" alt="Evidence Preview" class="max-h-48 border border-imperial-gray rounded">
+                        </div>
+                    </div>
+
+                    <!-- 8. Nama Pelapor -->
+                    <div class="space-y-2">
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider flex items-center justify-between">
+                            <span>8. Nama Pelapor</span>
+                            <span id="reporter-status" class="text-xs font-mono text-yellow-500">Memuat turun data CSV...</span>
+                        </label>
+                        <select id="reporter-name" class="imperial-input w-full p-3" required>
+                            <option value="">-- Pilih Nama Pelapor --</option>
+                        </select>
+                    </div>
+
+                    <!-- 9 & 10. Tandatangan -->
+                    <div class="mt-8 border-t border-imperial-gray pt-6">
+                        <label class="block text-imperial-red uppercase text-xl font-bold tracking-wider mb-4 flex items-center">
+                            <span class="mr-2">9 & 10. Pengesahan (E-Sign)</span>
+                            <span class="flex-grow h-px bg-gradient-to-r from-imperial-red to-transparent"></span>
+                        </label>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Teacher Signature -->
+                            <div class="space-y-2 text-center">
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Tandatangan Pelapor</label>
+                                <canvas id="pad-teacher" class="signature-canvas"></canvas>
+                                <button type="button" onclick="clearPad('teacher')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                            </div>
+                            <!-- PK HEM Signature -->
+                            <div class="space-y-2 text-center">
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disemak Oleh:<br><span class="text-imperial-white font-imperial text-sm">Ling Mee Choo (PK HEM)</span></label>
+                                <canvas id="pad-pk" class="signature-canvas"></canvas>
+                                <button type="button" onclick="clearPad('pk')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                            </div>
+                            <!-- Guru Besar Signature -->
+                            <div class="space-y-2 text-center">
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disahkan Oleh:<br><span class="text-imperial-white font-imperial text-sm">Aziz bin Tahir (Guru Besar)</span></label>
+                                <canvas id="pad-gb" class="signature-canvas"></canvas>
+                                <button type="button" onclick="clearPad('gb')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Marks Preview -->
+                    <div class="bg-imperial-darkgray p-4 rounded flex justify-between items-center border border-imperial-red">
+                        <span class="uppercase tracking-widest font-bold text-imperial-lightgray">Jumlah Markah Demerit Semasa:</span>
+                        <span id="current-total-marks" class="text-3xl font-bold font-mono text-imperial-red">0</span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-6 flex flex-col md:flex-row gap-4 justify-end no-print">
+                        <button type="button" onclick="saveRecord()" class="px-8 py-3 bg-imperial-darkgray border border-imperial-gray text-white font-bold rounded hover:bg-imperial-gray hover:border-white transition-all uppercase tracking-widest flex-1 md:flex-none">
+                            Simpan Ke Pangkalan Data
+                        </button>
+                        <button type="button" onclick="generatePDF()" class="px-8 py-3 bg-imperial-red text-white font-bold rounded hover:bg-imperial-darkred shadow-[0_0_15px_rgba(204,0,0,0.5)] transition-all uppercase tracking-widest flex-1 md:flex-none">
+                            11. Jana Laporan PDF
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: DATABANK ARCHIVE ==================== -->
+        <section id="section-archive" class="hidden">
+            <div class="bg-imperial-black border border-imperial-gray rounded-lg p-6 shadow-2xl">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-imperial-gray pb-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-imperial-white uppercase tracking-widest">12. Senarai Rekod Disiplin</h2>
+                        <p class="text-imperial-lightgray font-mono mt-1">PANGKALAN DATA BERPUSAT</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 w-full md:w-64">
+                        <input type="text" id="search-student" onkeyup="filterRecords()" placeholder="Tapis nama murid..." class="imperial-input w-full p-2">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="records-table">
+                        <thead>
+                            <tr class="bg-imperial-darkgray border-b-2 border-imperial-red text-imperial-lightgray uppercase text-sm font-bold tracking-wider">
+                                <th class="p-3">Tarikh Kejadian</th>
+                                <th class="p-3">Nama Murid</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3">Pelapor</th>
+                                <th class="p-3 text-center">Markah Terkumpul</th>
+                                <th class="p-3 text-center">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-tbody" class="text-imperial-white font-mono text-sm divide-y divide-imperial-gray">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="empty-state" class="text-center py-12 hidden">
+                    <p class="text-imperial-lightgray font-mono">TIADA REKOD DIJUMPAI DALAM PANGKALAN DATA.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA STRUCTURES ---
+        
+        let studentList = [];
+
+        // Disciplinary Offenses Data
+        const disciplineData = {
+            "TAHAP 1 — RENDAH": {
+                "KEKEMASAN DAN PENAMPILAN DIRI": [
+                    { desc: "Tidak memakai pakaian seragam yang ditetapkan", mark: 1 },
+                    { desc: "Memakai pakaian yang tidak lengkap", mark: 1 },
+                    { desc: "Memakai pakaian yang tidak kemas", mark: 1 },
+                    { desc: "Memakai pakaian yang tidak sesuai", mark: 1 },
+                    { desc: "Tidak memakai pakaian kokurikulum yang ditetapkan", mark: 1 },
+                    { desc: "Tidak memakai pakaian unit beruniform yang ditetapkan", mark: 1 },
+                    { desc: "Rambut tidak mengikut peraturan sekolah", mark: 1 },
+                    { desc: "Mewarnakan rambut", mark: 1 },
+                    { desc: "Memakai barang kemas tanpa kebenaran", mark: 1 },
+                    { desc: "Menggunakan alat solek tanpa kebenaran", mark: 1 },
+                    { desc: "Berkuku panjang", mark: 1 },
+                    { desc: "Mewarnakan kuku", mark: 1 },
+                    { desc: "Tidak memakai kasut yang ditetapkan", mark: 1 },
+                    { desc: "Penampilan diri lain yang tidak mematuhi peraturan sekolah", mark: 1 }
+                ],
+                "KEHADIRAN DAN KETEPATAN MASA": [
+                    { desc: "Lewat hadir ke sekolah", mark: 1 },
+                    { desc: "Lewat masuk ke kelas", mark: 1 },
+                    { desc: "Lewat menghadiri perhimpunan", mark: 1 },
+                    { desc: "Lewat menghadiri aktiviti sekolah", mark: 1 },
+                    { desc: "Tidak kembali ke kelas selepas waktu rehat", mark: 2 },
+                    { desc: "Ponteng perhimpunan", mark: 2 },
+                    { desc: "Ponteng aktiviti kokurikulum", mark: 2 },
+                    { desc: "Ponteng program rasmi sekolah", mark: 2 },
+                    { desc: "Ponteng kelas tambahan", mark: 2 },
+                    { desc: "Ponteng sesi bimbingan atau kaunseling", mark: 2 },
+                    { desc: "Ponteng kelas", mark: 3 },
+                    { desc: "Ponteng sekolah", mark: 4 },
+                    { desc: "Keluar dari kelas tanpa kebenaran", mark: 3 }
+                ],
+                "GANGGUAN PENGAJARAN DAN PEMBELAJARAN": [
+                    { desc: "Membuat bising dengan sengaja semasa PdP", mark: 1 },
+                    { desc: "Bermain semasa PdP", mark: 1 },
+                    { desc: "Berulang kali meninggalkan tempat duduk tanpa kebenaran", mark: 1 },
+                    { desc: "Mengganggu murid lain semasa belajar", mark: 2 },
+                    { desc: "Mengganggu guru semasa mengajar", mark: 2 },
+                    { desc: "Mengganggu aktiviti kumpulan secara sengaja", mark: 2 },
+                    { desc: "Mengganggu penggunaan peralatan pembelajaran", mark: 2 },
+                    { desc: "Mengambil alat pembelajaran murid lain tanpa izin", mark: 2 },
+                    { desc: "Menyembunyikan alat pembelajaran murid lain", mark: 3 },
+                    { desc: "Menghalang murid lain daripada mengikuti aktiviti", mark: 3 },
+                    { desc: "Membaling barang di dalam kelas tanpa mengenai sesiapa", mark: 3 },
+                    { desc: "Mengganggu komputer atau peralatan teknologi sekolah", mark: 3 },
+                    { desc: "Menyebabkan kerosakan peralatan pembelajaran secara sengaja", mark: 4 }
+                ],
+                "KETIDAKPATUHAN ARAHAN DAN PERATURAN": [
+                    { desc: "Tidak mengikut arahan pengawas", mark: 1 },
+                    { desc: "Tidak mengikut arahan guru", mark: 2 },
+                    { desc: "Tidak mengikut arahan pentadbir", mark: 2 },
+                    { desc: "Enggan melaksanakan tugasan selepas diberikan arahan dan bimbingan", mark: 1 },
+                    { desc: "Melanggar peraturan kelas", mark: 1 },
+                    { desc: "Melanggar peraturan sekolah", mark: 2 },
+                    { desc: "Meninggalkan tempat yang telah ditetapkan", mark: 2 },
+                    { desc: "Mengulangi kesalahan selepas diberikan peringatan", mark: 3 },
+                    { desc: "Mengganggu pelaksanaan aktiviti sekolah", mark: 3 },
+                    { desc: "Memasuki kawasan larangan", mark: 3 },
+                    { desc: "Tidak menyerahkan barang larangan apabila diarahkan", mark: 4 },
+                    { desc: "Sengaja melawan arahan keselamatan", mark: 5 }
+                ]
+            },
+            "TAHAP 2 — SEDERHANA": {
+                "ADAB DAN BAHASA TIDAK SOPAN": [
+                    { desc: "Tidak menghormati warga sekolah", mark: 1 },
+                    { desc: "Menjerit kepada murid lain", mark: 2 },
+                    { desc: "Menjerit kepada guru atau kakitangan", mark: 3 },
+                    { desc: "Menggunakan kata-kata kasar", mark: 2 },
+                    { desc: "Menggunakan bahasa kesat", mark: 2 },
+                    { desc: "Membuat isyarat tidak sopan", mark: 2 },
+                    { desc: "Bersikap biadab terhadap murid lain", mark: 2 },
+                    { desc: "Bersikap biadab terhadap guru", mark: 3 },
+                    { desc: "Bersikap biadab terhadap kakitangan sekolah", mark: 3 },
+                    { desc: "Bersikap biadab terhadap tetamu", mark: 3 },
+                    { desc: "Menghina murid lain", mark: 3 },
+                    { desc: "Menghina guru atau kakitangan", mark: 4 },
+                    { desc: "Mengejek kekurangan atau keadaan murid lain", mark: 4 },
+                    { desc: "Memanggil seseorang dengan gelaran yang mengaibkan", mark: 3 },
+                    { desc: "Meludah di tempat yang tidak sepatutnya", mark: 1 },
+                    { desc: "Membuang sampah merata-rata dengan sengaja", mark: 1 }
+                ],
+                "TELEFON, PERANTI DAN KESALAHAN SIBER": [
+                    { desc: "Membawa telefon tanpa kebenaran", mark: 1 },
+                    { desc: "Membawa jam pintar tanpa kebenaran", mark: 1 },
+                    { desc: "Menggunakan telefon ketika dilarang", mark: 2 },
+                    { desc: "Menggunakan peranti komunikasi semasa PdP", mark: 2 },
+                    { desc: "Merakam gambar tanpa kebenaran", mark: 3 },
+                    { desc: "Merakam suara tanpa kebenaran", mark: 3 },
+                    { desc: "Merakam video tanpa kebenaran", mark: 4 },
+                    { desc: "Mengakses kandungan tidak sesuai di sekolah", mark: 4 },
+                    { desc: "Menggunakan kata laluan orang lain", mark: 4 },
+                    { desc: "Mengakses akaun orang lain tanpa kebenaran", mark: 5 },
+                    { desc: "Memadam atau mengubah fail orang lain", mark: 5 },
+                    { desc: "Mengganggu sistem komputer sekolah", mark: 6 },
+                    { desc: "Menyamar sebagai orang lain dalam talian", mark: 5 },
+                    { desc: "Menyebarkan maklumat palsu", mark: 5 },
+                    { desc: "Menyebarkan gambar atau video tanpa izin", mark: 5 },
+                    { desc: "Mengubah gambar untuk memalukan seseorang", mark: 6 },
+                    { desc: "Menghantar mesej menghina", mark: 5 },
+                    { desc: "Menghantar mesej mengugut", mark: 7 },
+                    { desc: "Menyebarkan fitnah dalam talian", mark: 6 },
+                    { desc: "Mencemarkan nama sekolah melalui media sosial", mark: 5 },
+                    { desc: "Menjual atau menyewakan telefon atau peranti di sekolah", mark: 4 },
+                    { desc: "Menyebarkan maklumat peribadi seseorang tanpa izin", mark: 7 },
+                    { desc: "Buli siber secara berulang", mark: 8 }
+                ],
+                "TIDAK AMANAH DAN MENGAMBIL BARANG": [
+                    { desc: "Berbohong mengenai perkara kecil", mark: 1 },
+                    { desc: "Menyembunyikan maklumat berkaitan kejadian", mark: 3 },
+                    { desc: "Memberikan maklumat palsu", mark: 3 },
+                    { desc: "Meniru tugasan", mark: 2 },
+                    { desc: "Menciplak hasil kerja orang lain", mark: 2 },
+                    { desc: "Meniru dalam ujian", mark: 3 },
+                    { desc: "Memberikan jawapan kepada murid lain semasa ujian", mark: 3 },
+                    { desc: "Menyimpan barang yang dijumpai tanpa menyerahkannya", mark: 2 },
+                    { desc: "Mengambil barang tanpa kebenaran", mark: 4 },
+                    { desc: "Menyembunyikan barang orang lain", mark: 4 },
+                    { desc: "Menuduh orang lain secara palsu", mark: 5 },
+                    { desc: "Memalsukan tandatangan", mark: 5 },
+                    { desc: "Memalsukan surat atau dokumen", mark: 6 },
+                    { desc: "Menukar atau mengubah markah", mark: 6 },
+                    { desc: "Menipu dalam urusan jual beli", mark: 5 },
+                    { desc: "Pecah amanah", mark: 6 },
+                    { desc: "Mencuri barang bernilai rendah", mark: 6 },
+                    { desc: "Mencuri barang bernilai tinggi atau penting", mark: 8 },
+                    { desc: "Mengambil wang secara sengaja", mark: 8 }
+                ],
+                "VANDALISME DAN KEROSAKAN HARTA BENDA": [
+                    { desc: "Menconteng buku sekolah", mark: 2 },
+                    { desc: "Menconteng meja atau kerusi", mark: 2 },
+                    { desc: "Menconteng dinding", mark: 3 },
+                    { desc: "Merosakkan bahan pembelajaran", mark: 3 },
+                    { desc: "Merosakkan buku teks", mark: 3 },
+                    { desc: "Merosakkan tanaman atau landskap", mark: 3 },
+                    { desc: "Merosakkan meja atau kerusi", mark: 4 },
+                    { desc: "Merosakkan barang murid lain", mark: 5 },
+                    { desc: "Merosakkan harta guru atau kakitangan", mark: 5 },
+                    { desc: "Merosakkan peralatan sukan", mark: 4 },
+                    { desc: "Merosakkan peralatan bilik khas", mark: 5 },
+                    { desc: "Merosakkan peralatan sekolah", mark: 5 },
+                    { desc: "Merosakkan peralatan ICT", mark: 6 },
+                    { desc: "Merosakkan pintu atau tingkap", mark: 6 },
+                    { desc: "Merosakkan tandas", mark: 6 },
+                    { desc: "Memecahkan barang dengan sengaja", mark: 5 },
+                    { desc: "Mengubah atau merosakkan kemudahan sekolah", mark: 6 },
+                    { desc: "Menyalahgunakan alat pemadam api", mark: 7 },
+                    { desc: "Merosakkan kenderaan milik warga sekolah", mark: 8 },
+                    { desc: "Kerosakan yang boleh mengancam keselamatan orang lain", mark: 8 }
+                ]
+            },
+            "TAHAP 3 — TINGGI": {
+                "KESELAMATAN DIRI DAN PERGERAKAN TANPA KEBENARAN": [
+                    { desc: "Meninggalkan kelas tanpa kebenaran", mark: 3 },
+                    { desc: "Berada di kawasan larangan", mark: 3 },
+                    { desc: "Menggunakan peralatan tanpa kebenaran", mark: 3 },
+                    { desc: "Bermain di kawasan berbahaya", mark: 4 },
+                    { desc: "Berada di tempat berbahaya", mark: 4 },
+                    { desc: "Menggunakan peralatan secara tidak selamat", mark: 5 },
+                    { desc: "Mengabaikan arahan keselamatan", mark: 5 },
+                    { desc: "Melarikan diri daripada pengawasan guru", mark: 5 },
+                    { desc: "Keluar dari kawasan sekolah tanpa kebenaran", mark: 7 },
+                    { desc: "Memanjat pagar, bangunan atau struktur sekolah", mark: 6 },
+                    { desc: "Menyeberang jalan tanpa kebenaran atau pengawasan", mark: 7 },
+                    { desc: "Membuka pintu pagar atau pintu keselamatan tanpa izin", mark: 6 },
+                    { desc: "Mengganggu alat keselamatan sekolah", mark: 6 },
+                    { desc: "Membunyikan penggera kecemasan tanpa sebab", mark: 6 },
+                    { desc: "Mengusik suis, pendawaian atau peralatan elektrik", mark: 7 },
+                    { desc: "Sengaja mewujudkan keadaan yang boleh mencederakan orang lain", mark: 8 }
+                ],
+                "BARANGAN LARANGAN": [
+                    { desc: "Membawa permainan yang mengganggu pembelajaran", mark: 1 },
+                    { desc: "Membawa alat elektronik tanpa kebenaran", mark: 1 },
+                    { desc: "Menggunakan barang milik sekolah tanpa izin", mark: 2 },
+                    { desc: "Menukar atau menjual barang tanpa kebenaran", mark: 3 },
+                    { desc: "Membawa barang yang dilarang oleh sekolah", mark: 3 },
+                    { desc: "Membawa alat yang menghasilkan api", mark: 5 },
+                    { desc: "Membawa bahan atau cecair yang tidak dibenarkan", mark: 4 },
+                    { desc: "Membawa bahan mudah terbakar", mark: 7 },
+                    { desc: "Menyimpan barang berbahaya", mark: 7 },
+                    { desc: "Membawa objek yang boleh menyebabkan kecederaan", mark: 7 },
+                    { desc: "Menggunakan barang berbahaya untuk menakutkan", mark: 8 },
+                    { desc: "Menggunakan barang berbahaya sehingga menyebabkan kecederaan", mark: 10 },
+                    { desc: "Membekalkan barang larangan kepada murid lain", mark: 7 },
+                    { desc: "Membeli barang berbahaya daripada murid lain", mark: 6 },
+                    { desc: "Menjual barang berbahaya kepada murid lain", mark: 8 }
+                ],
+                "TINGKAH LAKU TIDAK SENONOH": [
+                    { desc: "Menggunakan perkataan tidak senonoh", mark: 2 },
+                    { desc: "Menulis perkataan tidak senonoh", mark: 2 },
+                    { desc: "Melukis gambar tidak senonoh", mark: 2 },
+                    { desc: "Membuat gurauan tidak sesuai", mark: 2 },
+                    { desc: "Membuat isyarat tidak senonoh", mark: 3 },
+                    { desc: "Menunjukkan bahan tidak sesuai kepada murid lain", mark: 4 },
+                    { desc: "Membawa bahan tidak sesuai", mark: 4 },
+                    { desc: "Menyimpan bahan tidak sesuai", mark: 4 },
+                    { desc: "Menyebarkan bahan tidak sesuai", mark: 6 },
+                    { desc: "Menyentuh barang peribadi murid lain tanpa izin", mark: 3 },
+                    { desc: "Mengganggu privasi murid lain", mark: 5 },
+                    { desc: "Mengintai", mark: 7 },
+                    { desc: "Berada dalam keadaan yang melanggar batas kesopanan sekolah", mark: 4 }
+                ],
+                "PERGADUHAN, AGRESIF DAN ANCAMAN KESELAMATAN": [
+                    { desc: "Mencetuskan pertengkaran", mark: 3 },
+                    { desc: "Mengajak murid lain bergaduh", mark: 5 },
+                    { desc: "Bersubahat dalam pergaduhan", mark: 5 },
+                    { desc: "Bergaduh tanpa kecederaan", mark: 6 },
+                    { desc: "Menolak dengan sengaja", mark: 4 },
+                    { desc: "Mencubit dengan sengaja", mark: 4 },
+                    { desc: "Menarik rambut", mark: 5 },
+                    { desc: "Mencakar dengan sengaja", mark: 5 },
+                    { desc: "Menggigit dengan sengaja", mark: 6 },
+                    { desc: "Menampar", mark: 6 },
+                    { desc: "Menendang", mark: 7 },
+                    { desc: "Memukul", mark: 7 },
+                    { desc: "Menumbuk", mark: 7 },
+                    { desc: "Membaling objek ke arah orang lain", mark: 7 },
+                    { desc: "Mengejar murid lain dengan tujuan menakutkan", mark: 6 },
+                    { desc: "Mengugut secara fizikal", mark: 7 },
+                    { desc: "Mengancam untuk mencederakan", mark: 8 },
+                    { desc: "Menggunakan barang untuk mencederakan orang lain", mark: 9 },
+                    { desc: "Menyebabkan kecederaan ringan", mark: 8 },
+                    { desc: "Menyebabkan kecederaan yang memerlukan rawatan klinik", mark: 9 },
+                    { desc: "Menyebabkan kecederaan serius atau rawatan hospital", mark: 10 }
+                ]
+            },
+            "TAHAP 4 — SANGAT TINGGI": {
+                "BULI": [
+                    { desc: "Buli bukan lisan secara berulang", mark: 5 },
+                    { desc: "Buli sosial atau pemulauan", mark: 6 },
+                    { desc: "Buli lisan secara berulang", mark: 6 },
+                    { desc: "Mengejek secara berulang", mark: 6 },
+                    { desc: "Memberikan gelaran yang mengaibkan secara berulang", mark: 6 },
+                    { desc: "Memalukan murid di hadapan orang lain", mark: 6 },
+                    { desc: "Menyebarkan khabar angin", mark: 6 },
+                    { desc: "Memulaukan murid secara sengaja", mark: 6 },
+                    { desc: "Mengajak murid lain memulaukan seseorang", mark: 7 },
+                    { desc: "Menyembunyikan atau merosakkan barang mangsa", mark: 7 },
+                    { desc: "Buli siber", mark: 8 },
+                    { desc: "Menghantar mesej menghina secara berulang", mark: 7 },
+                    { desc: "Menghantar mesej mengugut", mark: 8 },
+                    { desc: "Menyebarkan gambar atau video untuk memalukan murid", mark: 8 },
+                    { desc: "Menggunakan akaun palsu untuk mengganggu murid lain", mark: 8 },
+                    { desc: "Menakut-nakutkan murid lain secara berulang", mark: 7 },
+                    { desc: "Mengugut murid lain", mark: 8 },
+                    { desc: "Mengambil barang atau wang secara paksa", mark: 9 },
+                    { desc: "Buli fizikal tanpa kecederaan", mark: 8 },
+                    { desc: "Memukul atau menolak mangsa secara berulang", mark: 9 },
+                    { desc: "Buli yang menyebabkan kecederaan atau gangguan emosi serius", mark: 10 }
+                ],
+                "ROKOK, ROKOK ELEKTRONIK DAN BAHAN TERLARANG": [
+                    { desc: "Memiliki rokok", mark: 6 },
+                    { desc: "Menyimpan rokok", mark: 6 },
+                    { desc: "Menghisap rokok", mark: 7 },
+                    { desc: "Membeli rokok", mark: 7 },
+                    { desc: "Membekalkan rokok kepada murid lain", mark: 8 },
+                    { desc: "Menjual rokok", mark: 8 },
+                    { desc: "Memiliki rokok elektronik atau vape", mark: 6 },
+                    { desc: "Menyimpan rokok elektronik atau vape", mark: 6 },
+                    { desc: "Membawa cecair atau komponen vape", mark: 6 },
+                    { desc: "Menggunakan rokok elektronik atau vape", mark: 7 },
+                    { desc: "Membeli rokok elektronik atau vape", mark: 7 },
+                    { desc: "Membekalkan rokok elektronik atau vape", mark: 8 },
+                    { desc: "Menjual rokok elektronik atau vape", mark: 8 },
+                    { desc: "Menyalahgunakan ubat atau bahan lain", mark: 8 },
+                    { desc: "Memiliki bahan terlarang", mark: 9 },
+                    { desc: "Menggunakan bahan terlarang", mark: 10 },
+                    { desc: "Membekalkan bahan terlarang", mark: 10 },
+                    { desc: "Menjual atau mengedar bahan terlarang", mark: 10 }
+                ],
+                "SALAH LAKU SEKSUAL": [
+                    { desc: "Mengeluarkan kata-kata seksual yang tidak sesuai", mark: 5 },
+                    { desc: "Membuat isyarat seksual kepada orang lain", mark: 5 },
+                    { desc: "Menghantar mesej seksual yang tidak diminta", mark: 7 },
+                    { desc: "Menunjukkan kandungan seksual kepada murid lain", mark: 7 },
+                    { desc: "Menyebarkan kandungan seksual", mark: 9 },
+                    { desc: "Merakam atau menyimpan kandungan peribadi orang lain tanpa izin", mark: 9 },
+                    { desc: "Menyebarkan gambar peribadi tanpa izin", mark: 10 },
+                    { desc: "Mengganggu seseorang secara seksual", mark: 9 },
+                    { desc: "Menyentuh orang lain tanpa persetujuan", mark: 9 },
+                    { desc: "Mengugut seseorang berkaitan perkara seksual", mark: 10 },
+                    { desc: "Melakukan pengantunan atau grooming", mark: 10 },
+                    { desc: "Mengeksploitasi murid lain", mark: 10 },
+                    { desc: "Memaksa seseorang melakukan perbuatan seksual", mark: 10 },
+                    { desc: "Perbuatan yang disyaki sebagai kesalahan seksual serius (rujukan segera)", mark: 10 }
+                ],
+                "KES BERPOTENSI JENAYAH ATAU RISIKO TINGGI": [
+                    { desc: "Ancaman keselamatan serius", mark: 10 },
+                    { desc: "Perbuatan berkumpulan yang membahayakan", mark: 10 },
+                    { desc: "Gengsterisme", mark: 10 },
+                    { desc: "Kecurian serius", mark: 10 },
+                    { desc: "Pemerasan wang atau barang", mark: 10 },
+                    { desc: "Peras ugut", mark: 10 },
+                    { desc: "Pemilikan barang yang boleh membawa risiko kecederaan serius", mark: 10 },
+                    { desc: "Penggunaan barang berbahaya", mark: 10 },
+                    { desc: "Serangan fizikal serius", mark: 10 },
+                    { desc: "Kecederaan serius", mark: 10 },
+                    { desc: "Perbuatan yang mungkin melanggar undang-undang", mark: 10 },
+                    { desc: "Perbuatan yang melibatkan siasatan polis", mark: 10 },
+                    { desc: "Perbuatan yang melibatkan agensi perlindungan", mark: 10 },
+                    { desc: "Kes yang memerlukan tindakan kecemasan", mark: 10 },
+                    { desc: "Kes yang memerlukan rujukan kepada PDRM, JKM, KKM, PPD atau JPN", mark: 10 }
+                ]
+            }
+        };
+
+        // --- GLOBAL VARIABLES & STATE ---
+        let signaturePads = {};
+        let currentTotalMarks = 0;
+        let recordsData = JSON.parse(localStorage.getItem('imperialDisciplineRecords')) || [];
+
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            initDate();
+            initLiveClock();
+            fetchStudentCSV();
+            fetchReporterCSV();
+            renderOffensesUI();
+            initSignaturePads();
+            renderRecordsTable();
+            
+            // Image Preview logic
+            document.getElementById('evidence-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('preview-img').src = e.target.result;
+                        document.getElementById('evidence-preview').classList.remove('hidden');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // --- CORE FUNCTIONS ---
+
+        function customAlert(title, message) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('custom-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+
+        // Live Clock initialization and logic
+        function initLiveClock() {
+            function updateClock() {
+                const now = new Date();
+                
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+
+                document.getElementById('live-time').textContent = `${hours}:${minutes}:${seconds}`;
+                document.getElementById('live-date').textContent = `${day}.${month}.${year}`;
+            }
+            
+            updateClock(); // Set immediately to avoid 00:00:00 flash
+            setInterval(updateClock, 1000); // Update every second
+        }
+
+        function initDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-recorded').value = today;
+            document.getElementById('date-incident').max = today;
+        }
+
+        function fetchStudentCSV() {
+            const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv';
+            const statusEl = document.getElementById('student-status');
+            
+            fetch(csvUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("HTTP error " + response.status);
+                    return response.text();
+                })
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true, // Prevents empty rows from breaking the list
+                        complete: function(results) {
+                            const select = document.getElementById('student-name');
+                            select.innerHTML = '<option value="">-- Pilih Nama Murid --</option>';
+                            
+                            if(results.data && results.data.length > 0) {
+                                studentList = results.data;
+                                
+                                // Dynamically find 'Nama' column or default to 1st column
+                                const keys = Object.keys(results.data[0]);
+                                const nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[0]; 
+                                
+                                results.data.forEach((row, index) => {
+                                    if(row[nameKey] && row[nameKey].trim() !== '') {
+                                        const option = document.createElement('option');
+                                        option.value = index; // Store index to retrieve class later
+                                        option.textContent = row[nameKey];
+                                        select.appendChild(option);
+                                    }
+                                });
+                                statusEl.innerText = 'Data Dimuat Turun';
+                                statusEl.className = 'text-xs font-mono text-green-500';
+                            } else {
+                                statusEl.innerText = 'Data Kosong';
+                                statusEl.className = 'text-xs font-mono text-red-500';
+                            }
+                        },
+                        error: function(err) {
+                            throw err;
+                        }
+                    });
+                })
+                .catch(err => {
+                    statusEl.innerText = 'Ralat Rangkaian';
+                    statusEl.className = 'text-xs font-mono text-red-500 uppercase';
+                    console.error("CSV Fetch Error:", err);
+                    document.getElementById('student-name').innerHTML = '<option value="">-- Gagal Memuat Turun --</option>';
+                });
+        }
+
+        function updateClassField() {
+            const select = document.getElementById('student-name');
+            const classInput = document.getElementById('student-class');
+            const selectedIndex = select.value;
+            
+            if (selectedIndex !== "" && studentList[selectedIndex]) {
+                const row = studentList[selectedIndex];
+                const keys = Object.keys(row);
+                
+                // Dynamically find 'Kelas' column or default to 2nd column
+                const classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan') || k.toLowerCase().includes('tahun')) || (keys.length > 1 ? keys[1] : keys[0]);
+                
+                classInput.value = row[classKey] || 'N/A';
+            } else {
+                classInput.value = '';
+            }
+        }
+
+        function fetchReporterCSV() {
+            const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdF191iBW-AeowPV7V7Y8cOtViagbtuIkf4GivqTWFpxApaA9K9EuIcD5cot664hNH8vcHqOsxvJU2/pub?output=csv';
+            const statusEl = document.getElementById('reporter-status');
+            
+            fetch(csvUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("HTTP error " + response.status);
+                    return response.text();
+                })
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true, // Prevents empty rows from breaking the list
+                        complete: function(results) {
+                            const select = document.getElementById('reporter-name');
+                            select.innerHTML = '<option value="">-- Pilih Nama Pelapor --</option>';
+                            
+                            if(results.data && results.data.length > 0) {
+                                // Assuming the name is in the first column or named 'Nama'/'Name'
+                                const keys = Object.keys(results.data[0]);
+                                const nameKey = keys[0]; 
+
+                                results.data.forEach(row => {
+                                    if(row[nameKey] && row[nameKey].trim() !== '') {
+                                        const option = document.createElement('option');
+                                        option.value = row[nameKey];
+                                        option.textContent = row[nameKey];
+                                        select.appendChild(option);
+                                    }
+                                });
+                                statusEl.innerText = 'Data Dimuat Turun';
+                                statusEl.className = 'text-xs font-mono text-green-500';
+                            } else {
+                                statusEl.innerText = 'Data Kosong';
+                                statusEl.className = 'text-xs font-mono text-red-500';
+                            }
+                        },
+                        error: function(err) {
+                            throw err;
+                        }
+                    });
+                })
+                .catch(err => {
+                    statusEl.innerText = 'Ralat Rangkaian';
+                    statusEl.className = 'text-xs font-mono text-red-500 uppercase';
+                    console.error("CSV Fetch Error:", err);
+                    document.getElementById('reporter-name').innerHTML = '<option value="">-- Gagal Memuat Turun --</option>';
+                });
+        }
+
+        function renderOffensesUI() {
+            const container = document.getElementById('offenses-container');
+            
+            for (const [tahap, categories] of Object.entries(disciplineData)) {
+                // Tahap Header
+                const tahapDiv = document.createElement('div');
+                tahapDiv.className = 'border border-imperial-gray rounded bg-imperial-black overflow-hidden mb-4';
+                
+                const tahapHeader = document.createElement('button');
+                tahapHeader.type = 'button';
+                tahapHeader.className = 'w-full flex justify-between items-center p-4 bg-imperial-darkgray hover:bg-imperial-gray transition-colors text-imperial-white font-bold tracking-widest text-left';
+                tahapHeader.innerHTML = `<span>${tahap}</span> <span class="text-imperial-red font-mono transform transition-transform">+</span>`;
+                
+                const categoryContainer = document.createElement('div');
+                categoryContainer.className = 'hidden p-4 space-y-4 bg-imperial-black border-t border-imperial-gray';
+
+                tahapHeader.onclick = () => {
+                    categoryContainer.classList.toggle('hidden');
+                    const icon = tahapHeader.querySelector('.text-imperial-red');
+                    icon.textContent = categoryContainer.classList.contains('hidden') ? '+' : '-';
+                };
+
+                for (const [category, offenses] of Object.entries(categories)) {
+                    const catDiv = document.createElement('div');
+                    catDiv.innerHTML = `<h4 class="text-imperial-lightgray text-sm mb-2 border-b border-imperial-gray pb-1">${category}</h4>`;
+                    
+                    const list = document.createElement('div');
+                    list.className = 'space-y-2 pl-2';
+                    
+                    offenses.forEach((offense, index) => {
+                        const id = `offense-${tahap.replace(/\s+/g, '')}-${category.replace(/\s+/g, '')}-${index}`;
+                        const label = document.createElement('label');
+                        label.className = 'flex items-start space-x-3 cursor-pointer group hover:bg-imperial-darkgray p-1 rounded transition-colors';
+                        
+                        label.innerHTML = `
+                            <input type="checkbox" id="${id}" value="${offense.mark}" data-desc="${offense.desc}" class="checkbox-imperial mt-1" onchange="calculateMarks()">
+                            <div class="flex-grow text-sm font-mono text-imperial-white group-hover:text-imperial-red transition-colors">
+                                ${offense.desc}
+                            </div>
+                            <div class="text-imperial-red font-bold font-mono min-w-[2rem] text-right">[${offense.mark}]</div>
+                        `;
+                        list.appendChild(label);
+                    });
+                    
+                    catDiv.appendChild(list);
+                    categoryContainer.appendChild(catDiv);
+                }
+
+                tahapDiv.appendChild(tahapHeader);
+                tahapDiv.appendChild(categoryContainer);
+                container.appendChild(tahapDiv);
+            }
+        }
+
+
+        function calculateMarks() {
+            const checkboxes = document.querySelectorAll('.checkbox-imperial:checked');
+            currentTotalMarks = Array.from(checkboxes).reduce((sum, cb) => sum + parseInt(cb.value), 0);
+            document.getElementById('current-total-marks').innerText = currentTotalMarks;
+        }
+
+        function initSignaturePads() {
+            const canvasConfigs = [
+                { id: 'pad-teacher', key: 'teacher' },
+                { id: 'pad-pk', key: 'pk' },
+                { id: 'pad-gb', key: 'gb' }
+            ];
+
+            canvasConfigs.forEach(config => {
+                const canvas = document.getElementById(config.id);
+                // Adjust canvas resolution for sharp drawing
+                const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+
+                signaturePads[config.key] = new SignaturePad(canvas, {
+                    penColor: "rgb(20, 20, 20)",
+                    backgroundColor: "rgba(255, 255, 255, 0)"
+                });
+            });
+
+            window.addEventListener("resize", () => {
+                // Optional: handle resize for signature pads if layout is very fluid
+            });
+        }
+
+        function clearPad(key) {
+            if(signaturePads[key]) {
+                signaturePads[key].clear();
+            }
+        }
+
+        function getSelectedOffenses() {
+            const checkboxes = document.querySelectorAll('.checkbox-imperial:checked');
+            return Array.from(checkboxes).map(cb => ({
+                desc: cb.getAttribute('data-desc'),
+                mark: parseInt(cb.value)
+            }));
+        }
+
+        function saveRecord() {
+            const form = document.getElementById('discipline-form');
+            if(!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            if(currentTotalMarks === 0) {
+                customAlert("Ralat Kemasukan", "Sila pilih sekurang-kurangnya satu kesalahan disiplin.");
+                return;
+            }
+
+            const studentSelect = document.getElementById('student-name');
+            const studentNameStr = studentSelect.options[studentSelect.selectedIndex].text;
+
+            const record = {
+                id: Date.now(),
+                studentName: studentNameStr,
+                studentClass: document.getElementById('student-class').value || 'N/A',
+                dateRecorded: document.getElementById('date-recorded').value,
+                dateIncident: document.getElementById('date-incident').value,
+                location: document.querySelector('input[name="location"]:checked')?.value || 'N/A',
+                offenses: getSelectedOffenses(),
+                totalMarks: currentTotalMarks,
+                description: document.getElementById('teacher-desc').value,
+                reporter: document.getElementById('reporter-name').value
+            };
+
+            // Calculate accumulated marks for this student
+            const existingRecords = recordsData.filter(r => r.studentName === record.studentName);
+            const accumulated = existingRecords.reduce((sum, r) => sum + r.totalMarks, 0) + record.totalMarks;
+            record.accumulatedMarks = accumulated;
+
+            recordsData.push(record);
+            localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
+            
+            renderRecordsTable();
+            customAlert("Operasi Berjaya", "Data berjaya disimpan ke dalam Pangkalan Data Pusat (Local Storage).");
+            
+            // Optional: reset form
+            // form.reset();
+            // document.querySelectorAll('.checkbox-imperial').forEach(cb => cb.checked = false);
+            // calculateMarks();
+            // Object.values(signaturePads).forEach(pad => pad.clear());
+        }
+
+        function renderRecordsTable() {
+            const tbody = document.getElementById('records-tbody');
+            const emptyState = document.getElementById('empty-state');
+            const table = document.getElementById('records-table');
+            
+            tbody.innerHTML = '';
+            
+            if(recordsData.length === 0) {
+                emptyState.classList.remove('hidden');
+                table.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            table.classList.remove('hidden');
+
+            // Sort by latest
+            const sortedRecords = [...recordsData].sort((a, b) => b.id - a.id);
+
+            sortedRecords.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-imperial-darkgray transition-colors';
+                
+                // Determine threat level color based on accumulated marks
+                let accColorClass = 'text-green-500';
+                if(record.accumulatedMarks >= 15) accColorClass = 'text-imperial-red font-bold animate-pulse';
+                else if(record.accumulatedMarks >= 8) accColorClass = 'text-yellow-500';
+
+                tr.innerHTML = `
+                    <td class="p-3">${record.dateIncident}</td>
+                    <td class="p-3 font-bold">${record.studentName}</td>
+                    <td class="p-3">${record.studentClass}</td>
+                    <td class="p-3">${record.reporter}</td>
+                    <td class="p-3 text-center text-lg ${accColorClass}">${record.accumulatedMarks}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteRecord(${record.id})" class="px-3 py-1 bg-imperial-red text-white text-xs rounded hover:bg-red-800 uppercase tracking-wide">Padam</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterRecords() {
+            const search = document.getElementById('search-student').value.toLowerCase();
+            const rows = document.getElementById('records-tbody').getElementsByTagName('tr');
+            
+            for(let i = 0; i < rows.length; i++) {
+                const nameCol = rows[i].getElementsByTagName('td')[1];
+                if(nameCol) {
+                    const name = nameCol.textContent || nameCol.innerText;
+                    if(name.toLowerCase().indexOf(search) > -1) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function deleteRecord(id) {
+            recordsData = recordsData.filter(r => r.id !== id);
+            localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
+            renderRecordsTable();
+        }
+
+        function switchTab(tabId) {
+            // UI Toggle
+            document.getElementById('tab-record').classList.remove('active');
+            document.getElementById('tab-archive').classList.remove('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Content Toggle
+            document.getElementById('section-record').style.display = tabId === 'record' ? 'block' : 'none';
+            document.getElementById('section-archive').style.display = tabId === 'archive' ? 'block' : 'none';
+        }
+
+
+        async function generatePDF() {
+            const form = document.getElementById('discipline-form');
+            if(!form.checkValidity()) {
+                form.reportValidity();
+                customAlert("Ralat", "Sila lengkapkan semua medan wajib (Nama, Tarikh, Tempat, Pelapor) sebelum menjana PDF.");
+                return;
+            }
+
+            customAlert("Memproses", "Laporan PDF sedang dijana. Sila tunggu seketika (protokol Imperial)...");
+            
+            const element = document.getElementById('pdf-content');
+            
+            // Pre-process for PDF layout
+            const originalStyles = {
+                maxHeight: element.style.maxHeight,
+                overflow: element.style.overflow,
+                transform: element.style.transform
+            };
+            
+            // Expand accordions for PDF
+            const hiddenCategories = element.querySelectorAll('.hidden');
+            hiddenCategories.forEach(el => {
+                if(el.parentElement.closest('#offenses-container')) {
+                    // Only expand if there's a checked item inside, otherwise hide the whole Tahap to save space
+                    if(el.querySelectorAll('.checkbox-imperial:checked').length > 0) {
+                        el.classList.remove('hidden');
+                        el.classList.add('temp-show-pdf');
+                    } else {
+                        el.parentElement.style.display = 'none';
+                        el.parentElement.classList.add('temp-hide-pdf');
+                    }
+                }
+            });
+
+            // Hide non-checked items to save massive space on PDF
+            const allLabels = element.querySelectorAll('#offenses-container label');
+            allLabels.forEach(lbl => {
+                const cb = lbl.querySelector('.checkbox-imperial');
+                if(!cb.checked) {
+                    lbl.style.display = 'none';
+                    lbl.classList.add('temp-hide-pdf-label');
+                }
+            });
+
+            // Hide action buttons
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Render Canvas
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Higher quality
+                    useCORS: true,
+                    backgroundColor: "#0a0a0a"
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                
+                const finalImgWidth = imgWidth * ratio;
+                const finalImgHeight = imgHeight * ratio;
+                
+                // Center vertically if it's shorter than the page
+                const marginY = (pdfHeight - finalImgHeight) > 0 ? 10 : 0; 
+                
+                pdf.addImage(imgData, 'JPEG', 0, marginY, finalImgWidth, finalImgHeight);
+                
+                const studentSelect = document.getElementById('student-name');
+                const studentNameStr = studentSelect.options[studentSelect.selectedIndex]?.text || 'Unknown';
+                
+                pdf.save(`Rekod_Disiplin_${studentNameStr.replace(/\s+/g, '_')}.pdf`);
+                
+                closeModal(); // Close loading modal
+
+            } catch (error) {
+                console.error("PDF Gen Error:", error);
+                customAlert("Ralat", "Gagal menjana PDF. Sila semak konsol.");
+            } finally {
+                // Restore UI State
+                noPrintElements.forEach(el => el.style.display = '');
+                
+                document.querySelectorAll('.temp-show-pdf').forEach(el => {
+                    el.classList.add('hidden');
+                    el.classList.remove('temp-show-pdf');
+                });
+                
+                document.querySelectorAll('.temp-hide-pdf').forEach(el => {
+                    el.style.display = '';
+                    el.classList.remove('temp-hide-pdf');
+                });
+
+                document.querySelectorAll('.temp-hide-pdf-label').forEach(el => {
+                    el.style.display = '';
+                    el.classList.remove('temp-hide-pdf-label');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
