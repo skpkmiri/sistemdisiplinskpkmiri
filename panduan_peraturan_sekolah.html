@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Peraturan Sekolah - SKPK Miri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Cloud City Color Palette */
+            --cc-bg-dark: #0f1626; /* Deep space blue */
+            --cc-bg-light: #2c3e50; /* Cloud city shadows */
+            --cc-accent-orange: #d35400; /* Bespin sunset orange */
+            --cc-accent-gold: #f39c12; /* Coruscant gold */
+            --cc-text-primary: #ecf0f1; /* Bright white/ice */
+            --cc-text-secondary: #bdc3c7; /* Light grey */
+            --cc-panel-bg: rgba(44, 62, 80, 0.7);
+            --cc-panel-border: rgba(243, 156, 18, 0.4);
+        }
+
+        body {
+            font-family: 'Jura', sans-serif;
+            background-color: var(--cc-bg-dark);
+            color: var(--cc-text-primary);
+            overflow-x: hidden; /* Only hide horizontal overflow */
+            overflow-y: auto;   /* Enable the main web scrollbar vertically */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- Animated Background (Clouds & Tech) --- */
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Typography & Branding --- */
+        .title-glow {
+            text-shadow: 0 0 10px rgba(243, 156, 18, 0.8), 0 0 20px rgba(211, 84, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle-glow {
+            text-shadow: 0 0 5px rgba(236, 240, 241, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .slogan-text {
+            color: var(--cc-accent-gold);
+            font-style: italic;
+            letter-spacing: 3px;
+        }
+
+        .tech-border {
+            border: 1px solid var(--cc-panel-border);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(243, 156, 18, 0.2);
+            background: linear-gradient(135deg, rgba(15, 22, 38, 0.8) 0%, rgba(44, 62, 80, 0.8) 100%);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .tech-border::before, .tech-border::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 1px solid var(--cc-accent-gold);
+        }
+        .tech-border::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .tech-border::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+
+        /* --- Clock & Date --- */
+        #live-clock-container {
+            font-family: 'Courier New', Courier, monospace; /* Monospace for tech feel */
+            background: rgba(15, 22, 38, 0.6);
+            border: 1px solid var(--cc-accent-orange);
+            color: var(--cc-accent-gold);
+            padding: 5px 15px;
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(211, 84, 0, 0.4);
+        }
+
+        /* --- Dynamic Radial Menu (Segmented Wheel Style) --- */
+        .radial-menu-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #radial-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 22, 38, 0.7);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+        }
+
+        .radial-center-node {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(15, 22, 38, 0.9);
+            border: 3px solid var(--cc-accent-orange);
+            box-shadow: 0 0 15px var(--cc-accent-orange), inset 0 0 15px rgba(211, 84, 0, 0.5);
+            z-index: 20;
+            cursor: pointer;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            color: var(--cc-accent-gold);
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--cc-accent-orange);
+        }
+        
+        .radial-center-node:hover {
+            transform: scale(1.05);
+            background: rgba(211, 84, 0, 0.3);
+            box-shadow: 0 0 25px var(--cc-accent-orange), inset 0 0 20px rgba(243, 156, 18, 0.6);
+        }
+
+        .radial-center-node:active {
+            transform: scale(0.95);
+        }
+
+        /* Wheel Wrapper and Segments */
+        .wheel-wrapper {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            transform: scale(0.3) rotate(-20deg);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .wheel-wrapper.open {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            pointer-events: auto;
+        }
+
+        .wheel-segment {
+            fill: rgba(20, 30, 48, 0.85);
+            stroke: var(--cc-accent-orange);
+            stroke-width: 2;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .wheel-segment:hover {
+            fill: rgba(211, 84, 0, 0.9); /* Vibrant red/orange like PUBG wheel */
+            stroke: #fff;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 12px rgba(243, 156, 18, 0.9));
+        }
+
+        .wheel-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--cc-text-primary);
+            font-size: 0.9rem;
+            font-weight: 700;
+            pointer-events: none;
+            text-shadow: 1px 1px 5px black, 0 0 10px rgba(0,0,0,0.9);
+            width: 140px;
+            line-height: 1.3;
+            transition: color 0.2s;
+        }
+
+        .wheel-label.hovered {
+            color: #fff;
+            text-shadow: 0 0 10px var(--cc-accent-gold);
+        }
+
+        /* Connecting lines for radial menu (Removed in favor of new layout) */
+
+        /* --- Content Panels (Initially Hidden) --- */
+        .content-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 22, 38, 0.95); /* Nearly opaque background for content */
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            padding: 2rem;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .content-panel.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .content-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 2rem;
+            background: var(--cc-panel-bg);
+            border: 1px solid var(--cc-panel-border);
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .content-title {
+            color: var(--cc-accent-gold);
+            border-bottom: 2px solid var(--cc-accent-orange);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .content-body p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .content-body ul {
+            list-style-type: square;
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        .content-body li {
+            margin-bottom: 0.5rem;
+            color: var(--cc-text-secondary);
+        }
+
+        /* --- Glitch "Kembali" Button --- */
+        .btn-kembali {
+            position: relative;
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--cc-accent-gold);
+            border: 1px solid var(--cc-accent-orange);
+            font-family: 'Jura', sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            align-self: flex-start;
+        }
+
+        .btn-kembali:hover {
+            background: rgba(211, 84, 0, 0.2);
+            box-shadow: 0 0 10px var(--cc-accent-orange);
+        }
+
+        .btn-kembali::before {
+            content: 'KEMBALI';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--cc-bg-dark);
+            color: #0ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%);
+            transform: translate(-2px, 2px);
+        }
+
+        .btn-kembali::after {
+            content: 'KEMBALI';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--cc-bg-dark);
+            color: #f0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            clip-path: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+            transform: translate(2px, -2px);
+        }
+
+        /* Trigger glitch on click (class added via JS) */
+        .btn-kembali.glitching {
+            animation: text-glitch 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: transparent;
+        }
+        .btn-kembali.glitching::before, .btn-kembali.glitching::after {
+            opacity: 1;
+        }
+
+        @keyframes text-glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        /* Full screen glitch effect overlay - NEON STYLE */
+        .screen-glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            background: transparent;
+            mix-blend-mode: hard-light;
+        }
+
+        .screen-glitch-active {
+            animation: neon-glitch-anim 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes neon-glitch-anim {
+            0% { opacity: 0; transform: scale(1); filter: none; }
+            10% { opacity: 1; transform: scale(1.02) translate(10px, -5px); background: rgba(0, 255, 255, 0.2); box-shadow: inset 20px 0 0 rgba(255, 0, 255, 0.5), inset -20px 0 0 rgba(0, 255, 255, 0.5); filter: contrast(150%) hue-rotate(90deg); }
+            20% { opacity: 0.8; transform: scale(0.98) translate(-10px, 5px); background: rgba(255, 0, 255, 0.2); box-shadow: inset 10px 0 0 rgba(0, 255, 255, 0.6), inset -10px 0 0 rgba(255, 0, 255, 0.6); filter: invert(20%) hue-rotate(-90deg); }
+            30% { opacity: 1; transform: scale(1.05) translate(5px, 10px) skewX(5deg); background: rgba(0, 255, 255, 0.3); }
+            40% { opacity: 0.5; transform: scale(1) translate(-5px, -10px) skewX(-5deg); background: rgba(255, 0, 255, 0.3); }
+            50% { opacity: 0.9; transform: scale(1.01); background: rgba(255, 255, 255, 0.1); filter: invert(80%); }
+            60% { opacity: 0.4; transform: scale(0.99); background: transparent; filter: none; }
+            70% { opacity: 0.8; transform: scale(1.03) translate(15px, 0); box-shadow: inset 30px 0 0 rgba(0, 255, 255, 0.4); }
+            80% { opacity: 0.2; transform: scale(1) translate(-15px, 0); box-shadow: inset -30px 0 0 rgba(255, 0, 255, 0.4); }
+            90% { opacity: 0.6; transform: scale(1.02); filter: hue-rotate(180deg) brightness(200%); }
+            100% { opacity: 0; transform: scale(1); filter: none; background: transparent; box-shadow: none; }
+        }
+
+        /* --- Scrollbar styling --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--cc-bg-dark); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--cc-accent-orange); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--cc-accent-gold); 
+        }
+
+        /* --- Scroll Controls --- */
+        .scroll-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 60; /* Di atas panel, di bawah glitch overlay */
+        }
+
+        .scroll-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(15, 22, 38, 0.8);
+            border: 1px solid var(--cc-accent-orange);
+            color: var(--cc-accent-gold);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(211, 84, 0, 0.4);
+            border-radius: 8px;
+        }
+
+        .scroll-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scroll-btn:hover {
+            background: rgba(211, 84, 0, 0.3);
+            box-shadow: 0 0 20px var(--cc-accent-orange);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        /* --- Utilities --- */
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body class="flex flex-col min-h-screen relative">
+    <!-- Canvas for Animated Background -->
+    <canvas id="background-canvas"></canvas>
+
+    <!-- Full Screen Glitch Overlay -->
+    <div id="glitch-overlay" class="screen-glitch-overlay"></div>
+
+    <!-- Main Dashboard View -->
+    <div id="main-view" class="flex-grow flex flex-col justify-between p-4 md:p-8 relative z-10 transition-opacity duration-500">
+        
+        <!-- Radial HUD Overlay -->
+        <div id="radial-overlay"></div>
+
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 z-10 relative">
+            
+            <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
+                <!-- Main Page Kembali Button -->
+                <button class="btn-kembali !mb-0 h-full self-stretch flex items-center" onclick="triggerMainPageGlitch(this)">
+                    <span class="mr-2">◄</span> Kembali
+                </button>
+
+                <!-- Logo area -->
+                <div class="flex items-center gap-4 tech-border p-3">
+                    <img src="logo.png" alt="Logo SKPK" class="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(243,156,18,0.8)]" onerror="this.onerror=null; this.src='https://placehold.co/100x100/2c3e50/f39c12?text=Logo'">
+                    <h2 class="text-lg md:text-xl font-bold subtitle-glow uppercase text-white tracking-widest">
+                        Unit Disiplin SKPK Miri
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Live Clock -->
+            <div id="live-clock-container" class="text-sm md:text-base flex flex-col items-end">
+                <div id="date-display" class="text-gray-300">DD/MM/YYYY</div>
+                <div id="time-display" class="font-bold text-orange-400 text-lg">00:00:00</div>
+            </div>
+        </header>
+
+        <!-- Main Content Area (Central Menu) -->
+        <main class="flex-grow flex flex-col items-center justify-center">
+            
+            <!-- Main Title -->
+            <div class="text-center mb-12 tech-border p-6 max-w-3xl w-full z-10 relative">
+                <h1 class="text-3xl md:text-5xl font-bold title-glow uppercase text-white mb-2">
+                    Panduan Peraturan Sekolah
+                </h1>
+                <h3 class="text-xl text-gray-300 tracking-wider mb-4">Untuk Murid Sekolah</h3>
+                <p class="slogan-text text-lg">"Agar Dapat Turut Berbakti"</p>
+            </div>
+
+            <!-- Dynamic Radial Menu -->
+            <div class="radial-menu-container" id="radial-menu">
+                <!-- Center Node -->
+                <div class="radial-center-node" id="menu-core" title="Buka Menu">
+                    <span>TEKAN</span>
+                </div>
+                
+                <!-- Menu Items (Generated via JS for positioning) -->
+                <!-- Lines will also be generated via JS -->
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-xs text-gray-500 tech-border p-2">
+            Sistem Maklumat Disiplin Pelajar &copy; 2026 SKPK Miri
+        </footer>
+    </div>
+
+    <!-- Content Panels -->
+    <!-- Panel 1: Peraturan Am -->
+    <div id="panel-peraturan-am" class="content-panel">
+        <div class="w-full max-w-[800px] mx-auto flex justify-start">
+            <button class="btn-kembali" onclick="closePanel('panel-peraturan-am')">
+                <span class="mr-2">◄</span> Kembali
+            </button>
+        </div>
+        <div class="content-inner">
+            <h2 class="text-3xl font-bold content-title">BAHAGIAN A: PERATURAN AM WAKTU PERSEKOLAHAN</h2>
+                <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">A. WAKTU PERSEKOLAHAN</h3>
+                <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-gray-800 text-orange-400 font-bold sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 border-b border-gray-700 w-16 text-center">No.</th>
+                                <th class="px-4 py-3 border-b border-gray-700">Perkara / Butiran</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700/50">
+                            <!-- 1.1 Masa Hadir -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.1 Masa Hadir</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.1.1</td>
+                                <td class="px-4 py-3">Tahun 1-Tahun 6: Murid-muid perlu hadir ke sekolah selewat-lewatnya 7:00 am.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.1.2</td>
+                                <td class="px-4 py-3">Prasekolah: Murid-murid perlu hadir ke sekolah selewat-lewatnya jam 7:20 am.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.1.3</td>
+                                <td class="px-4 py-3">Ibu bapa/penjaga murid-murid prasekolah dibenarkan untuk menghantar dan menjemput anak mereka di kelas prasekolah manakala ibubapa/ penjaga murid-murid Tahun 1 hingga Tahun 6 hanya dibenarkan menghantar dan menjemput anak di pagar sekolah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.1.4</td>
+                                <td class="px-4 py-3">Murid tidak dibenarkan membawa orang luar ke kawasan sekolah tanpa kebenaran Guru Besar.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.1.5</td>
+                                <td class="px-4 py-3">Murid-murid perlu melalui saringan semakan suhu badan dan fizikal di pagar sekolah sebelum memasuki kawasan sekolah. Murid-murid yang didapati mempunyai suhu badan melebihi 37.5oC dan gejala penyakit berjangkit (contoh: selesema, batuk, HFMD, dan sebagainya) perlu pulang ke rumah.</td>
+                            </tr>
+
+                            <!-- 1.2 Waktu Belajar -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.2 Waktu Belajar</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.2.1</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-white">Prasekolah :</span><br>
+                                    Isnin - Jumaat : 7:30 am hingga 11:30 am
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.2.2</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-white">Tahun 1 hingga Tahun 6:</span><br><br>
+                                    Isnin - Khamis: 07:10 am hingga 11:30 am/ 12:00 pm/ 12:30 pm/ 1:00pm<br>
+                                    Jumaat: 07:10 am hingga 11:00 am/ 11:30 am<br><br>
+                                    <em class="text-gray-400 text-xs">* Waktu pulang murid-murid Tahun 1 hingga Tahun 6 tertakluk kepada kelas dan program berbeza (Program pendengaran, program pembelajaran dan program penglihatan) serta perubahan semasa. Murid-murid perlu merujuk jadual waktu pulang mengikut kategori edisi terkini yang diedar oleh pihak sekolah dari semasa ke semasa.</em>
+                                </td>
+                            </tr>
+
+                            <!-- 1.3 Waktu Rehat -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.3 Waktu Rehat</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.3.1</td>
+                                <td class="px-4 py-3">Prasekolah : 9:20-9:50 am</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.3.2</td>
+                                <td class="px-4 py-3">Tahun 1 hingga Tahun 6: 9:40-10:00 am</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.3.3</td>
+                                <td class="px-4 py-3">Murid-murid tidak dibenarkan berada di dalam kelas dan kawasan-kawasan larangan semasa waktu rehat. Semua murid akan makan di ruang RMT (murid-murid Tahun 1- Tahun 6) atau kelas prasekolah (murid prasekolah) semasa waktu rehat.</td>
+                            </tr>
+
+                            <!-- 1.4 Meninggalkan Kawasan -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.4 Meninggalkan Kawasan Sekolah Dalam Waktu Sekolah</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.4.1</td>
+                                <td class="px-4 py-3">Murid tidak dibenarkan meninggalkan kawasan sekolah dalam waktu sekolah, termasuk waktu rehat tanpa kebenaran bertulis daripada pihak sekolah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.4.2</td>
+                                <td class="px-4 py-3">Murid-murid yang terpaksa balik ke rumah (contoh: sakit, kecemasan keluarga, dan lain-lain), ibu bapa/ penjaga perlu meminta kebenaran dari dan maklum kepada pentadbir sekolah terlebih dahulu. Ibubapa/ penjaga perlu mengisi dan tandatangan dalam “Buku Rekod Pergerakan Murid semasa PdPc” di pejabat sekolah sebelum membawa murid balik ke rumah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.4.3</td>
+                                <td class="px-4 py-3">Semua murid dikehendaki menunggu ibubapa/ penjaga di ruang RMT semasa waktu pulang. Murid-murid tidak dibenarkan untuk keluar dari kawasan sekolah. Murid-murid prasekolah perlu menunggu ibubapa di kelas prasekolah semasa waktu pulang.</td>
+                            </tr>
+
+                            <!-- 1.5 Keluar Bilik Darjah -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.5 Keluar Bilik Darjah</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.5.1</td>
+                                <td class="px-4 py-3">Murid-murid dibenarkan keluar bilik darjah hanya dengan izin guru.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.5.2</td>
+                                <td class="px-4 py-3">Murid-murid yang memerlukan bantuan khas perlu ditemani oleh Pembantu Pengurusan Murid ketika keluar dari bilik darjah.</td>
+                            </tr>
+
+                            <!-- 1.6 Tatatertib -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.6 Tatatertib ke Bilik/ Kawasan Khas</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.6.1</td>
+                                <td class="px-4 py-3">Murid hanya boleh bergerak ke bilik Kemahiran Hidup, Bilik Muzik, Bilik Agama, Bilik Sains, Pusat Sumber Sekolah, padang untuk Pendidikan Jasmani dan sebagainya dengan kebenaran dan iringan guru atau/ dan Penolong Pengurusan Murid (PPM).</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.6.2</td>
+                                <td class="px-4 py-3">Murid hendaklah bergerak secara teratur dan tidak berlari semasa ke bilik/ kawasan khas.</td>
+                            </tr>
+
+                            <!-- 1.7 Makan Dan Minum -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.7 Makan Dan Minum</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.7.1</td>
+                                <td class="px-4 py-3">Aktiviti makan dan minum hanya terhad di ruang RMT sekolah atau di tempat yang dibenarkan. Murid-murid tidak dibenarkan untuk makan pada waktu belajar di dalam bilik darjah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.7.2</td>
+                                <td class="px-4 py-3">Murid-murid tidak dibenarkan untuk keluar dari kawasan sekolah untuk membeli makanan dan minuman semasa waktu persekolahan.</td>
+                            </tr>
+
+                            <!-- 1.8 Bilik Darjah -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.8 Bilik Darjah</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.8.1</td>
+                                <td class="px-4 py-3">Kebersihan dan keceriaan bilik darjah adalah tanggungjawab semua murid dalam kelas masing-masing. Tugas membersihkan kelas mestilah dilakukan sebelum waktu pertama persekolahan berlangsung. Sebelum pulang, bilik darjah hendaklah dibersihkan dan dikemaskan.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.8.2</td>
+                                <td class="px-4 py-3">Murid-murid juga perlu kosongkan bakul sampah di dalam bilik darjah sebelum pulang.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.8.3</td>
+                                <td class="px-4 py-3">Murid-murid perlu memastikan suis lampu dan kipas ditutup apabila keluar dari bilik darjah.</td>
+                            </tr>
+
+                            <!-- 1.9 Keselamatan -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.9 Keselamatan</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.9.1</td>
+                                <td class="px-4 py-3">Murid-murid perlu melaporkan sebarang kemalangan atau kecemasan yang berlaku di kawasan sekolah dengan kadar segera kepada guru.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.9.2</td>
+                                <td class="px-4 py-3">Semasa kejadian kebakaran atau latihan dril kebakaran (fire drill), murid-murid hendaklah memadamkan suis lampu dan kipas serta tinggalkan harta benda dan bilik darjah mengikut iringan guru. Murid-murid perlu bergerak secara tenang dalam keadaan tertib (jangan berlari/ terburu-buru) ke kawasan yang ditetapkan (Assemby Point).</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.9.3</td>
+                                <td class="px-4 py-3">Pihak sekolah tidak bertanggungjawab ke atas kehilangan barang-barang kepunyaan murid-murid. Barang- barang hilang yang dijumpai (lost and found item) hendaklah dilaporkan kepada guru bertugas atau Guru Penolong Kanan Hal Ehwal Murid (HEM).</td>
+                            </tr>
+
+                            <!-- 1.10 Ujian Penilaian -->
+                            <tr class="bg-gray-800/50"><td class="px-4 py-2 font-bold text-orange-300 text-center" colspan="2">1.10 Ujian Penilaian/ Peperiksaan</td></tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.10.1</td>
+                                <td class="px-4 py-3">Murid-murid perlu hadir tepat waktu dan lengkap dengan alat tulis semasa ujian penilaian/ peperiksaan.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.10.2</td>
+                                <td class="px-4 py-3">Murid-murid tidak dibenarkan untuk meniru semasa ujian/ peperiksaan dijalankan. Murid-murid yang didapati meniru akan dikenakan tindakan disiplin.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">1.10.3</td>
+                                <td class="px-4 py-3">Murid yang tidak hadir semasa ujian penilaian dan peperiksaan dibenarkan menjalani ujian pada hari berikutnya sekiranya ada surat doktor atau surat ibu bapa/ penjaga dengan sebab yang munasabah.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-xl text-white font-bold mb-4 mt-12 border-l-4 border-orange-500 pl-3">2. TIDAK HADIR KE SEKOLAH</h3>
+                <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                    <table class="min-w-full text-sm text-left">
+                        <tbody class="divide-y divide-gray-700/50">
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">2.1</td>
+                                <td class="px-4 py-3">Sekiranya murid tidak hadir ke sekolah, ibu bapa/ penjaga mestilah menyerahkan surat doktor atau surat ibu bapa/ penjaga dengan tandatangan yang sah bagi tempoh masa murid itu tidak hadir kepada guru kelas. Sila pastikan nama, kelas, sebab dan tarikh tidak hadir ternyata dalam surat-surat. </td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">2.2</td>
+                                <td class="px-4 py-3">Murid yang tidak hadir selama dua hari tanpa surat dikehendaki membawa ibubapa/ penjaga ke sekolah untuk berjumpa dengan pihak sekolah (kecuali ada bukti yang nyata bahawa ketidakhadiran murid tesebut ada sebab munasabah). </td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">2.3</td>
+                                <td class="px-4 py-3">Murid yang tidak hadir ke sekolah tanpa surat (doktor/ ibubapa/ penjaga) atau sebab-sebab yang akan munasabah akan diberi surat amaran dan dikenakan tindakan mengikut tatacara dalam Jadual 1.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-red-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(255,0,0,0.2)]">
+                    <table class="min-w-full text-sm text-center">
+                        <thead class="bg-gray-800 text-orange-400 font-bold">
+                            <tr>
+                                <th class="px-4 py-3 border-b border-gray-700 border-r border-gray-700/50 text-left">SURAT/ TINDAKAN</th>
+                                <th class="px-4 py-3 border-b border-gray-700 border-r border-gray-700/50">TIDAK HADIR BERTURUT-TURUT</th>
+                                <th class="px-4 py-3 border-b border-gray-700">TIDAK HADIR BERSELANG SELI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700/50">
+                            <tr class="hover:bg-red-900/30 transition-colors text-gray-300">
+                                <td class="px-4 py-3 font-bold text-left border-r border-gray-700/50">Amaran Pertama</td>
+                                <td class="px-4 py-3 border-r border-gray-700/50">Pada hari ke 3</td>
+                                <td class="px-4 py-3">Pada hari ke 10</td>
+                            </tr>
+                            <tr class="hover:bg-red-900/30 transition-colors text-gray-300">
+                                <td class="px-4 py-3 font-bold text-left border-r border-gray-700/50">Amaran Kedua</td>
+                                <td class="px-4 py-3 border-r border-gray-700/50">7 hari selepas Amaran Pertama</td>
+                                <td class="px-4 py-3">10 hari selepas Amaran Pertama</td>
+                            </tr>
+                            <tr class="hover:bg-red-900/30 transition-colors text-gray-300">
+                                <td class="px-4 py-3 font-bold text-left border-r border-gray-700/50">Amaran Terakhir</td>
+                                <td class="px-4 py-3 border-r border-gray-700/50">7 hari selepas Amaran Kedua</td>
+                                <td class="px-4 py-3">20 hari selepas Amaran Kedua</td>
+                            </tr>
+                            <tr class="hover:bg-red-900/50 transition-colors text-red-400 font-bold bg-red-900/20">
+                                <td class="px-4 py-3 text-left border-r border-gray-700/50">Buang Sekolah</td>
+                                <td class="px-4 py-3 border-r border-gray-700/50">14 hari selepas Amaran Terakhir</td>
+                                <td class="px-4 py-3">20 hari selepas Amaran Terakhir</td>
+                            </tr>
+                            <tr class="bg-gray-800/80 font-bold text-orange-300">
+                                <td class="px-4 py-3 text-left border-r border-gray-700/50">Jumlah Hari Tidak Hadir</td>
+                                <td class="px-4 py-3 border-r border-gray-700/50">31 hari berturut-turut</td>
+                                <td class="px-4 py-3">60 hari bukan berturut-turut</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-center text-sm text-gray-400 italic mb-12">Jadual 1: Tatacara Tindakan Terhadap Murid Tidak Hadir Sekolah</p>
+
+                <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">3. PENGGUNAAN KAWASAN/ BANGUNAN/ HARTA BENDA SEKOLAH</h3>
+                <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                    <table class="min-w-full text-sm text-left">
+                        <tbody class="divide-y divide-gray-700/50">
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">3.1</td>
+                                <td class="px-4 py-3">Kawasan, bangunan dan harta benda sekolah merujuk kepada semua kawasan sekolah seperti taman permainan (playground), padang, gelanggang, dewan, ruang RMT dan tandas; bilik-bilik khas seperti bilik sains, musolla, bilik agama, pusat sumber sekolah, bilik kemahiran hidup dan bilik mesyuarat; manakala harta benda sekolah merangkumi semua kemudahan fizikal dan peralatan di kawasan sekolah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.2</td>
+                                <td class="px-4 py-3">Kawasan, bangunan dan harta benda sekolah <span class="text-red-400 font-bold">tidak boleh</span> digunakan oleh sesiapa untuk sebarang tujuan tanpa kebenaran guru dan sekurang-kurangnya seorang guru bertanggungjawab mesti ada bersama-sama murid semasa menggunakannya.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.3</td>
+                                <td class="px-4 py-3">Murid dilarang membuang sampah dan mengotorkan kawasan sekolah atau menconteng bangunan sekolah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.4</td>
+                                <td class="px-4 py-3">Sebelum meninggalkan bilik khas, pastikan suis lampu, kipas dan pintu ditutup.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.5</td>
+                                <td class="px-4 py-3">Semua harta benda dan perlatan sekolah (contoh: water dispenser, alat-alat khas penglihatan, peralatan sukan, telekung dan sejadah, dan sebagainya) perlu digunakan dengan cermat mengikut manual penggunaan dan diletak balik secara kemas di tempat asal.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.5</td>
+                                <td class="px-4 py-3">Harta benda sekolah <span class="text-red-400 font-bold">tidak boleh</span> dipindah milik kecuali dengan kebenaran Guru Besar dan guru-guru.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.6</td>
+                                <td class="px-4 py-3">Murid-murid hendaklah melaporkan kepada guru-guru jika ada berlaku kerosakan dan kehilangan harta benda sekolah.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">3.7</td>
+                                <td class="px-4 py-3">Murid-murid yang merosakkan harta benda sekolah mesti mengantikannya dan murid tersebut akan diambil tindakan disiplin.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">4. Skim Pinjaman Buku Teks (SPBT)</h3>
+                <div class="overflow-x-auto rounded-lg border border-orange-500/50 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                    <table class="min-w-full text-sm text-left">
+                        <tbody class="divide-y divide-gray-700/50">
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">4.1</td>
+                                <td class="px-4 py-3">Buku SPBT yang dipinjam hendaklah dibalut dan dijaga dengan baik.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">4.2</td>
+                                <td class="px-4 py-3">Murid dilarang menconteng di dalam buku SPBT atau merosakkan buku SPBT dalam sebarang bentuk (gunting, koyak, dan sebagainya).</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">4.3</td>
+                                <td class="px-4 py-3">Murid yang berhenti/ berpindah ke sekolah lain mesti memulangkan semua buku SPBT kepada guru kelas.</td>
+                            </tr>
+                            <tr class="hover:bg-orange-900/30 transition-colors">
+                                <td class="px-4 py-3 text-center align-top font-mono text-gray-400">4.4</td>
+                                <td class="px-4 py-3">Buku-buku yang hilang atau rosak mestilah diganti semula dengan buku yang serupa jenis atau membayar kos buku berkenaan.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Disiplin -->
+    <div id="panel-disiplin" class="content-panel">
+        <div class="w-full max-w-[800px] mx-auto flex justify-start">
+            <button class="btn-kembali" onclick="closePanel('panel-disiplin')">
+                <span class="mr-2">◄</span> Kembali
+            </button>
+        </div>
+        <div class="content-inner">
+            <h2 class="text-3xl font-bold content-title">BAHAGIAN B: DISIPLIN</h2>
+            
+            <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">A. DALAM BILIK DARJAH</h3>
+            <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                <table class="min-w-full text-sm text-left">
+                    <tbody class="divide-y divide-gray-700/50">
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">1.1</td>
+                            <td class="px-4 py-3">Bilik darjah hendaklah sentiasa dalam keadaan bersih, kemas dan teratur.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">1.2</td>
+                            <td class="px-4 py-3">Setiap murid bertanggungjawab ke atas kerusi dan meja sendiri. Perbuatan vandalisme terhadap kerusi, meja dan peralatan dalam bilik darjah adalah dilarang.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">1.3</td>
+                            <td class="px-4 py-3">Sebelum pulang, murid hendaklah memasukkan kerusi di bawah meja serta tutup suis lampu dan kipas.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">1.4</td>
+                            <td class="px-4 py-3">Murid perlu menumpukan perhatian kepada sesi pembelajaran semasa dalam bilik darjah.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">1.5</td>
+                            <td class="px-4 py-3">Murid perlu menyelesaikan tugasan dan kerja rumah yang diberikan oleh guru. Kegagalan bertindak sedemikian akan dikenakan hukuman oleh guru.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">1. KELAKUAN</h3>
+            <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                <table class="min-w-full text-sm text-left">
+                    <tbody class="divide-y divide-gray-700/50">
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">2.1</td>
+                            <td class="px-4 py-3">Murid-murid hendaklah menunjukkan hormat dan menggunakan bahasa yang sopan dalam pertuturan kepada guru-guru, kakitangan sekolah, orang yang lebih tua daripada mereka, pengawas dan sesama murid.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">2.2</td>
+                            <td class="px-4 py-3">Murid-murid perlu berucap salam apabila bertemu guru, kakitangan sekolah dan tetamu dari luar.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">2.3</td>
+                            <td class="px-4 py-3">Murid-murid tidak dibenarkan memasuki pejabat Guru Besar, pejabat dan Bilik Guru tanpa kebenaran pihak-pihak berkenaan.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">2.4</td>
+                            <td class="px-4 py-3">Murid-murid tidak dibenarkan berkeliaran dan berlari di kawasan sekolah.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">2. BARANG-BARANG LARANGAN</h3>
+            <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                <table class="min-w-full text-sm text-left">
+                    <tbody class="divide-y divide-gray-700/50">
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">3.1</td>
+                            <td class="px-4 py-3">
+                                <p class="mb-3 text-gray-300">Barang-barang larangan berikut tidak dibenarkan dibawa ke sekolah. Sekiranya dijumpai, barang-barang ini akan dirampas dan murid akan dikenakan tindakan disiplin:</p>
+                                <ul class="space-y-2 text-gray-400">
+                                    <li><span class="font-bold text-orange-400">a)</span> Mancis, mercun, bunga api dan bahan-bahan lain yang boleh menyebabkan punca kebakaran.</li>
+                                    <li><span class="font-bold text-orange-400">b)</span> Rokok, arak, dadah dan vape.</li>
+                                    <li><span class="font-bold text-orange-400">c)</span> Objek tajam dan sebarang bentuk senjata seperti pisau, parang dan lain-lain. Gunting dan pembaris besi hanya dibenarkan untuk mata pelajaran Pendidikan Seni atau Kemahiran Hidup dengan kebenaran guru mata pelajaran berkenaan.</li>
+                                    <li><span class="font-bold text-orange-400">d)</span> Barang perhiasan seperti rantai emas, cincin dan lain-lain.</li>
+                                    <li><span class="font-bold text-orange-400">e)</span> Alat solek.</li>
+                                    <li><span class="font-bold text-orange-400">f)</span> Wang saku tidak melebihi RM10.00 kecuali untuk membayar yuran atau membeli bahan pelajaran.</li>
+                                    <li><span class="font-bold text-orange-400">g)</span> Telefon bimbit dan sebarang bentuk gajet digital (kecuali untuk tujuan pembelajaran dengan kebenaran pihak sekolah).</li>
+                                    <li><span class="font-bold text-orange-400">h)</span> Sebarang objek/bahan berunsur perjudian dan jualan.</li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-xl text-white font-bold mb-4 mt-6 border-l-4 border-orange-500 pl-3">3. JENIS KESALAHAN DISIPLIN</h3>
+            <div class="overflow-x-auto rounded-lg border border-orange-500/50 mb-8 bg-[#0f1626]/80 shadow-[0_0_15px_rgba(211,84,0,0.2)]">
+                <table class="min-w-full text-sm text-left">
+                    <tbody class="divide-y divide-gray-700/50">
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">4.1</td>
+                            <td class="px-4 py-3">Murid-murid yang didapati melakukan kesalahan disiplin dan melanggar peraturan sekolah akan dikenakan tindakan disiplin kecuali Kes Khas. Jadual 2 menunjukkan senarai jenis kesalahan disiplin yang boleh dikenakan tindakan disiplin.</td>
+                        </tr>
+                        <tr class="hover:bg-orange-900/30 transition-colors">
+                            <td class="px-4 py-3 text-center align-top font-mono text-gray-400 w-16">4.2</td>
+                            <td class="px-4 py-3">Kes Khas adalah kes-kes yang hanya untuk dilaporkan, dan bukan untuk diambil tindakan / hukuman oleh pihak sekolah. Kes-kes khas akan dirujuk terus kepada Guru Bimbingan dan Kaunseling untuk intervensi. Sila rujuk Jadual 2 untuk senarai kes khas.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Big Table: Jadual 2 -->
+            <div class="overflow-x-auto rounded-lg border border-red-500/50 mb-4 bg-[#0f1626]/90 shadow-[0_0_15px_rgba(255,0,0,0.2)]">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-gray-800 text-orange-400 font-bold sticky top-0 z-10 shadow-md">
+                        <tr>
+                            <th class="px-4 py-3 border-b border-gray-700 border-r border-gray-700/50 w-24 text-center">Kod</th>
+                            <th class="px-4 py-3 border-b border-gray-700 border-r border-gray-700/50">Kesalahan</th>
+                            <th class="px-4 py-3 border-b border-gray-700 w-32 text-center">Status Kes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700/50">
+                        <!-- Category A -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">A</td>
+                            <td class="px-4 py-2" colspan="2">Tingkah Laku Jenayah</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A01</td><td class="px-4 py-2 border-r border-gray-700/50">Berjudi</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A02</td><td class="px-4 py-2 border-r border-gray-700/50">Mencuri</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A03</td><td class="px-4 py-2 border-r border-gray-700/50">Mengancam/memukul/mencederakan guru</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A04</td><td class="px-4 py-2 border-r border-gray-700/50">Mengancam/memukul/mencederakan kakitangan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A05</td><td class="px-4 py-2 border-r border-gray-700/50">Mengancam/memukul/mencederakan murid</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A06</td><td class="px-4 py-2 border-r border-gray-700/50">Peras ugut</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A07</td><td class="px-4 py-2 border-r border-gray-700/50">Gengsterisme</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A08</td><td class="px-4 py-2 border-r border-gray-700/50">Penglibatan dalam politik</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">A09</td><td class="px-4 py-2 border-r border-gray-700/50">Bergaduh</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category B -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">B</td>
+                            <td class="px-4 py-2" colspan="2">Penyalahgunaan Dadah/ Inhalan</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">B01</td><td class="px-4 py-2 border-r border-gray-700/50">Memiliki/ Menyimpan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">B02</td><td class="px-4 py-2 border-r border-gray-700/50">Membekal/ Menawarkan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">B03</td><td class="px-4 py-2 border-r border-gray-700/50">Menjual/ Mengedar</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">B04</td><td class="px-4 py-2 border-r border-gray-700/50">Hisap/ Suntik/ Sedut/ Minum/ Hidu</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">B05</td><td class="px-4 py-2 border-r border-gray-700/50">Hidu bahan-bahan inhalan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category C -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">C</td>
+                            <td class="px-4 py-2" colspan="2">Buli</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">C01</td><td class="px-4 py-2 border-r border-gray-700/50">Buli bahasa</td><td class="px-4 py-2 text-center text-gray-400">SPI</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">C02</td><td class="px-4 py-2 border-r border-gray-700/50">Buli fizikal</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">C03</td><td class="px-4 py-2 border-r border-gray-700/50">Buli isyarat</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">C04</td><td class="px-4 py-2 border-r border-gray-700/50">Buli perhubungan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category D -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">D</td>
+                            <td class="px-4 py-2" colspan="2">Rokok</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">D01</td><td class="px-4 py-2 border-r border-gray-700/50">Memiliki dan menyimpan</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">D02</td><td class="px-4 py-2 border-r border-gray-700/50">Membekal dan menawarkan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">D03</td><td class="px-4 py-2 border-r border-gray-700/50">Menjual dan mengedar</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">D04</td><td class="px-4 py-2 border-r border-gray-700/50">Menghisap</td><td class="px-4 py-2 text-center text-gray-400">SPI</td></tr>
+
+                        <!-- Category E -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">E</td>
+                            <td class="px-4 py-2" colspan="2">Ponteng</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E01</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng sekolah</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E02</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng kelas</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E03</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng aktiviti kokurikulum</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E04</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng ujian / peperiksaan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E05</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng prep **</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E06</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng asrama **</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E07</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng acara rasmi sekolah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">E08</td><td class="px-4 py-2 border-r border-gray-700/50">Ponteng perhimpunan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category F -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">F</td>
+                            <td class="px-4 py-2" colspan="2">Tingkah Laku Lucah</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F01</td><td class="px-4 py-2 border-r border-gray-700/50">Bercumbuan</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F02</td><td class="px-4 py-2 border-r border-gray-700/50">Berkhalwat</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F03</td><td class="px-4 py-2 border-r border-gray-700/50">Bawa bahan lucah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F04</td><td class="px-4 py-2 border-r border-gray-700/50">Mengedar bahan lucah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F05</td><td class="px-4 py-2 border-r border-gray-700/50">Mengintai</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F06</td><td class="px-4 py-2 border-r border-gray-700/50">Menggunakan kata / perbuatan lucah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F07</td><td class="px-4 py-2 border-r border-gray-700/50">Melukis dan menulis kata-kata dan gambar lucah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F08</td><td class="px-4 py-2 border-r border-gray-700/50">Menonton vcd / filem lucah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F09</td><td class="px-4 py-2 border-r border-gray-700/50">Memeluk murid lain jantina</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">F10</td><td class="px-4 py-2 border-r border-gray-700/50">Berdua-duaan yang menimbulkan syak</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category G -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">G</td>
+                            <td class="px-4 py-2" colspan="2">Tingkah Laku Kurang Sopan / Biadap</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G01</td><td class="px-4 py-2 border-r border-gray-700/50">Biadap kepada guru</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G02</td><td class="px-4 py-2 border-r border-gray-700/50">Biadap kepada kakitangan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G03</td><td class="px-4 py-2 border-r border-gray-700/50">Biadap kepada tetamu</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G04</td><td class="px-4 py-2 border-r border-gray-700/50">Berkelakuan kasar kepada murid</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G05</td><td class="px-4 py-2 border-r border-gray-700/50">Berbahasa kesat / kasar kepada murid</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G06</td><td class="px-4 py-2 border-r border-gray-700/50">Meminum / membeli / menyimpan / mengedar minuman yang memabukkan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G07</td><td class="px-4 py-2 border-r border-gray-700/50">Membuang sampah merata-rata</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G08</td><td class="px-4 py-2 border-r border-gray-700/50">Ingkar arahan guru</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G09</td><td class="px-4 py-2 border-r border-gray-700/50">Ingkar arahan pengawas</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">G10</td><td class="px-4 py-2 border-r border-gray-700/50">Meludah di tempat tidak sepatutnya</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category H -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">H</td>
+                            <td class="px-4 py-2" colspan="2">Kesalahan Vandalisme</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H01</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan harta benda sekolah</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H02</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan harta benda asrama **</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H03</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan harta benda kantin</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H04</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan peralatan bilik-bilik khas</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H05</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan tanaman tumbuhan / tanaman hiasan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H06</td><td class="px-4 py-2 border-r border-gray-700/50">Menconteng dinding bangunan sekolah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H07</td><td class="px-4 py-2 border-r border-gray-700/50">Menconteng dinding bangunan asrama **</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H08</td><td class="px-4 py-2 border-r border-gray-700/50">Merosak / mengoyak buku SPBT</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H09</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan peralatan sukan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H10</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan kenderaan guru besar / pengetua / guru / kakitangan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">H11</td><td class="px-4 py-2 border-r border-gray-700/50">Merosakkan harta / kenderaan murid</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category J -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">J</td>
+                            <td class="px-4 py-2" colspan="2">Tingkah Laku Tidak Amanah</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">J01</td><td class="px-4 py-2 border-r border-gray-700/50">Pecah amanah</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">J02</td><td class="px-4 py-2 border-r border-gray-700/50">Berbohong</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">J03</td><td class="px-4 py-2 border-r border-gray-700/50">Tidak bertanggungjawab</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">J04</td><td class="px-4 py-2 border-r border-gray-700/50">Tidak jujur</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category K -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">K</td>
+                            <td class="px-4 py-2" colspan="2">Kenakalan</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K01</td><td class="px-4 py-2 border-r border-gray-700/50">Menunggang motosikal dalam kawasan sekolah</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K02</td><td class="px-4 py-2 border-r border-gray-700/50">Masuk tandas berlainan jantina</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K03</td><td class="px-4 py-2 border-r border-gray-700/50">Sengaja membunyikan loceng kecemasan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K04</td><td class="px-4 py-2 border-r border-gray-700/50">Mengganggu semasa pengajaran dan pembelajaran</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K05</td><td class="px-4 py-2 border-r border-gray-700/50">Tidak ikut giliran / berebut-rebut / bertolak-tolak</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K06</td><td class="px-4 py-2 border-r border-gray-700/50">Membawa / bermain mercun</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K07</td><td class="px-4 py-2 border-r border-gray-700/50">Mengubahsuai pendawaian elektrik</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K08</td><td class="px-4 py-2 border-r border-gray-700/50">Keluar kawasan sekolah / asrama tanpa kebenaran</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K09</td><td class="px-4 py-2 border-r border-gray-700/50">Bermain dalam dorm **</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">K10</td><td class="px-4 py-2 border-r border-gray-700/50">Melanggar peraturan asrama **</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category L -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">L</td>
+                            <td class="px-4 py-2" colspan="2">Tingkah Laku Tidak Pentingkan Masa</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">L01</td><td class="px-4 py-2 border-r border-gray-700/50">Lewat ke sekolah</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">L02</td><td class="px-4 py-2 border-r border-gray-700/50">Lewat ke perhimpunan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">L03</td><td class="px-4 py-2 border-r border-gray-700/50">Lewat masuk kelas</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">L04</td><td class="px-4 py-2 border-r border-gray-700/50">Lewat datang aktiviti luar kelas / kokurikulum</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category M -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">M</td>
+                            <td class="px-4 py-2" colspan="2">Kekemasan Diri</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M01</td><td class="px-4 py-2 border-r border-gray-700/50">Berkuku panjang</td><td class="px-4 py-2 text-center text-gray-400">Pilihan</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M02</td><td class="px-4 py-2 border-r border-gray-700/50">Mewarna kuku / berinai</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M03</td><td class="px-4 py-2 border-r border-gray-700/50">Berambut panjang</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M04</td><td class="px-4 py-2 border-r border-gray-700/50">Rambut berfesyen</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M05</td><td class="px-4 py-2 border-r border-gray-700/50">Bermisai / berjanggut</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M06</td><td class="px-4 py-2 border-r border-gray-700/50">Memakai pakaian tidak mengikut peraturan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M07</td><td class="px-4 py-2 border-r border-gray-700/50">Pakai barang kemas</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M08</td><td class="px-4 py-2 border-r border-gray-700/50">Bertatoo</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M09</td><td class="px-4 py-2 border-r border-gray-700/50">Mencukur bulu kening</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">M10</td><td class="px-4 py-2 border-r border-gray-700/50">Memakai alat solek</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category R -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">R</td>
+                            <td class="px-4 py-2" colspan="2">Kes Khas</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R01</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Penyalahgunaan dadah/ inhalan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R02</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Memiliki/ menyimpan bahan berkaitan dadah/ inhalan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R03</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Membekal/ menawarkan bahan berkaitan dadah/ inhalan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R04</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Menjual/ mengedar bahan berkaitan dadah/ inhalan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R05</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Menghisap/ menyuntik/ menyedut/ meminum/ menghidu bahan berkaitan dadah/ inhalan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R06</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Menghidu bahan-bahan inhalan</td><td class="px-4 py-2 text-center text-gray-400">Kes Khas</td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R07</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Bertatoo</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R08</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Mencederakan diri sendiri</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R09</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Cubaan membunuh diri</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R10</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Terjun bangunan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R11</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Penyalahgunaan racun</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R12</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Hamil</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R13</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Lumba haram</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R14</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Kemalangan dalam sekolah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R15</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Lari dari rumah</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R16</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Ajaran sesat/militan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">R17</td><td class="px-4 py-2 border-r border-gray-700/50">Kes khas - Membunuh diri</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                        <!-- Category S -->
+                        <tr class="bg-gray-800/80 font-bold text-orange-300">
+                            <td class="px-4 py-2 text-center border-r border-gray-700/50">S</td>
+                            <td class="px-4 py-2" colspan="2">Dadah</td>
+                        </tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">S01</td><td class="px-4 py-2 border-r border-gray-700/50">Urin</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">S02</td><td class="px-4 py-2 border-r border-gray-700/50">Tangkapan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+                        <tr class="hover:bg-red-900/30 transition-colors"><td class="px-4 py-2 text-center font-mono text-gray-400 border-r border-gray-700/50">S03</td><td class="px-4 py-2 border-r border-gray-700/50">Pengakuan</td><td class="px-4 py-2 text-center text-gray-400"></td></tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Notes -->
+            <div class="text-sm text-gray-400 mb-12 flex flex-col gap-1">
+                <p class="italic text-gray-500">** Item-item yang tidak berkaitan dengan konteks semasa sekolah</p>
+                <p class="font-bold text-gray-300 mt-2">Jadual 2: Senarai kesalahan disiplin</p>
+                <p>Sumber: Sistem Sahsiah Diri Murid 2.0</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Panel 3: Pakaian & Kekemasan -->
+    <div id="panel-pakaian" class="content-panel">
+        <div class="w-full max-w-[800px] mx-auto flex justify-start">
+            <button class="btn-kembali" onclick="closePanel('panel-pakaian')">
+                <span class="mr-2">◄</span> Kembali
+            </button>
+        </div>
+        <div class="content-inner">
+            <h2 class="text-3xl font-bold content-title">Pakaian Seragam & Kekemasan Diri</h2>
+            <div class="content-body text-gray-200">
+                <p>Kekemasan diri mencerminkan imej murid yang berdisiplin. Patuhi kod etika pakaian yang ditetapkan oleh sekolah.</p>
+                <ul>
+                    <li><strong class="text-white">Pakaian Seragam:</strong> Mesti bersih, kemas, dan tidak diubahsuai. Lencana dan tanda nama wajib dijahit.</li>
+                    <li><strong class="text-white">Rambut (Lelaki):</strong> Pendek, kemas dan tidak menyentuh kolar baju. Fesyen rambut yang diwarnakan adalah dilarang.</li>
+                    <li><strong class="text-white">Rambut/Tudung (Perempuan):</strong> Rambut melepasi bahu mesti diikat rapi. Pemakaian tudung mesti mematuhi spesifikasi.</li>
+                    <li><strong class="text-white">Kuku & Aksesori:</strong> Kuku mesti pendek dan bersih. Barang kemas dan alat solek tidak dibenarkan dipakai.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Controls -->
+    <div class="scroll-controls">
+        <button id="scroll-to-top" class="scroll-btn" onclick="scrollToTop()" title="Kembali ke atas">
+            ▲
+        </button>
+        <button id="scroll-to-bottom" class="scroll-btn" onclick="scrollToBottom()" title="Tatal ke bawah">
+            ▼
+        </button>
+    </div>
+
+    <script>
+        // --- 1. Live Clock & Date ---
+        function updateClock() {
+            const now = new Date();
+            
+            // Format Date (DD/MM/YYYY)
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            document.getElementById('date-display').textContent = `${day}/${month}/${year}`;
+            
+            // Format Time (HH:MM:SS)
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('time-display').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
+
+        // --- 2. Dynamic Radial Menu Logic ---
+        const menuData = [
+            { id: 'peraturan-am', title: 'Peraturan Am', panelId: 'panel-peraturan-am' },
+            { id: 'disiplin', title: 'Disiplin', panelId: 'panel-disiplin' },
+            { id: 'pakaian', title: 'Pakaian & Kekemasan', panelId: 'panel-pakaian' }
+        ];
+
+        let menuOpen = false;
+        const radialContainer = document.getElementById('radial-menu');
+        const coreNode = document.getElementById('menu-core');
+        const radialOverlay = document.getElementById('radial-overlay');
+        
+        // Setup Wheel Wrapper
+        const wheelWrapper = document.createElement('div');
+        wheelWrapper.className = 'wheel-wrapper';
+        radialContainer.appendChild(wheelWrapper);
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("width", "400");
+        svg.setAttribute("height", "400");
+        svg.setAttribute("viewBox", "0 0 400 400");
+        wheelWrapper.appendChild(svg);
+
+        // Dimensions for the segmented wheel
+        const centerX = 200, centerY = 200, outerRadius = 190, innerRadius = 75;
+
+        // Math helpers for drawing SVG arcs
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+
+        function describeArc(x, y, innerRadius, outerRadius, startAngle, endAngle) {
+            const startOuter = polarToCartesian(x, y, outerRadius, startAngle);
+            const endOuter = polarToCartesian(x, y, outerRadius, endAngle);
+            const startInner = polarToCartesian(x, y, innerRadius, endAngle);
+            const endInner = polarToCartesian(x, y, innerRadius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            
+            return [
+                "M", startOuter.x, startOuter.y,
+                "A", outerRadius, outerRadius, 0, largeArcFlag, 1, endOuter.x, endOuter.y,
+                "L", startInner.x, startInner.y,
+                "A", innerRadius, innerRadius, 0, largeArcFlag, 0, endInner.x, endInner.y,
+                "Z"
+            ].join(" ");
+        }
+
+        const anglePerItem = 360 / menuData.length;
+        const gap = 3; // Gap between segments in degrees
+
+        menuData.forEach((item, index) => {
+            const startAngle = index * anglePerItem + (gap / 2);
+            const endAngle = (index + 1) * anglePerItem - (gap / 2);
+            
+            // Create SVG Path (The clickable segment)
+            const path = document.createElementNS(svgNS, "path");
+            path.setAttribute("d", describeArc(centerX, centerY, innerRadius, outerRadius, startAngle, endAngle));
+            path.classList.add('wheel-segment');
+            
+            // Hover effect links SVG and HTML label
+            path.addEventListener('mouseenter', () => {
+                document.getElementById(`label-${item.id}`).classList.add('hovered');
+            });
+            path.addEventListener('mouseleave', () => {
+                document.getElementById(`label-${item.id}`).classList.remove('hovered');
+            });
+
+            path.addEventListener('click', () => {
+                openPanel(item.panelId);
+                // Auto close menu when picking an item
+                coreNode.click(); 
+            });
+            svg.appendChild(path);
+
+            // Create HTML Label inside the segment
+            const midAngle = startAngle + (endAngle - startAngle) / 2;
+            const labelPos = polarToCartesian(centerX, centerY, (innerRadius + outerRadius) / 2, midAngle);
+            
+            const label = document.createElement('div');
+            label.id = `label-${item.id}`;
+            label.className = 'wheel-label';
+            label.style.left = `${labelPos.x}px`;
+            label.style.top = `${labelPos.y}px`;
+            label.innerHTML = item.title;
+            wheelWrapper.appendChild(label);
+        });
+
+        // Toggle Menu Animation (Only pops out when middle button clicked)
+        coreNode.addEventListener('click', () => {
+            menuOpen = !menuOpen;
+            
+            if (menuOpen) {
+                // HUD Active State
+                coreNode.style.boxShadow = '0 0 30px #0ff, inset 0 0 20px #0ff';
+                coreNode.style.borderColor = '#0ff';
+                coreNode.style.color = '#0ff';
+                radialOverlay.style.opacity = '1';
+                wheelWrapper.classList.add('open');
+            } else {
+                // HUD Inactive State
+                coreNode.style.boxShadow = '';
+                coreNode.style.borderColor = '';
+                coreNode.style.color = '';
+                radialOverlay.style.opacity = '0';
+                wheelWrapper.classList.remove('open');
+            }
+        });
+
+        // --- 3. Panel Navigation & Glitch Transition ---
+        const mainView = document.getElementById('main-view');
+        const glitchOverlay = document.getElementById('glitch-overlay');
+
+        function openPanel(panelId) {
+            // Add neon glitch effect when opening panel
+            triggerGlitchEffect(400);
+            
+            setTimeout(() => {
+                mainView.classList.add('hidden');
+                mainView.style.opacity = '0';
+                const panel = document.getElementById(panelId);
+                panel.classList.add('active');
+                
+                // Cek scroll button status selepas panel aktif
+                setTimeout(() => updateScrollButtons(panel), 50);
+            }, 200); // Switch halfway through the glitch
+        }
+
+        function closePanel(panelId) {
+            const btn = document.querySelector(`#${panelId} .btn-kembali`);
+            
+            // Hide scroll buttons when panel closes
+            document.getElementById('scroll-to-top').classList.remove('visible');
+            document.getElementById('scroll-to-bottom').classList.remove('visible');
+
+            // 1. Start button specific glitch animation
+            if (btn) btn.classList.add('glitching');
+
+            // 2. Trigger full screen neon glitch
+            triggerGlitchEffect(400);
+
+            // 3. Switch views during glitch
+            setTimeout(() => {
+                const panel = document.getElementById(panelId);
+                panel.classList.remove('active');
+                
+                mainView.classList.remove('hidden');
+                // Small delay before fading main view back in
+                setTimeout(() => {
+                     mainView.style.opacity = '1';
+                }, 50);
+
+                if (btn) btn.classList.remove('glitching');
+            }, 200); // Switch halfway through the glitch
+        }
+
+        function triggerMainPageGlitch(btn) {
+            // Button specific glitch
+            btn.classList.add('glitching');
+            
+            // Trigger full screen neon glitch
+            triggerGlitchEffect(400);
+
+            // Reset button after glitch finishes and navigate to index.html
+            setTimeout(() => {
+                btn.classList.remove('glitching');
+                window.location.href = 'index.html';
+            }, 400);
+        }
+
+        function triggerGlitchEffect(duration) {
+            glitchOverlay.classList.remove('screen-glitch-active');
+            // Force reflow to restart animation
+            void glitchOverlay.offsetWidth; 
+            glitchOverlay.style.animationDuration = `${duration}ms`;
+            glitchOverlay.classList.add('screen-glitch-active');
+        }
+
+        // --- Scroll Navigation Logic ---
+        function scrollToTop() {
+            const activePanel = document.querySelector('.content-panel.active');
+            if (activePanel) {
+                activePanel.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function scrollToBottom() {
+            const activePanel = document.querySelector('.content-panel.active');
+            if (activePanel) {
+                activePanel.scrollTo({ top: activePanel.scrollHeight, behavior: 'smooth' });
+            } else {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+        }
+
+        function updateScrollButtons(element = null) {
+            const scrollUpBtn = document.getElementById('scroll-to-top');
+            const scrollDownBtn = document.getElementById('scroll-to-bottom');
+            
+            let scrollTop, scrollHeight, clientHeight;
+
+            // Determine if we are scrolling a panel or the main window
+            if (element && element.classList && element.classList.contains('content-panel')) {
+                scrollTop = element.scrollTop;
+                scrollHeight = element.scrollHeight;
+                clientHeight = element.clientHeight;
+            } else {
+                scrollTop = window.scrollY || document.documentElement.scrollTop;
+                scrollHeight = document.documentElement.scrollHeight;
+                clientHeight = window.innerHeight;
+            }
+            
+            // Show UP button if scrolled down slightly
+            if (scrollTop > 50) {
+                scrollUpBtn.classList.add('visible');
+            } else {
+                scrollUpBtn.classList.remove('visible');
+            }
+
+            // Show DOWN button if content is scrollable and hasn't reached the bottom
+            // Using a tolerance (-2) to avoid cross-browser pixel rounding issues
+            if (scrollHeight > clientHeight && (scrollTop + clientHeight) < (scrollHeight - 2)) {
+                scrollDownBtn.classList.add('visible');
+            } else {
+                scrollDownBtn.classList.remove('visible');
+            }
+        }
+
+        // Monitor scroll events on all content panels
+        document.querySelectorAll('.content-panel').forEach(panel => {
+            panel.addEventListener('scroll', () => {
+                updateScrollButtons(panel);
+            });
+            
+            // Listen for resize changes that might affect scrollability
+            window.addEventListener('resize', () => {
+                if (panel.classList.contains('active')) {
+                    updateScrollButtons(panel);
+                }
+            });
+        });
+
+        // Monitor scroll events on the main window
+        window.addEventListener('scroll', () => {
+            if (!document.querySelector('.content-panel.active')) {
+                updateScrollButtons();
+            }
+        });
+        
+        // Initial check for main window on load and resize
+        window.addEventListener('resize', () => {
+            if (!document.querySelector('.content-panel.active')) {
+                updateScrollButtons();
+            }
+        });
+        setTimeout(() => updateScrollButtons(), 500); // Check shortly after load
+
+        // --- 4. Animated Background (Star Wars Cloud City Tech Vibe) ---
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        let techLines = [];
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Cloud/Dust Particles
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 3 + 1;
+                // Move mostly horizontally (wind on Cloud City)
+                this.speedX = (Math.random() - 0.2) * 1.5; 
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.alpha = Math.random() * 0.5 + 0.1;
+                // Mix of white/blue/orange
+                const colors = ['236, 240, 241', '189, 195, 199', '211, 84, 0'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // Wrap around edges
+                if (this.x > width + 10) this.x = -10;
+                if (this.x < -10) this.x = width + 10;
+                if (this.y > height + 10) this.y = -10;
+                if (this.y < -10) this.y = height + 10;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Background Tech Lines (circuit-like)
+        class TechLine {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.length = Math.random() * 200 + 50;
+                this.vertical = Math.random() > 0.5;
+                this.alpha = 0;
+                this.maxAlpha = Math.random() * 0.3 + 0.1;
+                this.fadeSpeed = Math.random() * 0.01 + 0.005;
+                this.fadingIn = true;
+            }
+            update() {
+                if (this.fadingIn) {
+                    this.alpha += this.fadeSpeed;
+                    if (this.alpha >= this.maxAlpha) this.fadingIn = false;
+                } else {
+                    this.alpha -= this.fadeSpeed;
+                    if (this.alpha <= 0) this.reset();
+                }
+            }
+            draw() {
+                ctx.strokeStyle = `rgba(44, 62, 80, ${this.alpha})`; // Shadow blue
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                if (this.vertical) {
+                    ctx.lineTo(this.x, this.y + this.length);
+                } else {
+                    ctx.lineTo(this.x + this.length, this.y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        // Initialize background elements
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+        for (let i = 0; i < 20; i++) techLines.push(new TechLine());
+
+        function animateBackground() {
+            // Create trailing effect by drawing semi-transparent background
+            ctx.fillStyle = 'rgba(15, 22, 38, 0.2)'; // Dark bg with low opacity
+            ctx.fillRect(0, 0, width, height);
+
+            techLines.forEach(line => {
+                line.update();
+                line.draw();
+            });
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animateBackground);
+        }
+
+        // Start animation after a slight delay to ensure everything is loaded
+        window.onload = function() {
+            setTimeout(animateBackground, 100);
+        };
+
+    </script>
+</body>
+</html>
