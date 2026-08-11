@@ -57,7 +57,7 @@
             background-image: url('school2.png');
             background-size: cover;
             background-position: center;
-            /* Gradient mask for smooth 30% to 70% opacity blending */
+            /* Gradient mask for smooth blending */
             mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
             -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
         }
@@ -66,7 +66,6 @@
             font-family: 'Cinzel', serif;
         }
 
-        /* Persona UI Elements */
         .persona-bg-text {
             position: fixed;
             top: 10%;
@@ -142,7 +141,6 @@
             color: var(--hr-white);
         }
 
-        /* Form Container Styling */
         .glass-panel {
             background: rgba(13, 40, 24, 0.7);
             backdrop-filter: blur(10px);
@@ -150,7 +148,6 @@
             border-left: 5px solid var(--hr-gold);
         }
 
-        /* Signature Pads */
         .signature-wrapper {
             background: #fff;
             border: 3px solid var(--hr-gold);
@@ -163,7 +160,6 @@
             cursor: crosshair;
         }
 
-        /* Animations */
         @keyframes slideInRight {
             from { opacity: 0; transform: translateX(50px) skewX(10deg); }
             to { opacity: 1; transform: translateX(0) skewX(0); }
@@ -172,7 +168,6 @@
             animation: slideInRight 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        /* PDF Template (Hidden from UI) */
         #pdf-template {
             position: fixed;
             left: -9999px;
@@ -194,12 +189,10 @@
         .pdf-sig-box { width: 30%; text-align: center; }
         .pdf-sig-img { max-width: 100%; height: 80px; object-fit: contain; border-bottom: 1px solid #000; margin-bottom: 5px;}
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
         ::-webkit-scrollbar-thumb { background: var(--hr-gold); }
 
-        /* Glitch Effect */
         #glitch-overlay {
             position: fixed;
             top: 0;
@@ -234,7 +227,6 @@
             80% { transform: translate(5px, 5px) rotate(1deg); }
         }
         
-        /* Status Badges */
         .badge {
             display: inline-block;
             padding: 0.25rem 0.5rem;
@@ -250,13 +242,10 @@
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
 
-    <!-- Glitch Overlay -->
     <div id="glitch-overlay"></div>
-
     <div id="bg-image"></div>
     <canvas id="bg-canvas"></canvas>
 
-    <!-- Background text for Persona vibe -->
     <div class="persona-bg-text">
         REKOD<br>AMALAN<br>BAIK
     </div>
@@ -290,7 +279,6 @@
 
                 <form id="amalan-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    <!-- 1. Kelas & Student Name (Split and Sequenced) -->
                     <div class="md:col-span-1 space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">Kelas</label>
                         <select id="class-select" required class="input-persona w-full p-3 text-lg cursor-pointer">
@@ -307,7 +295,6 @@
                         <input type="hidden" id="student-name">
                     </div>
 
-                    <!-- 2 & 3. Dates -->
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">2. Tarikh Direkodkan</label>
                         <input type="date" id="date-recorded" required class="input-persona w-full p-3" readonly>
@@ -317,7 +304,6 @@
                         <input type="date" id="date-incident" required class="input-persona w-full p-3">
                     </div>
 
-                    <!-- 4. Location -->
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">4. Tempat</label>
                         <select id="location" required class="input-persona w-full p-3">
@@ -326,7 +312,6 @@
                         </select>
                     </div>
 
-                    <!-- 8. Reporter (Moved up for better flow) -->
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">8. Nama Pelapor</label>
                         <select id="reporter-name" required class="input-persona w-full p-3">
@@ -334,7 +319,6 @@
                         </select>
                     </div>
 
-                    <!-- 5. Category & Marks -->
                     <div class="md:col-span-2 space-y-4 p-4 border border-[rgba(212,175,55,0.2)] bg-[rgba(0,0,0,0.3)]">
                         <h3 class="text-xl cinzel text-[#D4AF37]">5. Kategori dan Pecahan Amalan Baik</h3>
                         
@@ -366,20 +350,17 @@
                         </div>
                     </div>
 
-                    <!-- 6. Teacher Description -->
                     <div class="md:col-span-2 space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">6. Keterangan Guru</label>
                         <textarea id="description" rows="3" class="input-persona w-full p-3" placeholder="Sila nyatakan butiran kejadian..."></textarea>
                     </div>
 
-                    <!-- 7. Evidence -->
                     <div class="md:col-span-2 space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">7. Eviden (Gambar/Video)</label>
                         <input type="file" id="evidence-file" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:clip-diagonal file:border-0 file:text-sm file:font-bold file:bg-[#D4AF37] file:text-[#0D2818] hover:file:bg-[#04E762] hover:file:text-black transition-all cursor-pointer">
                         <p class="text-xs text-gray-500 mt-1">*Hanya imej akan disertakan dalam PDF. Fail besar mungkin tidak disimpan di pangkalan data.</p>
                     </div>
 
-                    <!-- 9 & 10. Signatures -->
                     <div class="md:col-span-2 mt-6">
                         <h3 class="text-xl cinzel text-[#D4AF37] mb-4 border-b border-[#D4AF37] pb-2">Tandatangan Pengesahan</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -403,7 +384,6 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="md:col-span-2 flex flex-col md:flex-row gap-4 mt-8">
                         <button type="submit" class="btn-persona flex-1 py-4 text-lg" id="submit-btn-text">Simpan Rekod</button>
                         <button type="button" onclick="window.resetForm()" class="px-8 py-4 bg-transparent border-2 border-gray-500 text-gray-300 hover:bg-gray-800 font-bold uppercase clip-diagonal transition-colors">Batal</button>
@@ -413,7 +393,7 @@
             </div>
         </section>
 
-        <!-- TAB 2: ALL RECORDS (SEMAKAN & PENGESAHAN) -->
+        <!-- TAB 2: ALL RECORDS -->
         <section id="records-tab" class="hidden animate-enter space-y-6">
             <div class="glass-panel clip-panel p-6 md:p-8">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
@@ -449,7 +429,7 @@
             </div>
         </section>
 
-        <!-- TAB 3: MERIT LIST (ONLY SAH RECORDS) -->
+        <!-- TAB 3: MERIT LIST -->
         <section id="list-tab" class="hidden animate-enter space-y-6">
             <div class="glass-panel clip-panel p-6 md:p-8">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
@@ -484,7 +464,7 @@
 
     </main>
 
-    <!-- HIDDEN PDF TEMPLATE (A4 format, clean styling for print) -->
+    <!-- HIDDEN PDF TEMPLATE -->
     <div id="pdf-template">
         <div class="pdf-header">
             <h1 style="font-size: 24px; font-weight: bold; margin: 0;">LAPORAN AMALAN BAIK MURID</h1>
@@ -561,7 +541,7 @@
         </div>
     </div>
 
-    <!-- Signature Modal for Semakan & Pengesahan in Senarai Rekod -->
+    <!-- Signature Modal for Semakan & Pengesahan -->
     <div id="signature-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
         <div class="glass-panel clip-panel p-6 w-full max-w-md relative mx-4">
             <h3 id="signature-modal-title" class="text-2xl cinzel text-[#D4AF37] mb-4">Tandatangan</h3>
@@ -578,36 +558,69 @@
         </div>
     </div>
 
+    <!-- Custom Alert Modal -->
+    <div id="custom-alert-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel clip-panel p-6 w-full max-w-sm relative mx-4 text-center">
+            <h3 class="text-xl cinzel text-[#ff003c] mb-4 border-b border-[rgba(255,0,60,0.3)] pb-2">Notis</h3>
+            <p id="alert-message" class="text-white mb-6 text-sm font-bold"></p>
+            <button onclick="document.getElementById('custom-alert-modal').classList.add('hidden')" class="btn-persona px-6 py-2 text-sm w-full bg-[#ff003c] text-white hover:bg-red-700">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="custom-prompt-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel clip-panel p-6 w-full max-w-sm relative mx-4">
+            <h3 class="text-xl cinzel text-[#D4AF37] mb-4 border-b border-[rgba(212,175,55,0.3)] pb-2">Pengesahan Keselamatan</h3>
+            <p id="prompt-message" class="text-white mb-4 text-sm font-bold"></p>
+            <input type="password" id="prompt-input" class="input-persona w-full p-3 text-lg mb-6 text-center" placeholder="KATA LALUAN">
+            <div class="flex gap-4">
+                <button id="prompt-submit" class="btn-persona flex-1 py-2 text-sm">Sahkan</button>
+                <button id="prompt-cancel" class="px-6 py-2 border-2 border-gray-500 text-gray-300 hover:bg-gray-800 font-bold uppercase clip-diagonal text-sm">Batal</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Environment variables
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
-        let db, auth, currentUser;
+        let db, auth, currentUser, analytics;
 
         async function initFirebase() {
             try {
-                if (typeof __firebase_config !== 'undefined') {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    const app = initializeApp(firebaseConfig);
-                    db = getFirestore(app);
-                    auth = getAuth(app);
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAVCAgVcSBBJL6GbKfRCjv2tK_LhWoLssE",
+                    authDomain: "pengurusan-disiplin.firebaseapp.com",
+                    projectId: "pengurusan-disiplin",
+                    storageBucket: "pengurusan-disiplin.firebasestorage.app",
+                    messagingSenderId: "778292133080",
+                    appId: "1:778292133080:web:4bc389ecf3f4487c826bad",
+                    measurementId: "G-8HSDV4GG0B"
+                };
 
+                const app = initializeApp(firebaseConfig);
+                analytics = getAnalytics(app);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                try {
                     if (typeof __initial_auth_token !== 'undefined') {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
                         await signInAnonymously(auth);
                     }
-                    currentUser = auth.currentUser;
-                    console.log("Firebase Auth Success:", currentUser.uid);
-                    
-                    // Load data for dashboard
-                    window.loadRecords();
-                } else {
-                    console.warn("Firebase config not found. App will run in local-only mode.");
+                } catch (authErr) {
+                    console.warn("Custom token failed. Falling back to anonymous auth.", authErr);
+                    await signInAnonymously(auth);
                 }
+                
+                currentUser = auth.currentUser;
+                console.log("Firebase Auth Success:", currentUser.uid);
+                
+                window.loadRecords();
             } catch (e) {
                 console.error("Firebase Init Error:", e);
             }
@@ -680,19 +693,14 @@
             }
         };
 
-        // UI State & Instances
-        let sigPadReporter, sigPadPk, sigPadGb;
-        let modalSigPad; // Pad for the pop-up modal
+        let sigPadReporter, sigPadPk, sigPadGb, modalSigPad;
         let currentSignId = null;
         let currentSignType = null;
         let studentsData = [];
         let base64Evidence = "";
-        
-        // Editing state
         window.editingId = null;
         window.currentEditingRecord = null;
 
-        // Elements
         const catSelect = document.getElementById('category-select');
         const subSelect = document.getElementById('subcategory-select');
         const markContainer = document.getElementById('mark-selection-container');
@@ -700,61 +708,84 @@
         const finalMarkInput = document.getElementById('final-mark');
         const displayMark = document.getElementById('display-mark');
         const evidenceFile = document.getElementById('evidence-file');
-        
         const classSelect = document.getElementById('class-select');
         const studentSelect = document.getElementById('student-select');
         const studentClassInput = document.getElementById('student-class');
         const studentNameInput = document.getElementById('student-name');
 
+        // Custom Modal Logic
+        window.showAlert = (msg) => {
+            document.getElementById('alert-message').textContent = msg;
+            document.getElementById('custom-alert-modal').classList.remove('hidden');
+        };
+
+        window.showPrompt = (msg) => {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-prompt-modal');
+                document.getElementById('prompt-message').textContent = msg;
+                const input = document.getElementById('prompt-input');
+                input.value = '';
+                modal.classList.remove('hidden');
+                input.focus();
+
+                const handleSubmit = () => {
+                    modal.classList.add('hidden');
+                    cleanup();
+                    resolve(input.value);
+                };
+
+                const handleCancel = () => {
+                    modal.classList.add('hidden');
+                    cleanup();
+                    resolve(null);
+                };
+
+                const cleanup = () => {
+                    document.getElementById('prompt-submit').removeEventListener('click', handleSubmit);
+                    document.getElementById('prompt-cancel').removeEventListener('click', handleCancel);
+                };
+
+                document.getElementById('prompt-submit').addEventListener('click', handleSubmit);
+                document.getElementById('prompt-cancel').addEventListener('click', handleCancel);
+            });
+        };
+
         window.onload = async () => {
             initAnimatedBackground();
-
             await initFirebase();
-
-            // Set today's date
             document.getElementById('date-recorded').valueAsDate = new Date();
             
-            // Init Signatures
             const canvasOpts = { backgroundColor: 'rgb(255, 255, 255)' };
             sigPadReporter = new SignaturePad(document.getElementById('sig-reporter'), canvasOpts);
             sigPadPk = new SignaturePad(document.getElementById('sig-pk'), canvasOpts);
             sigPadGb = new SignaturePad(document.getElementById('sig-gb'), canvasOpts);
-
-            // Init Modal Signature Pad
             modalSigPad = new SignaturePad(document.getElementById('modal-sig-pad'), canvasOpts);
 
             const studentCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv";
             const reporterCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSdF191iBW-AeowPV7V7Y8cOtViagbtuIkf4GivqTWFpxApaA9K9EuIcD5cot664hNH8vcHqOsxvJU2/pub?output=csv";
             
-            // Fetch Students CSV
             Papa.parse(studentCsvUrl, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
-                complete: function(results) {
-                    processCSVData(results.data);
-                },
+                complete: function(results) { processCSVData(results.data); },
                 error: function(err) {
                     console.error("CSV Parse Error:", err);
                     classSelect.innerHTML = '<option value="">Ralat memuat senarai kelas.</option>';
                 }
             });
 
-            // Fetch Reporters CSV
             Papa.parse(reporterCsvUrl, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
-                complete: function(results) {
-                    processReporterCSVData(results.data);
-                },
+                complete: function(results) { processReporterCSVData(results.data); },
                 error: function(err) {
                     console.error("CSV Parse Error (Reporters):", err);
                     document.getElementById('reporter-name').innerHTML = '<option value="">Ralat memuat senarai guru.</option>';
                 }
             });
 
-            // Populate Categories
             Object.keys(amalanCategories).forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat;
@@ -762,14 +793,11 @@
                 catSelect.appendChild(opt);
             });
 
-            // Handle Evidence file conversion to base64 for PDF
             evidenceFile.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(readerEvent) {
-                        base64Evidence = readerEvent.target.result;
-                    }
+                    reader.onload = function(readerEvent) { base64Evidence = readerEvent.target.result; }
                     reader.readAsDataURL(file);
                 } else {
                     base64Evidence = "";
@@ -797,7 +825,6 @@
                 });
             }
 
-            // Populate Class Dropdown
             Array.from(classes).sort().forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c;
@@ -805,11 +832,10 @@
                 classSelect.appendChild(opt);
             });
             
-            // Handle Class Selection -> Unlock & Populate Student Dropdown
             classSelect.addEventListener('change', (e) => {
                 const selectedClass = e.target.value;
                 studentClassInput.value = selectedClass;
-                studentNameInput.value = ""; // reset hidden input
+                studentNameInput.value = ""; 
                 
                 if (!selectedClass) {
                     studentSelect.innerHTML = '<option value="">-- Pilih Kelas Dahulu --</option>';
@@ -826,7 +852,7 @@
                     
                 filteredStudents.forEach(s => {
                     const opt = document.createElement('option');
-                    opt.value = s.name; // Just store name
+                    opt.value = s.name;
                     opt.textContent = s.name;
                     studentSelect.appendChild(opt);
                 });
@@ -857,7 +883,6 @@
             }
         }
 
-        // Category Selection Logic
         catSelect.addEventListener('change', (e) => {
             const cat = e.target.value;
             subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
@@ -877,7 +902,6 @@
             }
         });
 
-        // Subcategory Selection Logic
         subSelect.addEventListener('change', (e) => {
             const cat = catSelect.value;
             if (!cat || !e.target.value) {
@@ -888,11 +912,9 @@
 
             const marks = amalanCategories[cat].marks;
             if (marks[0] === marks[1]) {
-                // Fixed mark
                 markContainer.classList.add('hidden');
                 window.setMark(marks[0]);
             } else {
-                // Range, need user selection
                 markContainer.classList.remove('hidden');
                 markRadios.innerHTML = '';
                 for (let i = marks[0]; i <= marks[1]; i++) {
@@ -904,7 +926,7 @@
                     `;
                     markRadios.appendChild(label);
                 }
-                window.setMark(0); // Reset until chosen
+                window.setMark(0);
             }
         });
 
@@ -915,21 +937,27 @@
 
         window.clearPad = (type) => {
             if (type === 'reporter' && sigPadReporter) sigPadReporter.clear();
-            else if (type === 'pk' && sigPadPk) sigPadPk.clear();
-            else if (type === 'gb' && sigPadGb) sigPadGb.clear();
         }
 
         document.getElementById('amalan-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (parseInt(finalMarkInput.value) === 0) {
-                alert("Sila lengkapkan pilihan kategori untuk menjana markah merit.");
+                window.showAlert("Sila lengkapkan pilihan kategori untuk menjana markah merit.");
                 return;
             }
 
             if (sigPadReporter.isEmpty()) {
-                alert("Sila lengkapkan tandatangan pelapor.");
+                window.showAlert("Sila lengkapkan tandatangan pelapor.");
                 return;
+            }
+
+            const pass = await window.showPrompt("Sila masukkan kata laluan rahsia untuk menyimpan/mengemaskini rekod ini:");
+            if (pass !== '920307136255') {
+                 if (pass !== null) {
+                     window.showAlert("Kata laluan salah. Operasi dibatalkan.");
+                 }
+                 return;
             }
 
             const btn = document.getElementById('submit-btn-text');
@@ -937,7 +965,6 @@
             btn.textContent = "Menyimpan...";
             btn.disabled = true;
 
-            // Gather Data
             const formData = {
                 studentName: studentNameInput.value,
                 studentClass: studentClassInput.value,
@@ -956,17 +983,16 @@
                 timestamp: window.editingId ? window.currentEditingRecord.timestamp : new Date().toISOString()
             };
 
-            // Save to Firebase (Public Data Rule 1)
             if (db && currentUser) {
                 try {
                     if (window.editingId) {
                         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'amalan_baik', window.editingId);
                         await updateDoc(docRef, formData);
-                        alert("Rekod berjaya dikemaskini.");
+                        window.showAlert("Rekod berjaya dikemaskini.");
                     } else {
                         const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
                         await addDoc(colRef, formData);
-                        alert("Rekod berjaya disimpan.");
+                        window.showAlert("Rekod berjaya disimpan.");
                     }
                     
                     window.resetForm();
@@ -974,7 +1000,7 @@
                     window.switchTab('records-tab');
                 } catch (err) {
                     console.error("Error saving to Firestore:", err);
-                    alert("Ralat semasa menyimpan rekod.");
+                    window.showAlert("Ralat semasa menyimpan rekod.");
                 } finally {
                     btn.textContent = window.editingId ? "Kemaskini Rekod" : "Simpan Rekod";
                     btn.disabled = false;
@@ -986,7 +1012,6 @@
             const data = window.allRawRecords.find(r => r.id === id);
             if (!data) return;
 
-            // Populate Template
             document.getElementById('pdf-nama').textContent = data.studentName;
             document.getElementById('pdf-kelas').textContent = data.studentClass;
             document.getElementById('pdf-tarikh-rekod').textContent = data.dateRecorded;
@@ -999,7 +1024,6 @@
             document.getElementById('pdf-pelapor').textContent = data.reporter;
             document.getElementById('pdf-nama-pelapor-bawah').textContent = data.reporter;
 
-            // Handle Evidence Image
             const evContainer = document.getElementById('pdf-evidence-container');
             const evImg = document.getElementById('pdf-evidence-img');
             const evNone = document.getElementById('pdf-evidence-none');
@@ -1013,45 +1037,34 @@
                 evNone.style.display = 'block';
             }
 
-            // Populate Signatures
             const defaultBlank = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
             document.getElementById('pdf-sig-img-reporter').src = data.sigReporter || defaultBlank;
             document.getElementById('pdf-sig-img-pk').src = data.sigPk || defaultBlank;
             document.getElementById('pdf-sig-img-gb').src = data.sigGb || defaultBlank;
 
-            // Wait a tick for images to load into DOM
             await new Promise(r => setTimeout(r, 500));
 
-            // html2canvas
             const element = document.getElementById('pdf-template');
             
             try {
                 const canvas = await html2canvas(element, {
-                    scale: 2, // Higher resolution
+                    scale: 2,
                     useCORS: true,
                     logging: false,
-                    windowWidth: 794 // Force A4 width context
+                    windowWidth: 794 
                 });
 
                 const imgData = canvas.toDataURL('image/png');
-                
-                // jsPDF A4 portrait
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: 'p',
-                    unit: 'mm',
-                    format: 'a4'
-                });
+                const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
                 const canvasRatio = canvas.height / canvas.width;
                 let imgHeight = pdfWidth * canvasRatio;
 
-                // FIT TO PAGE LOGIC
                 if (imgHeight > pdfHeight) {
                     const scaledWidth = pdfHeight / canvasRatio;
-                    // Center horizontally if we had to scale down by height
                     pdf.addImage(imgData, 'PNG', (pdfWidth - scaledWidth) / 2, 0, scaledWidth, pdfHeight);
                 } else {
                     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
@@ -1061,7 +1074,7 @@
 
             } catch (err) {
                 console.error("PDF Gen Error:", err);
-                alert("Ralat semasa menjana PDF.");
+                window.showAlert("Ralat semasa menjana PDF.");
             }
         }
 
@@ -1073,7 +1086,6 @@
             
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
-                // No complex queries as per Rule 2, fetching all and sorting/filtering locally
                 const q = query(colRef);
                 const querySnapshot = await getDocs(q);
                 
@@ -1082,15 +1094,13 @@
                 
                 querySnapshot.forEach((d) => {
                     const data = d.data();
-                    data.id = d.id; // Store document ID for updating status
+                    data.id = d.id;
                     
-                    // Defaults for old records
                     if(!data.statusSemakan) data.statusSemakan = 'Belum Disemak';
                     if(!data.statusPengesahan) data.statusPengesahan = 'Belum Disahkan';
                     
                     rawRecords.push(data);
                     
-                    // Only aggregate for merit if 'Disahkan'
                     if (data.statusPengesahan === 'Disahkan') {
                         const key = `${data.studentName}|${data.studentClass}`;
                         
@@ -1107,11 +1117,9 @@
                     }
                 });
 
-                // Sort Raw Records by newest first
                 window.allRawRecords = rawRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 renderRawTable(window.allRawRecords);
 
-                // Convert Aggregated to array and sort by marks descending
                 window.allMeritRecords = Object.values(aggregated).sort((a, b) => b.totalMark - a.totalMark);
                 renderMeritTable(window.allMeritRecords);
 
@@ -1130,10 +1138,8 @@
             const canvas = document.getElementById('modal-sig-pad');
             
             title.textContent = type === 'semak' ? 'Tandatangan Semakan (PK HEM)' : 'Tandatangan Pengesahan (Guru Besar)';
-            
             modal.classList.remove('hidden');
             
-            // Adjust canvas resolution dynamically when shown
             setTimeout(() => {
                 const ratio =  Math.max(window.devicePixelRatio || 1, 1);
                 canvas.width = canvas.offsetWidth * ratio;
@@ -1158,7 +1164,7 @@
             if (!db || !currentSignId) return;
             
             if (modalSigPad.isEmpty()) {
-                alert("Sila masukkan tandatangan anda untuk meneruskan.");
+                window.showAlert("Sila masukkan tandatangan anda untuk meneruskan.");
                 return;
             }
 
@@ -1182,10 +1188,10 @@
                 
                 await updateDoc(docRef, updates);
                 window.closeSignatureModal();
-                window.loadRecords(); // Refresh tables silently
+                window.loadRecords(); 
             } catch (err) {
                 console.error("Error updating status", err);
-                alert("Ralat mengemaskini status.");
+                window.showAlert("Ralat mengemaskini status.");
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
@@ -1253,7 +1259,6 @@
             });
         }
 
-        // Search Filter Logic
         document.getElementById('search-student').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             if (window.allMeritRecords) {
@@ -1276,138 +1281,132 @@
             }
         });
 
-        // Utilities
         window.switchTab = (tabId) => {
             const tabs = ['form-tab', 'records-tab', 'list-tab'];
             const navs = ['nav-form', 'nav-records', 'nav-list'];
             
-            // Hide all tabs & reset button styles
             tabs.forEach(t => document.getElementById(t).classList.add('hidden'));
             navs.forEach(n => {
                 const btn = document.getElementById(n);
-            btn.classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
-            btn.classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
-        });
+                btn.classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
+                btn.classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
+            });
 
-        // Show active tab & set active button style
-        document.getElementById(tabId).classList.remove('hidden');
-        
-        const activeBtnMap = { 'form-tab': 'nav-form', 'records-tab': 'nav-records', 'list-tab': 'nav-list' };
-        const activeBtn = document.getElementById(activeBtnMap[tabId]);
-        activeBtn.classList.remove('bg-transparent', 'text-[#D4AF37]');
-        activeBtn.classList.add('bg-[#D4AF37]', 'text-[#0D2818]');
-    };
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtnMap = { 'form-tab': 'nav-form', 'records-tab': 'nav-records', 'list-tab': 'nav-list' };
+            const activeBtn = document.getElementById(activeBtnMap[tabId]);
+            activeBtn.classList.remove('bg-transparent', 'text-[#D4AF37]');
+            activeBtn.classList.add('bg-[#D4AF37]', 'text-[#0D2818]');
+        };
 
-    window.editRecord = (id) => {
-        const record = window.allRawRecords.find(r => r.id === id);
-        if (!record) return;
+        window.editRecord = async (id) => {
+            const pass = await window.showPrompt("Sila masukkan kata laluan rahsia untuk mengedit rekod ini:");
+            if (pass === '920307136255') {
+                const record = window.allRawRecords.find(r => r.id === id);
+                if (!record) return;
 
-        window.editingId = id;
-        window.currentEditingRecord = record;
+                window.editingId = id;
+                window.currentEditingRecord = record;
 
-        // Tukar ke tab borang
-        window.switchTab('form-tab');
-        document.getElementById('submit-btn-text').textContent = "Kemaskini Rekod";
+                window.switchTab('form-tab');
+                document.getElementById('submit-btn-text').textContent = "Kemaskini Rekod";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // Auto-scroll ke atas supaya pengguna nampak borang
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        // Isi input asas
-        document.getElementById('date-recorded').value = record.dateRecorded || "";
-        document.getElementById('date-incident').value = record.dateIncident || "";
-        document.getElementById('location').value = record.location || "";
-        
-        if (record.reporter) {
-            document.getElementById('reporter-name').value = record.reporter;
-        }
-        
-        document.getElementById('description').value = record.description || "";
-        base64Evidence = record.evidenceBase64 || "";
-
-        // Isi Kelas & Murid (Secara Segera/Synchronous)
-        if (record.studentClass) {
-            classSelect.value = record.studentClass;
-            classSelect.dispatchEvent(new Event('change')); // Hasilkan pilihan murid
-            
-            if (record.studentName) {
-                studentSelect.value = record.studentName;
-                studentNameInput.value = record.studentName;
-            }
-        }
-
-        // Isi Kategori & Pecahan (Secara Segera/Synchronous)
-        if (record.category) {
-            catSelect.value = record.category;
-            catSelect.dispatchEvent(new Event('change')); // Hasilkan pilihan pecahan
-            
-            if (record.subcategory) {
-                subSelect.value = record.subcategory;
-                subSelect.dispatchEvent(new Event('change')); // Hasilkan pilihan markah
+                document.getElementById('date-recorded').value = record.dateRecorded || "";
+                document.getElementById('date-incident').value = record.dateIncident || "";
+                document.getElementById('location').value = record.location || "";
                 
-                if (record.mark) {
-                    const radio = document.querySelector(`input[name="merit_choice"][value="${record.mark}"]`);
-                    if (radio) {
-                        radio.checked = true;
-                    }
-                    window.setMark(record.mark);
+                if (record.reporter) {
+                    document.getElementById('reporter-name').value = record.reporter;
                 }
-            }
-        }
+                
+                document.getElementById('description').value = record.description || "";
+                base64Evidence = record.evidenceBase64 || "";
 
-        // Isi Tandatangan
-        if (record.sigReporter) {
-            // Beri masa untuk canvas render sebelum melukis
-            setTimeout(() => {
-                if(sigPadReporter) sigPadReporter.fromDataURL(record.sigReporter);
-            }, 100);
-        } else {
+                if (record.studentClass) {
+                    classSelect.value = record.studentClass;
+                    classSelect.dispatchEvent(new Event('change')); 
+                    
+                    if (record.studentName) {
+                        setTimeout(() => {
+                            studentSelect.value = record.studentName;
+                            studentNameInput.value = record.studentName;
+                        }, 50);
+                    }
+                }
+
+                if (record.category) {
+                    catSelect.value = record.category;
+                    catSelect.dispatchEvent(new Event('change')); 
+                    
+                    if (record.subcategory) {
+                        setTimeout(() => {
+                            subSelect.value = record.subcategory;
+                            subSelect.dispatchEvent(new Event('change')); 
+                            
+                            if (record.mark) {
+                                setTimeout(() => {
+                                    const radio = document.querySelector(`input[name="merit_choice"][value="${record.mark}"]`);
+                                    if (radio) radio.checked = true;
+                                    window.setMark(record.mark);
+                                }, 50);
+                            }
+                        }, 50);
+                    }
+                }
+
+                if (record.sigReporter) {
+                    setTimeout(() => {
+                        if(sigPadReporter) sigPadReporter.fromDataURL(record.sigReporter);
+                    }, 100);
+                } else {
+                    if(sigPadReporter) sigPadReporter.clear();
+                }
+            } else if (pass !== null) {
+                window.showAlert("Kata laluan salah. Operasi mengedit dibatalkan.");
+            }
+        };
+
+        window.deleteRecord = async (id) => {
+            const pass = await window.showPrompt("Sila masukkan kata laluan rahsia untuk memadam rekod ini (Amaran: Tidak boleh diundur):");
+            if (pass === '920307136255') {
+                if (!db) {
+                    window.showAlert("Ralat sambungan pangkalan data. Sila cuba lagi.");
+                    return;
+                }
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'amalan_baik', id));
+                    window.showAlert("Rekod berjaya dipadam.");
+                    window.loadRecords(); 
+                } catch (err) {
+                    console.error("Delete Error:", err);
+                    window.showAlert("Ralat semasa memadam rekod: " + err.message);
+                }
+            } else if (pass !== null) {
+                window.showAlert("Kata laluan salah. Operasi memadam dibatalkan.");
+            }
+        };
+
+        window.resetForm = () => {
+            document.getElementById('amalan-form').reset();
+            window.editingId = null;
+            window.currentEditingRecord = null;
+            document.getElementById('submit-btn-text').textContent = "Simpan Rekod";
+
             if(sigPadReporter) sigPadReporter.clear();
-        }
-    };
+            base64Evidence = "";
+            window.setMark(0);
+            markContainer.classList.add('hidden');
+            subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
+            subSelect.disabled = true;
+            studentSelect.innerHTML = '<option value="">-- Pilih Kelas Dahulu --</option>';
+            studentSelect.disabled = true;
+            studentClassInput.value = "";
+            studentNameInput.value = "";
+            document.getElementById('date-recorded').valueAsDate = new Date();
+        };
 
-    window.deleteRecord = async (id) => {
-        const pass = prompt("Sila masukkan kata laluan rahsia untuk memadam rekod ini (Amaran: Tindakan tidak boleh diundur):");
-        if (pass === '920307136255') {
-            if (!db) {
-                alert("Ralat sambungan pangkalan data. Sila cuba lagi.");
-                return;
-            }
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'amalan_baik', id));
-                alert("Rekod berjaya dipadam.");
-                window.loadRecords(); // Segarkan jadual secara automatik
-            } catch (err) {
-                console.error("Delete Error:", err);
-                alert("Ralat semasa memadam rekod: " + err.message);
-            }
-        } else if (pass !== null && pass.trim() !== "") {
-            alert("Kata laluan salah. Operasi memadam dibatalkan.");
-        }
-    };
-
-    window.resetForm = () => {
-        document.getElementById('amalan-form').reset();
-        
-        window.editingId = null;
-        window.currentEditingRecord = null;
-        document.getElementById('submit-btn-text').textContent = "Simpan Rekod";
-
-        if(sigPadReporter) sigPadReporter.clear();
-        if(sigPadPk) sigPadPk.clear();
-        if(sigPadGb) sigPadGb.clear();
-        base64Evidence = "";
-        window.setMark(0);
-        markContainer.classList.add('hidden');
-        subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
-        subSelect.disabled = true;
-        studentSelect.innerHTML = '<option value="">-- Pilih Kelas Dahulu --</option>';
-        studentSelect.disabled = true;
-        studentClassInput.value = "";
-        studentNameInput.value = "";
-        document.getElementById('date-recorded').valueAsDate = new Date();
-    };
-
-    window.triggerGlitchTransition = () => {
+        window.triggerGlitchTransition = () => {
             const overlay = document.getElementById('glitch-overlay');
             overlay.classList.add('glitch-active');
             document.body.style.animation = "shake 0.4s ease-in-out";
@@ -1421,7 +1420,6 @@
             }, 600);
         };
 
-        // Initialize active tab styling properly on load
         window.switchTab('form-tab');
 
         function initAnimatedBackground() {
@@ -1451,7 +1449,6 @@
                 update() {
                     this.x += this.vx;
                     this.y += this.vy;
-
                     if (this.x < 0) this.x = canvas.width;
                     if (this.x > canvas.width) this.x = 0;
                     if (this.y < 0) this.y = canvas.height;
@@ -1473,7 +1470,6 @@
 
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
                 ctx.lineWidth = 0.5;
                 for(let i=0; i<particles.length; i++) {
                     for(let j=i+1; j<particles.length; j++) {
@@ -1490,15 +1486,9 @@
                         }
                     }
                 }
-
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-
+                particles.forEach(p => { p.update(); p.draw(); });
                 requestAnimationFrame(animate);
             }
-
             animate();
         }
     </script>
