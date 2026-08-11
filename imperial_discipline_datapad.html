@@ -112,14 +112,16 @@
             top: 0;
             z-index: 50;
             backdrop-filter: blur(5px);
+            flex-wrap: wrap;
         }
         .rdr2-tab {
             font-family: 'Rajdhani', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
+            md:font-size: 1.5rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            padding: 0.5rem 2rem;
+            padding: 0.5rem 1.5rem;
             color: #888;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -198,7 +200,7 @@
         .hidden-print { display: block; }
         .show-print { display: none; }
 
-        #custom-modal {
+        #custom-modal, #signature-modal {
             display: none;
         }
     </style>
@@ -224,7 +226,9 @@
 
         <div class="absolute inset-0 opacity-20 pointer-events-none" style="background: repeating-linear-gradient(0deg, transparent, transparent 2px, #cc0000 2px, #cc0000 4px);"></div>
         
-        <img src="logo.png" alt="Logo Unit Disiplin" class="h-24 w-auto mb-4 relative z-10 drop-shadow-[0_0_15px_rgba(204,0,0,0.8)] object-contain transition-transform hover:scale-105 duration-300" onerror="this.src='https://placehold.co/150x150/0a0a0a/cc0000?text=LOGO'">
+        <div class="relative z-10 w-full flex justify-center mb-4">
+            <img src="logo.png" alt="Logo Unit Disiplin" class="h-24 w-auto drop-shadow-[0_0_15px_rgba(204,0,0,0.8)] object-contain transition-transform hover:scale-105 duration-300" onerror="this.src='https://placehold.co/150x150/0a0a0a/cc0000?text=LOGO'">
+        </div>
         
         <h1 class="neon-text text-4xl md:text-5xl font-bold tracking-widest text-imperial-white relative z-10 text-center uppercase">HAL EHWAL MURID</h1>
         <h2 class="text-xl md:text-2xl tracking-widest text-imperial-red mt-2 font-mono relative z-10 text-center uppercase">UNIT DISIPLIN</h2>
@@ -232,10 +236,11 @@
 
     <nav class="rdr2-nav">
         <button id="tab-record" class="rdr2-tab active" onclick="switchTab('record')">Incident Report</button>
+        <button id="tab-pending" class="rdr2-tab" onclick="switchTab('pending')">Senarai Rekod</button>
         <button id="tab-archive" class="rdr2-tab" onclick="switchTab('archive')">Databank Archive</button>
     </nav>
 
-    <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full">
+    <main class="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full">
         
         <!-- Custom Modal for Alerts -->
         <div id="custom-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -246,7 +251,48 @@
             </div>
         </div>
 
-        <!-- ==================== TAB 1: NEW RECORD FORM ==================== -->
+        <!-- Password Modal for Deletion -->
+        <div id="password-modal" class="fixed inset-0 z-[110] items-center justify-center bg-black/80 backdrop-blur-sm" style="display: none;">
+            <div class="bg-imperial-darkgray border-2 border-imperial-red p-6 rounded-md shadow-[0_0_20px_#cc0000] max-w-sm w-full text-center">
+                <h3 class="text-xl font-bold text-imperial-red mb-4 uppercase tracking-wider">Pengesahan Pentadbir</h3>
+                <p class="text-imperial-lightgray font-mono mb-4 text-sm">Sila masukkan kata laluan untuk memadam rekod.</p>
+                <input type="password" id="delete-password-input" class="imperial-input w-full p-2 mb-4 text-center tracking-widest font-mono text-lg" placeholder="********">
+                <div class="flex justify-between space-x-4 mt-2">
+                    <button onclick="closePasswordModal()" class="px-4 py-2 bg-imperial-gray text-white font-bold rounded hover:bg-gray-600 border border-gray-500 transition-colors w-full uppercase tracking-widest text-sm">Batal</button>
+                    <button onclick="confirmDeleteRecord()" class="px-4 py-2 bg-imperial-red text-white font-bold rounded hover:bg-imperial-darkred transition-colors w-full uppercase tracking-widest text-sm shadow-[0_0_10px_rgba(204,0,0,0.5)]">Padam</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signature Modal for Semakan/Pengesahan -->
+        <div id="signature-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
+            <div class="bg-imperial-black border-2 border-imperial-red p-6 rounded-md shadow-[0_0_30px_#cc0000] max-w-2xl w-full">
+                <h3 class="text-2xl font-bold text-imperial-white mb-2 uppercase tracking-wider border-b border-imperial-red pb-2">Pengesahan Dokumen</h3>
+                <p class="text-imperial-lightgray font-mono text-sm mb-6 uppercase">Rekod ID: <span id="sign-modal-id" class="text-imperial-red"></span></p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- PK HEM Signature -->
+                    <div class="space-y-2 text-center">
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold font-mono">Disemak Oleh:<br><span class="text-imperial-white font-imperial text-base">Ling Mee Choo (PK HEM)</span></label>
+                        <canvas id="modal-pad-pk" class="signature-canvas"></canvas>
+                        <button type="button" onclick="clearModalPad('pk')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                    </div>
+                    <!-- Guru Besar Signature -->
+                    <div class="space-y-2 text-center">
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold font-mono">Disahkan Oleh:<br><span class="text-imperial-white font-imperial text-base">Aziz bin Tahir (Guru Besar)</span></label>
+                        <canvas id="modal-pad-gb" class="signature-canvas"></canvas>
+                        <button type="button" onclick="clearModalPad('gb')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button onclick="closeSignatureModal()" class="px-6 py-2 bg-imperial-darkgray text-white font-bold rounded hover:bg-imperial-gray border border-imperial-gray transition-colors uppercase tracking-widest">Batal</button>
+                    <button onclick="saveSignatures()" class="px-6 py-2 bg-imperial-red text-white font-bold rounded hover:bg-imperial-darkred shadow-[0_0_15px_rgba(204,0,0,0.5)] transition-all uppercase tracking-widest">Simpan Pengesahan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 1: NEW/EDIT RECORD FORM ==================== -->
         <section id="section-record" class="block">
             <div id="pdf-content" class="bg-imperial-black border border-imperial-gray rounded-lg p-6 shadow-2xl relative">
                 
@@ -258,38 +304,40 @@
                 <form id="discipline-form" class="space-y-6">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- 1. Nama Murid -->
+                        <!-- 1. Kelas (Selection First) -->
                         <div class="space-y-2">
                             <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider flex items-center justify-between">
-                                <span>1. Nama Murid</span>
+                                <span>1. Kelas</span>
                                 <span id="student-status" class="text-xs font-mono text-yellow-500">Memuat turun data CSV...</span>
                             </label>
-                            <select id="student-name" class="imperial-input w-full p-3" required onchange="updateClassField()">
+                            <select id="student-class" class="imperial-input w-full p-3" required onchange="updateNameDropdown()">
                                 <option value="">-- Peringkat Data: Memuat turun --</option>
                             </select>
                         </div>
 
-                        <!-- 1b. Kelas -->
+                        <!-- 2. Nama Murid (Dependent on Kelas) -->
                         <div class="space-y-2">
-                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">Kelas</label>
-                            <input type="text" id="student-class" class="imperial-input w-full p-3 bg-black/30" required readonly placeholder="-">
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">2. Nama Murid</label>
+                            <select id="student-name" class="imperial-input w-full p-3" required disabled>
+                                <option value="">-- Sila Pilih Kelas Dahulu --</option>
+                            </select>
                         </div>
 
-                        <!-- 2. Tarikh Direkodkan -->
+                        <!-- 3. Tarikh Direkodkan -->
                         <div class="space-y-2">
-                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">2. Tarikh Direkodkan</label>
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">3. Tarikh Direkodkan</label>
                             <input type="date" id="date-recorded" class="imperial-input w-full p-3" required readonly>
                         </div>
 
-                        <!-- 3. Tarikh Kejadian -->
+                        <!-- 4. Tarikh Kejadian -->
                         <div class="space-y-2">
-                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">3. Tarikh Kejadian</label>
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">4. Tarikh Kejadian</label>
                             <input type="date" id="date-incident" class="imperial-input w-full p-3" required>
                         </div>
 
-                        <!-- 4. Tempat -->
+                        <!-- 5. Tempat -->
                         <div class="space-y-2 md:col-span-2">
-                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">4. Tempat Kejadian</label>
+                            <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">5. Tempat Kejadian</label>
                             <div class="flex space-x-6 p-3 bg-imperial-darkgray border border-imperial-gray rounded">
                                 <label class="flex items-center space-x-2 cursor-pointer hover:text-imperial-red transition-colors">
                                     <input type="radio" name="location" value="Dalam Sekolah" class="form-radio text-imperial-red bg-transparent border-imperial-red focus:ring-imperial-red" required>
@@ -303,10 +351,10 @@
                         </div>
                     </div>
 
-                    <!-- 5. A. REKOD SALAH LAKU DISIPLIN -->
+                    <!-- 6. A. REKOD SALAH LAKU DISIPLIN -->
                     <div class="mt-8 border-t border-imperial-gray pt-6">
                         <label class="block text-imperial-red uppercase text-xl font-bold tracking-wider mb-4 flex items-center">
-                            <span class="mr-2">5. Rekod Salah Laku Disiplin</span>
+                            <span class="mr-2">6. Rekod Salah Laku Disiplin</span>
                             <span class="flex-grow h-px bg-gradient-to-r from-imperial-red to-transparent"></span>
                         </label>
                         
@@ -332,25 +380,25 @@
                         </div>
                     </div>
 
-                    <!-- 6. Keterangan guru -->
+                    <!-- 7. Keterangan guru -->
                     <div class="space-y-2 mt-6">
-                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">6. Keterangan Guru (Laporan Kejadian)</label>
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">7. Keterangan Guru (Laporan Kejadian)</label>
                         <textarea id="teacher-desc" rows="4" class="imperial-input w-full p-3" placeholder="Sila nyatakan kronologi kejadian..." required></textarea>
                     </div>
 
-                    <!-- 7. Eviden -->
+                    <!-- 8. Eviden -->
                     <div class="space-y-2">
-                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">7. Eviden (Gambar/Dokumen)</label>
+                        <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider">8. Eviden (Gambar/Dokumen)</label>
                         <input type="file" id="evidence-file" accept="image/*" class="imperial-input w-full p-2 text-sm">
                         <div id="evidence-preview" class="mt-2 hidden">
                             <img id="preview-img" src="" alt="Evidence Preview" class="max-h-48 border border-imperial-gray rounded">
                         </div>
                     </div>
 
-                    <!-- 8. Nama Pelapor -->
+                    <!-- 9. Nama Pelapor -->
                     <div class="space-y-2">
                         <label class="block text-imperial-lightgray uppercase text-sm font-bold tracking-wider flex items-center justify-between">
-                            <span>8. Nama Pelapor</span>
+                            <span>9. Nama Pelapor</span>
                             <span id="reporter-status" class="text-xs font-mono text-yellow-500">Memuat turun data CSV...</span>
                         </label>
                         <select id="reporter-name" class="imperial-input w-full p-3" required>
@@ -358,31 +406,32 @@
                         </select>
                     </div>
 
-                    <!-- 9 & 10. Tandatangan -->
+                    <!-- 10. Tandatangan Pelapor (PK/GB moved to modal/display only for PDF) -->
                     <div class="mt-8 border-t border-imperial-gray pt-6">
                         <label class="block text-imperial-red uppercase text-xl font-bold tracking-wider mb-4 flex items-center">
-                            <span class="mr-2">9 & 10. Pengesahan (E-Sign)</span>
+                            <span class="mr-2">10. Pengesahan Laporan</span>
                             <span class="flex-grow h-px bg-gradient-to-r from-imperial-red to-transparent"></span>
                         </label>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Teacher Signature -->
-                            <div class="space-y-2 text-center">
+                            <!-- Teacher Signature (Active) -->
+                            <div class="space-y-2 text-center" id="container-pad-teacher">
                                 <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Tandatangan Pelapor</label>
                                 <canvas id="pad-teacher" class="signature-canvas"></canvas>
-                                <button type="button" onclick="clearPad('teacher')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                                <img id="img-teacher" class="hidden signature-canvas object-contain bg-transparent border-none">
+                                <button type="button" id="btn-clear-teacher" onclick="clearPad('teacher')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider no-print">Padam Semula</button>
                             </div>
-                            <!-- PK HEM Signature -->
+                            <!-- PK HEM Signature (Display Only for PDF) -->
                             <div class="space-y-2 text-center">
-                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disemak Oleh (Pilihan):<br><span class="text-imperial-white font-imperial text-sm">Ling Mee Choo (PK HEM)</span></label>
-                                <canvas id="pad-pk" class="signature-canvas"></canvas>
-                                <button type="button" onclick="clearPad('pk')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disemak Oleh:<br><span class="text-imperial-white font-imperial text-sm">Ling Mee Choo (PK HEM)</span></label>
+                                <div id="display-status-pk" class="text-yellow-500 font-mono text-sm py-8 border border-dashed border-imperial-gray rounded">Belum Disemak</div>
+                                <img id="display-img-pk" class="hidden signature-canvas object-contain bg-transparent border-none">
                             </div>
-                            <!-- Guru Besar Signature -->
+                            <!-- Guru Besar Signature (Display Only for PDF) -->
                             <div class="space-y-2 text-center">
-                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disahkan Oleh (Pilihan):<br><span class="text-imperial-white font-imperial text-sm">Aziz bin Tahir (Guru Besar)</span></label>
-                                <canvas id="pad-gb" class="signature-canvas"></canvas>
-                                <button type="button" onclick="clearPad('gb')" class="text-xs text-imperial-red hover:text-white uppercase tracking-wider">Padam Semula</button>
+                                <label class="block text-imperial-lightgray uppercase text-xs font-bold font-mono">Disahkan Oleh:<br><span class="text-imperial-white font-imperial text-sm">Aziz bin Tahir (Guru Besar)</span></label>
+                                <div id="display-status-gb" class="text-yellow-500 font-mono text-sm py-8 border border-dashed border-imperial-gray rounded">Belum Disahkan</div>
+                                <img id="display-img-gb" class="hidden signature-canvas object-contain bg-transparent border-none">
                             </div>
                         </div>
                     </div>
@@ -394,12 +443,9 @@
                     </div>
 
                     <!-- Actions -->
-                    <div class="pt-6 flex flex-col md:flex-row gap-4 justify-end no-print">
-                        <button type="button" onclick="saveRecord()" class="px-8 py-3 bg-imperial-darkgray border border-imperial-gray text-white font-bold rounded hover:bg-imperial-gray hover:border-white transition-all uppercase tracking-widest flex-1 md:flex-none">
-                            Simpan Ke Pangkalan Data
-                        </button>
-                        <button type="button" onclick="generatePDF()" class="px-8 py-3 bg-imperial-red text-white font-bold rounded hover:bg-imperial-darkred shadow-[0_0_15px_rgba(204,0,0,0.5)] transition-all uppercase tracking-widest flex-1 md:flex-none">
-                            11. Jana Laporan PDF
+                    <div class="pt-6 flex justify-end no-print">
+                        <button type="button" id="btn-save-record" onclick="saveRecord()" class="px-10 py-4 bg-imperial-red text-white font-bold rounded hover:bg-imperial-darkred shadow-[0_0_15px_rgba(204,0,0,0.5)] transition-all uppercase tracking-widest w-full md:w-auto">
+                            Simpan Rekod Laporan
                         </button>
                     </div>
 
@@ -407,39 +453,71 @@
             </div>
         </section>
 
-        <!-- ==================== TAB 2: DATABANK ARCHIVE ==================== -->
-        <section id="section-archive" class="hidden">
+        <!-- ==================== TAB 2: SENARAI REKOD (PENDING/ACTION) ==================== -->
+        <section id="section-pending" class="hidden">
             <div class="bg-imperial-black border border-imperial-gray rounded-lg p-6 shadow-2xl">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-imperial-gray pb-4">
-                    <div>
-                        <h2 class="text-3xl font-bold text-imperial-white uppercase tracking-widest">12. Senarai Rekod Disiplin</h2>
-                        <p class="text-imperial-lightgray font-mono mt-1">PANGKALAN DATA BERPUSAT</p>
-                    </div>
-                    <div class="mt-4 md:mt-0 w-full md:w-64">
-                        <input type="text" id="search-student" onkeyup="filterRecords()" placeholder="Tapis nama murid..." class="imperial-input w-full p-2">
-                    </div>
+                <div class="mb-8 border-b border-imperial-gray pb-4">
+                    <h2 class="text-3xl font-bold text-imperial-white uppercase tracking-widest">Senarai Rekod Semasa</h2>
+                    <p class="text-imperial-lightgray font-mono mt-1">SEMAKAN & PENGESAHAN PENTADBIR</p>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse" id="records-table">
+                    <table class="w-full text-left border-collapse" id="pending-table">
                         <thead>
-                            <tr class="bg-imperial-darkgray border-b-2 border-imperial-red text-imperial-lightgray uppercase text-sm font-bold tracking-wider">
-                                <th class="p-3">Tarikh Kejadian</th>
+                            <tr class="bg-imperial-darkgray border-b-2 border-imperial-red text-imperial-lightgray uppercase text-xs font-bold tracking-wider">
+                                <th class="p-3">Tarikh</th>
                                 <th class="p-3">Nama Murid</th>
                                 <th class="p-3">Kelas</th>
-                                <th class="p-3">Pelapor</th>
-                                <th class="p-3 text-center">Markah Terkumpul</th>
+                                <th class="p-3 text-center">Status Semakan</th>
+                                <th class="p-3 text-center">Status Pengesahan</th>
                                 <th class="p-3 text-center">Tindakan</th>
                             </tr>
                         </thead>
-                        <tbody id="records-tbody" class="text-imperial-white font-mono text-sm divide-y divide-imperial-gray">
+                        <tbody id="pending-tbody" class="text-imperial-white font-mono text-sm divide-y divide-imperial-gray">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
                 
-                <div id="empty-state" class="text-center py-12 hidden">
-                    <p class="text-imperial-lightgray font-mono">TIADA REKOD DIJUMPAI DALAM PANGKALAN DATA.</p>
+                <div id="pending-empty-state" class="text-center py-12 hidden">
+                    <p class="text-imperial-lightgray font-mono">TIADA REKOD DALAM SISTEM.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: DATABANK ARCHIVE ==================== -->
+        <section id="section-archive" class="hidden">
+            <div class="bg-imperial-black border border-imperial-gray rounded-lg p-6 shadow-2xl">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-imperial-gray pb-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-imperial-white uppercase tracking-widest">Databank Archive</h2>
+                        <p class="text-imperial-lightgray font-mono mt-1">REKOD YANG DISAHKAN (SAH SAHAJA)</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 w-full md:w-64">
+                        <input type="text" id="search-student" onkeyup="filterArchive()" placeholder="Tapis nama murid..." class="imperial-input w-full p-2">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="archive-table">
+                        <thead>
+                            <tr class="bg-imperial-darkgray border-b-2 border-imperial-red text-imperial-lightgray uppercase text-xs font-bold tracking-wider">
+                                <th class="p-3">Tarikh Kejadian</th>
+                                <th class="p-3">Nama Murid</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3">Pelapor</th>
+                                <th class="p-3 text-center">Markah Semasa</th>
+                                <th class="p-3 text-center">Terkumpul</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archive-tbody" class="text-imperial-white font-mono text-sm divide-y divide-imperial-gray">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="archive-empty-state" class="text-center py-12 hidden">
+                    <p class="text-imperial-lightgray font-mono">TIADA REKOD YANG DISAHKAN DIJUMPAI.</p>
                 </div>
             </div>
         </section>
@@ -449,7 +527,8 @@
     <script>
         // --- DATA STRUCTURES ---
         
-        let studentList = [];
+        let studentList = []; // Raw CSV rows
+        let classList = [];   // Unique classes
 
         // Disciplinary Offenses Data
         const disciplineData = {
@@ -652,7 +731,8 @@
                     { desc: "Menyentuh barang peribadi murid lain tanpa izin", mark: 3 },
                     { desc: "Mengganggu privasi murid lain", mark: 5 },
                     { desc: "Mengintai", mark: 7 },
-                    { desc: "Berada dalam keadaan yang melanggar batas kesopanan sekolah", mark: 4 }
+                    { desc: "Berada dalam keadaan yang melanggar batas kesopanan sekolah", mark: 4 },
+                    { desc: "Mengulangi perbuatan selepas diberikan teguran dan intervensi", mark: 2 }
                 ],
                 "PERGADUHAN, AGRESIF DAN ANCAMAN KESELAMATAN": [
                     { desc: "Mencetuskan pertengkaran", mark: 3 },
@@ -759,9 +839,13 @@
         };
 
         // --- GLOBAL VARIABLES & STATE ---
-        let signaturePads = {};
+        let signaturePads = {}; // Base pads for form
+        let modalPads = {}; // Pads for the modal
         let currentTotalMarks = 0;
         let recordsData = JSON.parse(localStorage.getItem('imperialDisciplineRecords')) || [];
+        let editingRecordId = null;
+        let signingRecordId = null;
+        let recordToDeleteId = null; // Track which record is pending deletion
 
         
         document.addEventListener("DOMContentLoaded", () => {
@@ -771,7 +855,7 @@
             fetchReporterCSV();
             renderOffensesUI();
             initSignaturePads();
-            renderRecordsTable();
+            updateTables();
             
             // Image Preview logic
             document.getElementById('evidence-file').addEventListener('change', function(e) {
@@ -801,10 +885,8 @@
 
         // Glitch Transition Function
         function goBackWithGlitch() {
-            // Trigger screen shake on body
             document.body.style.animation = 'screenShake 0.4s ease-in-out';
             
-            // Create and append laser glitch overlay
             const overlay = document.createElement('div');
             overlay.style.position = 'fixed';
             overlay.style.top = '0';
@@ -819,7 +901,6 @@
             
             document.body.appendChild(overlay);
             
-            // Redirect after animation completes
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 450);
@@ -842,8 +923,8 @@
                 document.getElementById('live-date').textContent = `${day}.${month}.${year}`;
             }
             
-            updateClock(); // Set immediately to avoid 00:00:00 flash
-            setInterval(updateClock, 1000); // Update every second
+            updateClock();
+            setInterval(updateClock, 1000);
         }
 
         function initDate() {
@@ -852,131 +933,138 @@
             document.getElementById('date-incident').max = today;
         }
 
-        function fetchStudentCSV() {
+        async function fetchStudentCSV() {
             const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv';
             const statusEl = document.getElementById('student-status');
+            const classSelect = document.getElementById('student-class');
             
-            fetch(csvUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error("HTTP error " + response.status);
-                    return response.text();
-                })
-                .then(csvText => {
-                    Papa.parse(csvText, {
-                        header: true,
-                        skipEmptyLines: true, // Prevents empty rows from breaking the list
-                        complete: function(results) {
-                            const select = document.getElementById('student-name');
-                            select.innerHTML = '<option value="">-- Pilih Nama Murid --</option>';
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                const csvText = await response.text();
+                
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        classSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+                        
+                        if(results.data && results.data.length > 0) {
+                            studentList = results.data;
                             
-                            if(results.data && results.data.length > 0) {
-                                studentList = results.data;
-                                
-                                // Dynamically find 'Nama' column or default to 1st column
-                                const keys = Object.keys(results.data[0]);
-                                const nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[0]; 
-                                
-                                results.data.forEach((row, index) => {
-                                    if(row[nameKey] && row[nameKey].trim() !== '') {
-                                        const option = document.createElement('option');
-                                        option.value = index; // Store index to retrieve class later
-                                        option.textContent = row[nameKey];
-                                        select.appendChild(option);
-                                    }
-                                });
-                                statusEl.innerText = 'Data Dimuat Turun';
-                                statusEl.className = 'text-xs font-mono text-green-500';
-                            } else {
-                                statusEl.innerText = 'Data Kosong';
-                                statusEl.className = 'text-xs font-mono text-red-500';
-                            }
-                        },
-                        error: function(err) {
-                            throw err;
+                            // Discover dynamic keys for Name and Class
+                            const keys = Object.keys(studentList[0]);
+                            const classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan') || k.toLowerCase().includes('tahun')) || (keys.length > 1 ? keys[1] : keys[0]);
+                            
+                            // Extract unique classes
+                            const classesSet = new Set();
+                            studentList.forEach(row => {
+                                if(row[classKey] && row[classKey].trim() !== '') {
+                                    classesSet.add(row[classKey].trim());
+                                }
+                            });
+                            
+                            classList = Array.from(classesSet).sort();
+                            
+                            classList.forEach(cls => {
+                                const option = document.createElement('option');
+                                option.value = cls;
+                                option.textContent = cls;
+                                classSelect.appendChild(option);
+                            });
+                            
+                            statusEl.innerText = 'Data Dimuat Turun';
+                            statusEl.className = 'text-xs font-mono text-green-500';
+                        } else {
+                            statusEl.innerText = 'Data Kosong';
+                            statusEl.className = 'text-xs font-mono text-red-500';
                         }
-                    });
-                })
-                .catch(err => {
-                    statusEl.innerText = 'Ralat Rangkaian';
-                    statusEl.className = 'text-xs font-mono text-red-500 uppercase';
-                    console.error("CSV Fetch Error:", err);
-                    document.getElementById('student-name').innerHTML = '<option value="">-- Gagal Memuat Turun --</option>';
+                    }
                 });
-        }
-
-        function updateClassField() {
-            const select = document.getElementById('student-name');
-            const classInput = document.getElementById('student-class');
-            const selectedIndex = select.value;
-            
-            if (selectedIndex !== "" && studentList[selectedIndex]) {
-                const row = studentList[selectedIndex];
-                const keys = Object.keys(row);
-                
-                // Dynamically find 'Kelas' column or default to 2nd column
-                const classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan') || k.toLowerCase().includes('tahun')) || (keys.length > 1 ? keys[1] : keys[0]);
-                
-                classInput.value = row[classKey] || 'N/A';
-            } else {
-                classInput.value = '';
+            } catch (err) {
+                statusEl.innerText = 'Ralat Rangkaian';
+                statusEl.className = 'text-xs font-mono text-red-500 uppercase';
+                console.error("CSV Fetch Error:", err);
+                classSelect.innerHTML = '<option value="">-- Gagal Memuat Turun --</option>';
             }
         }
 
-        function fetchReporterCSV() {
+        function updateNameDropdown() {
+            const classSelect = document.getElementById('student-class');
+            const nameSelect = document.getElementById('student-name');
+            const selectedClass = classSelect.value;
+            
+            nameSelect.innerHTML = '<option value="">-- Pilih Nama Murid --</option>';
+            
+            if (selectedClass !== "") {
+                const keys = Object.keys(studentList[0]);
+                const nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[0]; 
+                const classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan') || k.toLowerCase().includes('tahun')) || (keys.length > 1 ? keys[1] : keys[0]);
+
+                const filteredStudents = studentList.filter(s => s[classKey].trim() === selectedClass);
+                
+                filteredStudents.forEach(student => {
+                    if(student[nameKey] && student[nameKey].trim() !== '') {
+                        const option = document.createElement('option');
+                        option.value = student[nameKey];
+                        option.textContent = student[nameKey];
+                        nameSelect.appendChild(option);
+                    }
+                });
+                
+                nameSelect.disabled = false;
+            } else {
+                nameSelect.disabled = true;
+                nameSelect.innerHTML = '<option value="">-- Sila Pilih Kelas Dahulu --</option>';
+            }
+        }
+
+        async function fetchReporterCSV() {
             const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdF191iBW-AeowPV7V7Y8cOtViagbtuIkf4GivqTWFpxApaA9K9EuIcD5cot664hNH8vcHqOsxvJU2/pub?output=csv';
             const statusEl = document.getElementById('reporter-status');
             
-            fetch(csvUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error("HTTP error " + response.status);
-                    return response.text();
-                })
-                .then(csvText => {
-                    Papa.parse(csvText, {
-                        header: true,
-                        skipEmptyLines: true, // Prevents empty rows from breaking the list
-                        complete: function(results) {
-                            const select = document.getElementById('reporter-name');
-                            select.innerHTML = '<option value="">-- Pilih Nama Pelapor --</option>';
-                            
-                            if(results.data && results.data.length > 0) {
-                                // Assuming the name is in the first column or named 'Nama'/'Name'
-                                const keys = Object.keys(results.data[0]);
-                                const nameKey = keys[0]; 
-
-                                results.data.forEach(row => {
-                                    if(row[nameKey] && row[nameKey].trim() !== '') {
-                                        const option = document.createElement('option');
-                                        option.value = row[nameKey];
-                                        option.textContent = row[nameKey];
-                                        select.appendChild(option);
-                                    }
-                                });
-                                statusEl.innerText = 'Data Dimuat Turun';
-                                statusEl.className = 'text-xs font-mono text-green-500';
-                            } else {
-                                statusEl.innerText = 'Data Kosong';
-                                statusEl.className = 'text-xs font-mono text-red-500';
-                            }
-                        },
-                        error: function(err) {
-                            throw err;
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                const csvText = await response.text();
+                
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const select = document.getElementById('reporter-name');
+                        select.innerHTML = '<option value="">-- Pilih Nama Pelapor --</option>';
+                        
+                        if(results.data && results.data.length > 0) {
+                            const nameKey = Object.keys(results.data[0])[0]; 
+                            results.data.forEach(row => {
+                                if(row[nameKey] && row[nameKey].trim() !== '') {
+                                    const option = document.createElement('option');
+                                    option.value = row[nameKey];
+                                    option.textContent = row[nameKey];
+                                    select.appendChild(option);
+                                }
+                            });
+                            statusEl.innerText = 'Data Dimuat Turun';
+                            statusEl.className = 'text-xs font-mono text-green-500';
+                        } else {
+                            statusEl.innerText = 'Data Kosong';
+                            statusEl.className = 'text-xs font-mono text-red-500';
                         }
-                    });
-                })
-                .catch(err => {
-                    statusEl.innerText = 'Ralat Rangkaian';
-                    statusEl.className = 'text-xs font-mono text-red-500 uppercase';
-                    console.error("CSV Fetch Error:", err);
-                    document.getElementById('reporter-name').innerHTML = '<option value="">-- Gagal Memuat Turun --</option>';
+                    }
                 });
+            } catch (err) {
+                statusEl.innerText = 'Ralat Rangkaian';
+                statusEl.className = 'text-xs font-mono text-red-500 uppercase';
+                console.error("CSV Fetch Error:", err);
+                document.getElementById('reporter-name').innerHTML = '<option value="">-- Gagal Memuat Turun --</option>';
+            }
         }
 
         function renderOffensesUI() {
             const container = document.getElementById('offenses-container');
             
             for (const [tahap, categories] of Object.entries(disciplineData)) {
-                // Tahap Header
                 const tahapDiv = document.createElement('div');
                 tahapDiv.className = 'border border-imperial-gray rounded bg-imperial-black overflow-hidden mb-4';
                 
@@ -1034,35 +1122,51 @@
         }
 
         function initSignaturePads() {
-            const canvasConfigs = [
-                { id: 'pad-teacher', key: 'teacher' },
-                { id: 'pad-pk', key: 'pk' },
-                { id: 'pad-gb', key: 'gb' }
-            ];
-
-            canvasConfigs.forEach(config => {
-                const canvas = document.getElementById(config.id);
-                // Adjust canvas resolution for sharp drawing
+            // Delay initialization slightly to ensure CSS layout and grid widths are fully resolved
+            setTimeout(() => {
                 const ratio =  Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
-
-                signaturePads[config.key] = new SignaturePad(canvas, {
-                    penColor: "rgb(20, 20, 20)",
-                    backgroundColor: "rgba(255, 255, 255, 0)"
+                
+                // 1. Setup Form Pad (Teacher)
+                const canvasTeacher = document.getElementById('pad-teacher');
+                
+                // Use robust fallbacks in case offsetWidth is still 0
+                const tWidth = canvasTeacher.offsetWidth || canvasTeacher.parentElement.offsetWidth || 350;
+                const tHeight = canvasTeacher.offsetHeight || 150;
+                
+                canvasTeacher.width = tWidth * ratio;
+                canvasTeacher.height = tHeight * ratio;
+                canvasTeacher.getContext("2d").scale(ratio, ratio);
+                
+                signaturePads['teacher'] = new SignaturePad(canvasTeacher, { 
+                    penColor: "rgb(20, 20, 20)", 
+                    backgroundColor: "rgba(255, 255, 255, 0)" 
                 });
-            });
 
-            window.addEventListener("resize", () => {
-                // Optional: handle resize for signature pads if layout is very fluid
-            });
+                // 2. Setup Modal Pads (PK & GB)
+                const canvasConfigsModal = [
+                    { id: 'modal-pad-pk', key: 'pk' },
+                    { id: 'modal-pad-gb', key: 'gb' }
+                ];
+                
+                canvasConfigsModal.forEach(config => {
+                    const canvas = document.getElementById(config.id);
+                    // Fixed generic width mapping to Tailwind's w-full inside grid
+                    canvas.width = 400 * ratio; 
+                    canvas.height = 150 * ratio;
+                    canvas.getContext("2d").scale(ratio, ratio);
+                    modalPads[config.key] = new SignaturePad(canvas, { 
+                        penColor: "rgb(20, 20, 20)", 
+                        backgroundColor: "rgba(255, 255, 255, 0)" 
+                    });
+                });
+            }, 150);
         }
 
         function clearPad(key) {
-            if(signaturePads[key]) {
-                signaturePads[key].clear();
-            }
+            if(signaturePads[key]) signaturePads[key].clear();
+        }
+        function clearModalPad(key) {
+            if(modalPads[key]) modalPads[key].clear();
         }
 
         function getSelectedOffenses() {
@@ -1085,44 +1189,80 @@
                 return;
             }
 
-            const studentSelect = document.getElementById('student-name');
-            const studentNameStr = studentSelect.options[studentSelect.selectedIndex].text;
+            // Only require teacher signature if creating new, not if editing without resetting
+            if(!editingRecordId && signaturePads['teacher'].isEmpty()) {
+                customAlert("Ralat Kemasukan", "Tandatangan Pelapor diperlukan untuk rekod baharu.");
+                return;
+            }
 
             const record = {
-                id: Date.now(),
-                studentName: studentNameStr,
-                studentClass: document.getElementById('student-class').value || 'N/A',
+                id: editingRecordId || Date.now(),
+                studentClass: document.getElementById('student-class').value,
+                studentName: document.getElementById('student-name').value,
                 dateRecorded: document.getElementById('date-recorded').value,
                 dateIncident: document.getElementById('date-incident').value,
                 location: document.querySelector('input[name="location"]:checked')?.value || 'N/A',
                 offenses: getSelectedOffenses(),
                 totalMarks: currentTotalMarks,
                 description: document.getElementById('teacher-desc').value,
-                reporter: document.getElementById('reporter-name').value
+                reporter: document.getElementById('reporter-name').value,
+                
+                // Signatures & Statuses
+                signatureTeacher: editingRecordId ? (signaturePads['teacher'].isEmpty() ? document.getElementById('img-teacher').src : signaturePads['teacher'].toDataURL()) : signaturePads['teacher'].toDataURL(),
+                statusSemakan: false,
+                signaturePK: null,
+                statusPengesahan: false,
+                signatureGB: null
             };
 
-            // Calculate accumulated marks for this student
-            const existingRecords = recordsData.filter(r => r.studentName === record.studentName);
-            const accumulated = existingRecords.reduce((sum, r) => sum + r.totalMarks, 0) + record.totalMarks;
+            // If editing, preserve existing PK/GB statuses
+            if(editingRecordId) {
+                const existing = recordsData.find(r => r.id === editingRecordId);
+                if(existing) {
+                    record.statusSemakan = existing.statusSemakan;
+                    record.signaturePK = existing.signaturePK;
+                    record.statusPengesahan = existing.statusPengesahan;
+                    record.signatureGB = existing.signatureGB;
+                }
+                // Replace old record
+                recordsData = recordsData.filter(r => r.id !== editingRecordId);
+            }
+
+            // Calculate accumulated marks for this student based on ALL their records
+            const existingStudentRecords = recordsData.filter(r => r.studentName === record.studentName);
+            const accumulated = existingStudentRecords.reduce((sum, r) => sum + r.totalMarks, 0) + record.totalMarks;
             record.accumulatedMarks = accumulated;
 
             recordsData.push(record);
             localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
             
-            renderRecordsTable();
-            customAlert("Operasi Berjaya", "Data berjaya disimpan ke dalam Pangkalan Data Pusat (Local Storage).");
+            updateTables();
+            customAlert("Operasi Berjaya", editingRecordId ? "Rekod telah dikemaskini." : "Rekod baharu berjaya disimpan. Menunggu Semakan/Pengesahan.");
             
-            // Optional: reset form
-            // form.reset();
-            // document.querySelectorAll('.checkbox-imperial').forEach(cb => cb.checked = false);
-            // calculateMarks();
-            // Object.values(signaturePads).forEach(pad => pad.clear());
+            // Reset state
+            editingRecordId = null;
+            document.getElementById('btn-save-record').innerText = "Simpan Rekod Laporan";
+            form.reset();
+            document.getElementById('student-name').disabled = true;
+            document.querySelectorAll('.checkbox-imperial').forEach(cb => cb.checked = false);
+            calculateMarks();
+            clearPad('teacher');
+            
+            // Switch to Pending Tab
+            switchTab('pending');
         }
 
-        function renderRecordsTable() {
-            const tbody = document.getElementById('records-tbody');
-            const emptyState = document.getElementById('empty-state');
-            const table = document.getElementById('records-table');
+        // --- TABLE RENDERING & LOGIC ---
+
+        function updateTables() {
+            renderPendingTable();
+            renderArchiveTable();
+        }
+
+        function renderPendingTable() {
+            const tbody = document.getElementById('pending-tbody');
+            const emptyState = document.getElementById('pending-empty-state');
+            const table = document.getElementById('pending-table');
             
             tbody.innerHTML = '';
             
@@ -1135,14 +1275,57 @@
             emptyState.classList.add('hidden');
             table.classList.remove('hidden');
 
-            // Sort by latest
             const sortedRecords = [...recordsData].sort((a, b) => b.id - a.id);
 
             sortedRecords.forEach(record => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-imperial-darkgray transition-colors';
                 
-                // Determine threat level color based on accumulated marks
+                const semakText = record.statusSemakan ? '<span class="text-green-500">✔ Disemak</span>' : '<span class="text-yellow-500">❌ Menunggu</span>';
+                const sahText = record.statusPengesahan ? '<span class="text-green-500">✔ Disahkan</span>' : '<span class="text-yellow-500">❌ Menunggu</span>';
+
+                tr.innerHTML = `
+                    <td class="p-3">${record.dateIncident}</td>
+                    <td class="p-3 font-bold">${record.studentName}</td>
+                    <td class="p-3">${record.studentClass}</td>
+                    <td class="p-3 text-center">${semakText}</td>
+                    <td class="p-3 text-center">${sahText}</td>
+                    <td class="p-3 text-center space-x-2 space-y-2 md:space-y-0">
+                        <button onclick="openSignatureModal(${record.id})" class="px-3 py-1 bg-blue-700 text-white text-xs rounded hover:bg-blue-600 uppercase tracking-wide w-full md:w-auto">Semak/Sah</button>
+                        <button onclick="editRecord(${record.id})" class="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-500 uppercase tracking-wide w-full md:w-auto">Edit</button>
+                        <button onclick="generatePDFFromRecord(${record.id})" class="px-3 py-1 bg-green-700 text-white text-xs rounded hover:bg-green-600 uppercase tracking-wide w-full md:w-auto shadow-[0_0_8px_rgba(0,255,0,0.3)]">Jana PDF</button>
+                        <button onclick="deleteRecord(${record.id})" class="px-3 py-1 bg-imperial-red text-white text-xs rounded hover:bg-red-800 uppercase tracking-wide w-full md:w-auto">Padam</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderArchiveTable() {
+            const tbody = document.getElementById('archive-tbody');
+            const emptyState = document.getElementById('archive-empty-state');
+            const table = document.getElementById('archive-table');
+            
+            tbody.innerHTML = '';
+            
+            // Archive ONLY shows records where statusPengesahan === true
+            const validRecords = recordsData.filter(r => r.statusPengesahan === true);
+
+            if(validRecords.length === 0) {
+                emptyState.classList.remove('hidden');
+                table.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            table.classList.remove('hidden');
+
+            const sortedRecords = [...validRecords].sort((a, b) => b.id - a.id);
+
+            sortedRecords.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-imperial-darkgray transition-colors';
+                
                 let accColorClass = 'text-green-500';
                 if(record.accumulatedMarks >= 15) accColorClass = 'text-imperial-red font-bold animate-pulse';
                 else if(record.accumulatedMarks >= 8) accColorClass = 'text-yellow-500';
@@ -1152,18 +1335,16 @@
                     <td class="p-3 font-bold">${record.studentName}</td>
                     <td class="p-3">${record.studentClass}</td>
                     <td class="p-3">${record.reporter}</td>
+                    <td class="p-3 text-center">${record.totalMarks}</td>
                     <td class="p-3 text-center text-lg ${accColorClass}">${record.accumulatedMarks}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteRecord(${record.id})" class="px-3 py-1 bg-imperial-red text-white text-xs rounded hover:bg-red-800 uppercase tracking-wide">Padam</button>
-                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function filterRecords() {
+        function filterArchive() {
             const search = document.getElementById('search-student').value.toLowerCase();
-            const rows = document.getElementById('records-tbody').getElementsByTagName('tr');
+            const rows = document.getElementById('archive-tbody').getElementsByTagName('tr');
             
             for(let i = 0; i < rows.length; i++) {
                 const nameCol = rows[i].getElementsByTagName('td')[1];
@@ -1178,48 +1359,195 @@
             }
         }
 
+        // --- DELETION LOGIC (PASSWORD PROTECTED) ---
+
         function deleteRecord(id) {
-            recordsData = recordsData.filter(r => r.id !== id);
-            localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
-            renderRecordsTable();
+            recordToDeleteId = id;
+            document.getElementById('delete-password-input').value = ''; // Reset input
+            document.getElementById('password-modal').style.display = 'flex'; // Show modal
         }
 
-        function switchTab(tabId) {
-            // UI Toggle
-            document.getElementById('tab-record').classList.remove('active');
-            document.getElementById('tab-archive').classList.remove('active');
-            document.getElementById('tab-' + tabId).classList.add('active');
-
-            // Content Toggle
-            document.getElementById('section-record').style.display = tabId === 'record' ? 'block' : 'none';
-            document.getElementById('section-archive').style.display = tabId === 'archive' ? 'block' : 'none';
+        function closePasswordModal() {
+            recordToDeleteId = null;
+            document.getElementById('password-modal').style.display = 'none';
         }
 
-
-        async function generatePDF() {
-            const form = document.getElementById('discipline-form');
-            if(!form.checkValidity()) {
-                form.reportValidity();
-                customAlert("Ralat", "Sila lengkapkan semua medan wajib (Nama, Tarikh, Tempat, Pelapor) sebelum menjana PDF.");
-                return;
+        function confirmDeleteRecord() {
+            const pwd = document.getElementById('delete-password-input').value;
+            
+            if(pwd === "920307136255") {
+                recordsData = recordsData.filter(r => r.id !== recordToDeleteId);
+                localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
+                updateTables();
+                closePasswordModal();
+                customAlert("Berjaya", "Rekod telah dipadamkan secara kekal dari pangkalan data.");
+            } else {
+                closePasswordModal();
+                customAlert("Ralat Akses", "Kata laluan tidak sah. Akses ditolak.");
             }
+        }
+
+        // --- EDIT LOGIC ---
+
+        function editRecord(id) {
+            const record = recordsData.find(r => r.id === id);
+            if(!record) return;
+
+            editingRecordId = record.id;
+            
+            // Switch to Form Tab
+            switchTab('record');
+            document.getElementById('btn-save-record').innerText = "Kemaskini Rekod Laporan";
+
+            // Populate Dropdowns
+            document.getElementById('student-class').value = record.studentClass;
+            updateNameDropdown(); // populate names based on class
+            setTimeout(() => { document.getElementById('student-name').value = record.studentName; }, 100);
+            
+            document.getElementById('date-incident').value = record.dateIncident;
+            
+            // Location Radio
+            const locRadios = document.getElementsByName('location');
+            for(let radio of locRadios) {
+                if(radio.value === record.location) radio.checked = true;
+            }
+
+            // Checkboxes
+            document.querySelectorAll('.checkbox-imperial').forEach(cb => cb.checked = false); // reset all
+            record.offenses.forEach(off => {
+                // Find matching desc and check it
+                const allCbs = document.querySelectorAll('.checkbox-imperial');
+                for(let cb of allCbs) {
+                    if(cb.getAttribute('data-desc') === off.desc) {
+                        cb.checked = true;
+                        
+                        // Expand the parent accordion if hidden
+                        const catContainer = cb.closest('.hidden');
+                        if(catContainer) {
+                            catContainer.classList.remove('hidden');
+                            const icon = catContainer.previousElementSibling.querySelector('.text-imperial-red');
+                            if(icon) icon.textContent = '-';
+                        }
+                    }
+                }
+            });
+            calculateMarks();
+
+            document.getElementById('teacher-desc').value = record.description;
+            
+            setTimeout(() => { document.getElementById('reporter-name').value = record.reporter; }, 100);
+
+            // Handle Teacher Signature for edit view
+            if(record.signatureTeacher) {
+                document.getElementById('pad-teacher').classList.add('hidden');
+                document.getElementById('img-teacher').src = record.signatureTeacher;
+                document.getElementById('img-teacher').classList.remove('hidden');
+                document.getElementById('btn-clear-teacher').innerText = "Tulis Semula Tandatangan";
+                
+                // Override the clear function temporarily for this button to show canvas
+                document.getElementById('btn-clear-teacher').onclick = function() {
+                    document.getElementById('pad-teacher').classList.remove('hidden');
+                    document.getElementById('img-teacher').classList.add('hidden');
+                    clearPad('teacher');
+                    this.innerText = "Padam Semula";
+                    this.onclick = function() { clearPad('teacher'); };
+                };
+            }
+        }
+
+        // --- SIGNATURE MODAL LOGIC ---
+
+        function openSignatureModal(id) {
+            signingRecordId = id;
+            const record = recordsData.find(r => r.id === id);
+            
+            document.getElementById('sign-modal-id').innerText = id;
+            clearModalPad('pk');
+            clearModalPad('gb');
+
+            document.getElementById('signature-modal').style.display = 'flex';
+        }
+
+        function closeSignatureModal() {
+            signingRecordId = null;
+            document.getElementById('signature-modal').style.display = 'none';
+        }
+
+        function saveSignatures() {
+            const record = recordsData.find(r => r.id === signingRecordId);
+            if(!record) return;
+
+            let updated = false;
+
+            // PK HEM Check
+            if(!modalPads['pk'].isEmpty()) {
+                record.signaturePK = modalPads['pk'].toDataURL();
+                record.statusSemakan = true;
+                updated = true;
+            }
+
+            // Guru Besar Check
+            if(!modalPads['gb'].isEmpty()) {
+                record.signatureGB = modalPads['gb'].toDataURL();
+                record.statusPengesahan = true;
+                updated = true;
+            }
+
+            if(updated) {
+                localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
+                updateTables();
+                customAlert("Pengesahan Berjaya", "Dokumen telah dikemaskini dengan tandatangan rasmi.");
+                closeSignatureModal();
+            } else {
+                customAlert("Tiada Perubahan", "Sila tandatangan sebelum menyimpan.");
+            }
+        }
+
+        // --- PDF GENERATION ---
+
+        async function generatePDFFromRecord(id) {
+            const record = recordsData.find(r => r.id === id);
+            if(!record) return;
 
             customAlert("Memproses", "Laporan PDF sedang dijana. Sila tunggu seketika (protokol Imperial)...");
             
+            // 1. We must temporarily inject data into `#pdf-content` without destroying current active form state.
+            // Since this runs from Tab 2, we quickly unhide Tab 1, hide Tab 2, inject, capture, revert.
+            const originalActiveTab = document.querySelector('.rdr2-tab.active').id.replace('tab-', '');
+            
+            // Hide everything except record to capture
+            document.getElementById('section-pending').style.display = 'none';
+            document.getElementById('section-archive').style.display = 'none';
+            document.getElementById('section-record').style.display = 'block';
+
+            // Inject Data into UI safely
+            document.getElementById('student-class').innerHTML = `<option>${record.studentClass}</option>`;
+            document.getElementById('student-name').innerHTML = `<option>${record.studentName}</option>`;
+            document.getElementById('date-recorded').value = record.dateRecorded;
+            document.getElementById('date-incident').value = record.dateIncident;
+            document.getElementById('teacher-desc').value = record.description;
+            document.getElementById('reporter-name').innerHTML = `<option>${record.reporter}</option>`;
+            document.getElementById('current-total-marks').innerText = record.totalMarks;
+
+            // Handle location radio visual
+            document.querySelectorAll('input[name="location"]').forEach(radio => {
+                radio.checked = (radio.value === record.location);
+            });
+
+            // Handle Checkboxes visualization
+            document.querySelectorAll('.checkbox-imperial').forEach(cb => cb.checked = false); // reset
+            record.offenses.forEach(off => {
+                document.querySelectorAll('.checkbox-imperial').forEach(cb => {
+                    if(cb.getAttribute('data-desc') === off.desc) cb.checked = true;
+                });
+            });
+
             const element = document.getElementById('pdf-content');
             
-            // Pre-process for PDF layout
-            const originalStyles = {
-                maxHeight: element.style.maxHeight,
-                overflow: element.style.overflow,
-                transform: element.style.transform
-            };
-            
-            // Expand accordions for PDF
+            // Expand ONLY checked accordions
             const hiddenCategories = element.querySelectorAll('.hidden');
             hiddenCategories.forEach(el => {
                 if(el.parentElement.closest('#offenses-container')) {
-                    // Only expand if there's a checked item inside, otherwise hide the whole Tahap to save space
                     if(el.querySelectorAll('.checkbox-imperial:checked').length > 0) {
                         el.classList.remove('hidden');
                         el.classList.add('temp-show-pdf');
@@ -1230,7 +1558,7 @@
                 }
             });
 
-            // Hide non-checked items to save massive space on PDF
+            // Hide unchecked items
             const allLabels = element.querySelectorAll('#offenses-container label');
             allLabels.forEach(lbl => {
                 const cb = lbl.querySelector('.checkbox-imperial');
@@ -1240,14 +1568,43 @@
                 }
             });
 
-            // Hide action buttons
+            // Manage Signatures for PDF View
+            // Teacher
+            document.getElementById('pad-teacher').style.display = 'none';
+            if(record.signatureTeacher) {
+                document.getElementById('img-teacher').src = record.signatureTeacher;
+                document.getElementById('img-teacher').style.display = 'block';
+            }
+            // PK
+            if(record.signaturePK) {
+                document.getElementById('display-status-pk').style.display = 'none';
+                document.getElementById('display-img-pk').src = record.signaturePK;
+                document.getElementById('display-img-pk').style.display = 'block';
+            } else {
+                document.getElementById('display-status-pk').style.display = 'block';
+                document.getElementById('display-img-pk').style.display = 'none';
+            }
+            // GB
+            if(record.signatureGB) {
+                document.getElementById('display-status-gb').style.display = 'none';
+                document.getElementById('display-img-gb').src = record.signatureGB;
+                document.getElementById('display-img-gb').style.display = 'block';
+            } else {
+                document.getElementById('display-status-gb').style.display = 'block';
+                document.getElementById('display-img-gb').style.display = 'none';
+            }
+
+            // Hide actions
             const noPrintElements = document.querySelectorAll('.no-print');
             noPrintElements.forEach(el => el.style.display = 'none');
 
-            // Render Canvas
+            // 2. Render Canvas
             try {
+                // Wait small delay for UI rendering (especially images)
+                await new Promise(r => setTimeout(r, 300));
+                
                 const canvas = await html2canvas(element, {
-                    scale: 2, // Higher quality
+                    scale: 2, 
                     useCORS: true,
                     backgroundColor: "#0a0a0a"
                 });
@@ -1265,23 +1622,18 @@
                 const finalImgWidth = imgWidth * ratio;
                 const finalImgHeight = imgHeight * ratio;
                 
-                // Center vertically if it's shorter than the page
-                const marginY = (pdfHeight - finalImgHeight) > 0 ? 10 : 0; 
+                const marginY = (pdfHeight - finalImgHeight) / 2; // Center Vertically if shorter
                 
-                pdf.addImage(imgData, 'JPEG', 0, marginY, finalImgWidth, finalImgHeight);
+                pdf.addImage(imgData, 'JPEG', 0, marginY > 0 ? 10 : 0, finalImgWidth, finalImgHeight);
                 
-                const studentSelect = document.getElementById('student-name');
-                const studentNameStr = studentSelect.options[studentSelect.selectedIndex]?.text || 'Unknown';
-                
-                pdf.save(`Rekod_Disiplin_${studentNameStr.replace(/\s+/g, '_')}.pdf`);
-                
+                pdf.save(`Rekod_Disiplin_${record.studentName.replace(/\s+/g, '_')}.pdf`);
                 closeModal(); // Close loading modal
 
             } catch (error) {
                 console.error("PDF Gen Error:", error);
                 customAlert("Ralat", "Gagal menjana PDF. Sila semak konsol.");
             } finally {
-                // Restore UI State
+                // 3. Restore UI State and Tab
                 noPrintElements.forEach(el => el.style.display = '');
                 
                 document.querySelectorAll('.temp-show-pdf').forEach(el => {
@@ -1298,8 +1650,41 @@
                     el.style.display = '';
                     el.classList.remove('temp-hide-pdf-label');
                 });
+
+                document.getElementById('pad-teacher').style.display = 'block';
+                document.getElementById('img-teacher').style.display = 'none';
+                document.getElementById('display-img-pk').style.display = 'none';
+                document.getElementById('display-status-pk').style.display = 'block';
+                document.getElementById('display-img-gb').style.display = 'none';
+                document.getElementById('display-status-gb').style.display = 'block';
+
+                // Repopulate original dropdown states (clean slate)
+                document.getElementById('discipline-form').reset();
+                document.getElementById('current-total-marks').innerText = "0";
+                
+                // Jump back to the active tab
+                switchTab(originalActiveTab);
             }
         }
+
+        // --- TAB SYSTEM ---
+
+        function switchTab(tabId) {
+            // UI Toggle
+            document.getElementById('tab-record').classList.remove('active');
+            document.getElementById('tab-pending').classList.remove('active');
+            document.getElementById('tab-archive').classList.remove('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Content Toggle
+            document.getElementById('section-record').style.display = tabId === 'record' ? 'block' : 'none';
+            document.getElementById('section-pending').style.display = tabId === 'pending' ? 'block' : 'none';
+            document.getElementById('section-archive').style.display = tabId === 'archive' ? 'block' : 'none';
+            
+            // Auto refresh tables just in case data changed
+            if(tabId !== 'record') updateTables();
+        }
+
     </script>
 </body>
 </html>
