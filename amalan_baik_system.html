@@ -952,14 +952,6 @@
                 return;
             }
 
-            const pass = await window.showPrompt("Sila masukkan kata laluan rahsia untuk menyimpan/mengemaskini rekod ini:");
-            if (pass !== '920307136255') {
-                 if (pass !== null) {
-                     window.showAlert("Kata laluan salah. Operasi dibatalkan.");
-                 }
-                 return;
-            }
-
             const btn = document.getElementById('submit-btn-text');
             const originalText = btn.textContent;
             btn.textContent = "Menyimpan...";
@@ -1300,70 +1292,65 @@
         };
 
         window.editRecord = async (id) => {
-            const pass = await window.showPrompt("Sila masukkan kata laluan rahsia untuk mengedit rekod ini:");
-            if (pass === '920307136255') {
-                const record = window.allRawRecords.find(r => r.id === id);
-                if (!record) return;
+            const record = window.allRawRecords.find(r => r.id === id);
+            if (!record) return;
 
-                window.editingId = id;
-                window.currentEditingRecord = record;
+            window.editingId = id;
+            window.currentEditingRecord = record;
 
-                window.switchTab('form-tab');
-                document.getElementById('submit-btn-text').textContent = "Kemaskini Rekod";
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.switchTab('form-tab');
+            document.getElementById('submit-btn-text').textContent = "Kemaskini Rekod";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                document.getElementById('date-recorded').value = record.dateRecorded || "";
-                document.getElementById('date-incident').value = record.dateIncident || "";
-                document.getElementById('location').value = record.location || "";
+            document.getElementById('date-recorded').value = record.dateRecorded || "";
+            document.getElementById('date-incident').value = record.dateIncident || "";
+            document.getElementById('location').value = record.location || "";
+            
+            if (record.reporter) {
+                document.getElementById('reporter-name').value = record.reporter;
+            }
+            
+            document.getElementById('description').value = record.description || "";
+            base64Evidence = record.evidenceBase64 || "";
+
+            if (record.studentClass) {
+                classSelect.value = record.studentClass;
+                classSelect.dispatchEvent(new Event('change')); 
                 
-                if (record.reporter) {
-                    document.getElementById('reporter-name').value = record.reporter;
-                }
-                
-                document.getElementById('description').value = record.description || "";
-                base64Evidence = record.evidenceBase64 || "";
-
-                if (record.studentClass) {
-                    classSelect.value = record.studentClass;
-                    classSelect.dispatchEvent(new Event('change')); 
-                    
-                    if (record.studentName) {
-                        setTimeout(() => {
-                            studentSelect.value = record.studentName;
-                            studentNameInput.value = record.studentName;
-                        }, 50);
-                    }
-                }
-
-                if (record.category) {
-                    catSelect.value = record.category;
-                    catSelect.dispatchEvent(new Event('change')); 
-                    
-                    if (record.subcategory) {
-                        setTimeout(() => {
-                            subSelect.value = record.subcategory;
-                            subSelect.dispatchEvent(new Event('change')); 
-                            
-                            if (record.mark) {
-                                setTimeout(() => {
-                                    const radio = document.querySelector(`input[name="merit_choice"][value="${record.mark}"]`);
-                                    if (radio) radio.checked = true;
-                                    window.setMark(record.mark);
-                                }, 50);
-                            }
-                        }, 50);
-                    }
-                }
-
-                if (record.sigReporter) {
+                if (record.studentName) {
                     setTimeout(() => {
-                        if(sigPadReporter) sigPadReporter.fromDataURL(record.sigReporter);
-                    }, 100);
-                } else {
-                    if(sigPadReporter) sigPadReporter.clear();
+                        studentSelect.value = record.studentName;
+                        studentNameInput.value = record.studentName;
+                    }, 50);
                 }
-            } else if (pass !== null) {
-                window.showAlert("Kata laluan salah. Operasi mengedit dibatalkan.");
+            }
+
+            if (record.category) {
+                catSelect.value = record.category;
+                catSelect.dispatchEvent(new Event('change')); 
+                
+                if (record.subcategory) {
+                    setTimeout(() => {
+                        subSelect.value = record.subcategory;
+                        subSelect.dispatchEvent(new Event('change')); 
+                        
+                        if (record.mark) {
+                            setTimeout(() => {
+                                const radio = document.querySelector(`input[name="merit_choice"][value="${record.mark}"]`);
+                                if (radio) radio.checked = true;
+                                window.setMark(record.mark);
+                            }, 50);
+                        }
+                    }, 50);
+                }
+            }
+
+            if (record.sigReporter) {
+                setTimeout(() => {
+                    if(sigPadReporter) sigPadReporter.fromDataURL(record.sigReporter);
+                }, 100);
+            } else {
+                if(sigPadReporter) sigPadReporter.clear();
             }
         };
 
