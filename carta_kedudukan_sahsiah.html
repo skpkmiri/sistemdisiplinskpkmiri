@@ -663,34 +663,39 @@
         // Initialize Firebase for Merits (Amalan Baik System)
         async function initFirebase() {
             try {
-                if (typeof __firebase_config !== 'undefined') {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    const app = initializeApp(firebaseConfig);
-                    const db = getFirestore(app);
-                    const auth = getAuth(app);
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAVCAgVcSBBJL6GbKfRCjv2tK_LhWoLssE",
+                    authDomain: "pengurusan-disiplin.firebaseapp.com",
+                    projectId: "pengurusan-disiplin",
+                    storageBucket: "pengurusan-disiplin.firebasestorage.app",
+                    messagingSenderId: "778292133080",
+                    appId: "1:778292133080:web:4bc389ecf3f4487c826bad",
+                    measurementId: "G-8HSDV4GG0B"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const auth = getAuth(app);
 
-                    if (typeof __initial_auth_token !== 'undefined') {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
-                    
-                    // Real-time listener
-                    onSnapshot(query(colRef), (snapshot) => {
-                        amalanBaikData = [];
-                        snapshot.forEach(doc => {
-                            amalanBaikData.push(doc.data());
-                        });
-                        processAggregatedData();
-                    }, (error) => {
-                        console.error("Firebase Snapshot Error:", error);
-                    });
-                } else {
-                    console.warn("Firebase not configured. Merits will remain 0.");
+                try {
+                    await signInAnonymously(auth);
+                } catch (authErr) {
+                    console.warn("Anonymous auth failed (ensure it's enabled in Firebase Console). Proceeding...", authErr);
                 }
+                
+                const appId_val = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
+                const colRef = collection(db, 'artifacts', appId_val, 'public', 'data', 'amalan_baik');
+                
+                // Real-time listener
+                onSnapshot(query(colRef), (snapshot) => {
+                    amalanBaikData = [];
+                    snapshot.forEach(doc => {
+                        amalanBaikData.push(doc.data());
+                    });
+                    processAggregatedData();
+                }, (error) => {
+                    console.error("Firebase Snapshot Error:", error);
+                });
             } catch(e) {
                 console.error("Firebase Init Error:", e);
             }
