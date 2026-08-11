@@ -475,8 +475,9 @@
 
             // 1. Process Amalan Baik (Merits)
             amalanBaikData.forEach(doc => {
-                const name = doc.studentName;
-                if (!name) return;
+                if (!doc.studentName) return;
+                const name = String(doc.studentName).trim(); // Ensure exact matching between systems
+                
                 if (!studentsMap.has(name)) {
                     studentsMap.set(name, { 
                         id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
@@ -487,13 +488,14 @@
                         score: 100 // Starting base marks
                     });
                 }
-                studentsMap.get(name).merit += (doc.mark || 0);
+                studentsMap.get(name).merit += Number(doc.mark || 0);
             });
 
             // 2. Process Imperial Discipline (Demerits)
             disciplineData.forEach(doc => {
-                const name = doc.studentName;
-                if (!name) return;
+                if (!doc.studentName) return;
+                const name = String(doc.studentName).trim(); // Ensure exact matching between systems
+                
                 if (!studentsMap.has(name)) {
                     studentsMap.set(name, { 
                         id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
@@ -504,15 +506,15 @@
                         score: 100 // Starting base marks
                     });
                 }
-                studentsMap.get(name).demerit += (doc.totalMarks || 0);
+                studentsMap.get(name).demerit += Number(doc.totalMarks || 0);
             });
 
-            // Calculate final scores
+            // Calculate final scores: 100 + Merit - Demerit
             studentsMap.forEach(student => {
                 student.score = 100 + student.merit - student.demerit;
             });
 
-            // Convert to array and sort
+            // Convert to array and sort by score descending
             students = Array.from(studentsMap.values());
             students.sort((a, b) => b.score - a.score);
 
@@ -566,7 +568,8 @@
 
         // Update DOM based on current array state
         function renderChart() {
-            const maxScore = Math.max(...students.map(s => Math.max(0, s.score)), 50); 
+            // maxScore at least 100 so the baseline visually makes sense
+            const maxScore = Math.max(...students.map(s => Math.max(0, s.score)), 100); 
             const filterInput = document.getElementById('search-filter');
             const filterTerm = filterInput ? filterInput.value.toLowerCase() : '';
 
@@ -607,6 +610,15 @@
                 // Calculate percentage for width (prevent negative width)
                 const percentage = Math.max(0, (student.score / maxScore) * 100);
                 els.barFill.style.width = `${percentage}%`;
+
+                // Color coordination for score text (Red if total score drops below 100 base due to demerits)
+                if (student.score < 100) {
+                    els.scoreEl.style.color = '#ff0055';
+                    els.scoreEl.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 12px #ff0055, 0 0 20px #ff0055';
+                } else {
+                    els.scoreEl.style.color = '#ffffff';
+                    els.scoreEl.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 12px #00f0ff, 0 0 20px #00f0ff';
+                }
 
                 // Color coding based on rank
                 if (match && displayIndex === 1) { // 1st visible
