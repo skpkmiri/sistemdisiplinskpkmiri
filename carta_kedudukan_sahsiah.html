@@ -474,49 +474,63 @@
             const studentsMap = new Map();
 
             // Helper to strictly normalize names for bulletproof matching across systems
-            // Convert to uppercase and replace multiple spaces with a single space
-            const normalizeName = (name) => String(name).trim().toUpperCase().replace(/\s+/g, ' ');
+            // Menapis semua jenis jarak, newline, tab, dan zero-width character supaya nama PADAN 100%
+            const normalizeName = (name) => {
+                if (!name) return '';
+                return String(name)
+                    .replace(/[\u200B-\u200D\uFEFF]/g, '') 
+                    .replace(/[\r\n\t]+/g, ' ') 
+                    .trim()
+                    .toUpperCase()
+                    .replace(/\s+/g, ' ');
+            };
 
             // 1. Process Amalan Baik (Merits)
-            amalanBaikData.forEach(doc => {
-                if (!doc.studentName) return;
-                const rawName = String(doc.studentName).trim();
-                const key = normalizeName(rawName);
-                
-                if (!studentsMap.has(key)) {
-                    studentsMap.set(key, { 
-                        id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
-                        name: rawName, // Keep original casing for display
-                        class: doc.studentClass || 'N/A', 
-                        merit: 0, 
-                        demerit: 0, 
-                        score: 100 // Starting base marks
-                    });
-                }
-                studentsMap.get(key).merit += Number(doc.mark || 0);
-            });
+            if (Array.isArray(amalanBaikData)) {
+                amalanBaikData.forEach(doc => {
+                    if (!doc.studentName) return;
+                    const rawName = String(doc.studentName).trim();
+                    const key = normalizeName(rawName);
+                    
+                    if (!studentsMap.has(key)) {
+                        studentsMap.set(key, { 
+                            id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
+                            name: rawName, // Keep original casing for display
+                            class: doc.studentClass || 'N/A', 
+                            merit: 0, 
+                            demerit: 0, 
+                            score: 100 // Starting base marks
+                        });
+                    }
+                    studentsMap.get(key).merit += Number(doc.mark || 0);
+                });
+            }
 
-            // 2. Process Imperial Discipline (Demerits) - Guna 'Markah Terkumpul' (accumulatedMarks)
+            // 2. Process Imperial Discipline (Demerits) - Menjumlahkan Markah Terkumpul secara dinamik dari Databank
             const demeritTerkumpulMap = new Map();
             
-            // Cari Markah Terkumpul (accumulatedMarks) yang paling tinggi/terkini untuk setiap murid dalam Archive
-            disciplineData.forEach(doc => {
-                if (!doc.studentName) return;
-                const key = normalizeName(doc.studentName);
-                
-                // Ambil nilai accumulatedMarks. Jika tiada (fallback), guna totalMarks
-                const markahTerkumpul = Number(doc.accumulatedMarks || doc.totalMarks || 0);
-                
-                if (!demeritTerkumpulMap.has(key) || markahTerkumpul > demeritTerkumpulMap.get(key).marks) {
-                    demeritTerkumpulMap.set(key, {
-                        marks: markahTerkumpul,
-                        rawName: String(doc.studentName).trim(),
-                        className: doc.studentClass || 'N/A'
-                    });
-                }
-            });
+            if (Array.isArray(disciplineData)) {
+                disciplineData.forEach(doc => {
+                    if (!doc.studentName) return;
+                    const key = normalizeName(doc.studentName);
+                    
+                    // Ambil markah kesalahan untuk direkodkan dan dijumlahkan 
+                    // (Langkah ini menjamin Markah Terkumpul terhasil tanpa ralat snapshot)
+                    const markahRekod = Number(doc.totalMarks || 0);
+                    
+                    if (!demeritTerkumpulMap.has(key)) {
+                        demeritTerkumpulMap.set(key, {
+                            marks: 0,
+                            rawName: String(doc.studentName).trim(),
+                            className: doc.studentClass || 'N/A'
+                        });
+                    }
+                    // Tambah markah untuk mendapatkan Jumlah Terkumpul yang tepat untuk murid ini
+                    demeritTerkumpulMap.get(key).marks += markahRekod;
+                });
+            }
 
-            // Masukkan data Demerit ke dalam map utama (studentsMap)
+            // Masukkan data Demerit (Markah Terkumpul) ke dalam map utama (studentsMap)
             demeritTerkumpulMap.forEach((data, key) => {
                 if (!studentsMap.has(key)) {
                     studentsMap.set(key, { 
@@ -682,22 +696,19 @@
 
         // Load LocalStorage Demerits (Imperial Discipline Datapad)
         function loadLocalDemerits() {
-            const raw = localStorage.getItem('imperialDisciplineRecords');
-            if (raw) {
-                try {
+            try {
+                const raw = localStorage.getItem('imperialDisciplineRecords');
+                if (raw) {
                     const parsed = JSON.parse(raw);
-                    // Force the data to process every time to guarantee deduction UI updates
-                    disciplineData = parsed;
-                    processAggregatedData();
-                } catch(e) {
-                    console.error("Error parsing discipline datapad records:", e);
+                    if (Array.isArray(parsed)) {
+                        disciplineData = parsed;
+                    }
                 }
-            } else {
-                if (disciplineData.length > 0) {
-                    disciplineData = [];
-                    processAggregatedData();
-                }
+            } catch(e) {
+                console.error("Error parsing discipline datapad records:", e);
             }
+            // Sentiasa jalankan proses ini bagi mengemas kini visual walaupun rekod kosong
+            processAggregatedData();
         }
 
         // Initialize Firebase for Merits (Amalan Baik System)
