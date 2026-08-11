@@ -491,35 +491,25 @@
                 studentsMap.get(name).merit += Number(doc.mark || 0);
             });
 
-            // 2. Process Imperial Discipline (Demerits) - Based strictly on Markah Terkumpul
-            const latestDemerits = new Map();
+            // 2. Process Imperial Discipline (Demerits) - True 'Markah Terkumpul'
+            // We calculate the accumulated marks by summing the totalMarks of all active records in the Databank Archive.
+            // This ensures accuracy even if older records were deleted from the datapad.
             disciplineData.forEach(doc => {
                 if (!doc.studentName) return;
                 const name = String(doc.studentName).trim();
                 
-                // Find the latest record for each student based on ID to get the accurate 'Markah Terkumpul' (accumulatedMarks)
-                if (!latestDemerits.has(name) || doc.id > latestDemerits.get(name).id) {
-                    latestDemerits.set(name, { 
-                        id: doc.id, 
-                        accMarks: Number(doc.accumulatedMarks || doc.totalMarks || 0), 
-                        class: doc.studentClass 
-                    });
-                }
-            });
-
-            // Apply the accumulated Demerits to the chart
-            latestDemerits.forEach((data, name) => {
                 if (!studentsMap.has(name)) {
                     studentsMap.set(name, { 
                         id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
                         name: name, 
-                        class: data.class || 'N/A', 
+                        class: doc.studentClass || 'N/A', 
                         merit: 0, 
                         demerit: 0, 
                         score: 100 // Starting base marks
                     });
                 }
-                studentsMap.get(name).demerit = data.accMarks;
+                // Add up individual 'totalMarks' to get the exact current 'Terkumpul'
+                studentsMap.get(name).demerit += Number(doc.totalMarks || 0);
             });
 
             // Calculate final scores: 100 + Merit - Demerit
