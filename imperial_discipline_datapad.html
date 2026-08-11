@@ -14,6 +14,71 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration (Provided by User)
+        const providedConfig = {
+            apiKey: "AIzaSyAVCAgVcSBBJL6GbKfRCjv2tK_LhWoLssE",
+            authDomain: "pengurusan-disiplin.firebaseapp.com",
+            projectId: "pengurusan-disiplin",
+            storageBucket: "pengurusan-disiplin.firebasestorage.app",
+            messagingSenderId: "778292133080",
+            appId: "1:778292133080:web:4bc389ecf3f4487c826bad",
+            measurementId: "G-8HSDV4GG0B"
+        };
+        
+        // Environment fallback for sandbox compatibility
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : providedConfig;
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        async function initAuth() {
+            try {
+                // Strict Auth requirement before querying
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // Strict Paths Requirement configuration
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'pengurusan-disiplin';
+                const recordsRef = collection(db, 'artifacts', appId, 'public', 'data', 'disciplineRecords');
+
+                // Expose Database functions to the main global script
+                window.firebaseDB = {
+                    saveRecord: async (record) => {
+                        await setDoc(doc(recordsRef, record.id.toString()), record);
+                    },
+                    deleteRecord: async (id) => {
+                        await deleteDoc(doc(recordsRef, id.toString()));
+                    }
+                };
+
+                // Real-time synchronization
+                onSnapshot(recordsRef, (snapshot) => {
+                    const data = [];
+                    snapshot.forEach(doc => data.push(doc.data()));
+                    if (window.syncDataFromFirebase) {
+                        window.syncDataFromFirebase(data);
+                    }
+                }, (error) => {
+                    console.error("Firestore Error:", error);
+                });
+                
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+            }
+        }
+        
+        initAuth();
+    </script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -842,12 +907,17 @@
         let signaturePads = {}; // Base pads for form
         let modalPads = {}; // Pads for the modal
         let currentTotalMarks = 0;
-        let recordsData = JSON.parse(localStorage.getItem('imperialDisciplineRecords')) || [];
+        let recordsData = []; // Now actively managed by Firebase real-time sync
         let editingRecordId = null;
         let signingRecordId = null;
         let recordToDeleteId = null; // Track which record is pending deletion
 
-        
+        // Synchronization hook for Firebase module
+        window.syncDataFromFirebase = function(data) {
+            recordsData = data;
+            if (typeof updateTables === 'function') updateTables();
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             initDate();
             initLiveClock();
@@ -1224,20 +1294,19 @@
                     record.statusPengesahan = existing.statusPengesahan;
                     record.signatureGB = existing.signatureGB;
                 }
-                // Replace old record
-                recordsData = recordsData.filter(r => r.id !== editingRecordId);
             }
 
             // Calculate accumulated marks for this student based on ALL their records
-            const existingStudentRecords = recordsData.filter(r => r.studentName === record.studentName);
+            const existingStudentRecords = recordsData.filter(r => r.studentName === record.studentName && r.id !== record.id);
             const accumulated = existingStudentRecords.reduce((sum, r) => sum + r.totalMarks, 0) + record.totalMarks;
             record.accumulatedMarks = accumulated;
 
-            recordsData.push(record);
-            localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
+            // Push to Firebase instead of LocalStorage
+            if (window.firebaseDB) {
+                window.firebaseDB.saveRecord(record);
+            }
             
-            updateTables();
-            customAlert("Operasi Berjaya", editingRecordId ? "Rekod telah dikemaskini." : "Rekod baharu berjaya disimpan. Menunggu Semakan/Pengesahan.");
+            customAlert("Operasi Berjaya", editingRecordId ? "Rekod sedang dikemaskini dalam pangkalan data pusat." : "Rekod baharu sedang dihantar ke pelayan. Menunggu Semakan/Pengesahan.");
             
             // Reset state
             editingRecordId = null;
@@ -1376,11 +1445,11 @@
             const pwd = document.getElementById('delete-password-input').value;
             
             if(pwd === "920307136255") {
-                recordsData = recordsData.filter(r => r.id !== recordToDeleteId);
-                localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
-                updateTables();
+                if (window.firebaseDB) {
+                    window.firebaseDB.deleteRecord(recordToDeleteId);
+                }
                 closePasswordModal();
-                customAlert("Berjaya", "Rekod telah dipadamkan secara kekal dari pangkalan data.");
+                customAlert("Berjaya", "Rekod sedang dipadamkan secara kekal dari pangkalan data pusat.");
             } else {
                 closePasswordModal();
                 customAlert("Ralat Akses", "Kata laluan tidak sah. Akses ditolak.");
@@ -1494,9 +1563,10 @@
             }
 
             if(updated) {
-                localStorage.setItem('imperialDisciplineRecords', JSON.stringify(recordsData));
-                updateTables();
-                customAlert("Pengesahan Berjaya", "Dokumen telah dikemaskini dengan tandatangan rasmi.");
+                if (window.firebaseDB) {
+                    window.firebaseDB.saveRecord(record);
+                }
+                customAlert("Pengesahan Berjaya", "Dokumen sedang dikemaskini dalam pangkalan data pusat.");
                 closeSignatureModal();
             } else {
                 customAlert("Tiada Perubahan", "Sila tandatangan sebelum menyimpan.");
