@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Rekod Amalan Baik - High Republic x Persona</title>
+    <title>Sistem Rekod Amalan Baik - Unit Disiplin SKPK Miri</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -44,7 +44,7 @@
             height: 100vh;
             z-index: -2;
             pointer-events: none;
-            opacity: 0.4;
+            opacity: 0.6;
         }
 
         #bg-image {
@@ -106,6 +106,14 @@
             transform: scale(1.05) skewX(-5deg);
             box-shadow: 0 0 15px var(--p6-accent);
         }
+        
+        .btn-persona:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         .input-persona {
             background: rgba(253, 251, 247, 0.05);
@@ -120,6 +128,13 @@
             border-color: var(--hr-gold);
             outline: none;
             box-shadow: -5px 5px 0px rgba(212, 175, 55, 0.2);
+        }
+        
+        .input-persona:disabled {
+            background: rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.1);
+            color: #888;
+            cursor: not-allowed;
         }
         
         select option {
@@ -218,6 +233,19 @@
             60% { transform: translate(-5px, -5px) rotate(-1deg); }
             80% { transform: translate(5px, 5px) rotate(1deg); }
         }
+        
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
+        .badge-pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid #ffc107; }
+        .badge-success { background: rgba(4, 231, 98, 0.2); color: #04E762; border: 1px solid #04E762; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
@@ -235,17 +263,18 @@
 
     <header class="p-6 flex flex-col md:flex-row justify-between items-center border-b border-[rgba(212,175,55,0.2)] bg-[rgba(5,22,20,0.8)] backdrop-blur-md sticky top-0 z-50">
         <div class="flex items-center gap-4 mb-4 md:mb-0">
-            <img src="logo.png" alt="SKPK Miri Logo" class="w-14 h-14 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
+            <img src="logo.png" alt="SKPK Miri Logo" class="w-14 h-14 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" onerror="this.src='https://placehold.co/100x100/D4AF37/0D2818?text=SKPK'">
             <div>
                 <h1 class="text-2xl font-bold cinzel text-[#D4AF37] tracking-wider">SISTEM AMALAN BAIK</h1>
                 <p class="text-xs text-gray-400 tracking-widest uppercase">Unit Disiplin SKPK Miri</p>
             </div>
         </div>
         
-        <nav class="flex gap-4">
-            <button onclick="switchTab('form-tab')" id="nav-form" class="btn-persona px-6 py-2 text-sm shadow-lg">Borang Rekod</button>
-            <button onclick="switchTab('list-tab')" id="nav-list" class="btn-persona px-6 py-2 text-sm bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0D2818]">Senarai Merit</button>
-            <button onclick="triggerGlitchTransition()" class="btn-persona px-6 py-2 text-sm bg-transparent border-2 border-[#ff003c] text-[#ff003c] hover:bg-[#ff003c] hover:text-white ml-2 md:ml-6">Kembali</button>
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4">
+            <button onclick="switchTab('form-tab')" id="nav-form" class="nav-btn btn-persona px-4 py-2 text-sm shadow-lg">Borang Rekod</button>
+            <button onclick="switchTab('records-tab')" id="nav-records" class="nav-btn btn-persona px-4 py-2 text-sm bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0D2818]">Senarai Rekod</button>
+            <button onclick="switchTab('list-tab')" id="nav-list" class="nav-btn btn-persona px-4 py-2 text-sm bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0D2818]">Senarai Merit</button>
+            <button onclick="triggerGlitchTransition()" class="btn-persona px-4 py-2 text-sm bg-transparent border-2 border-[#ff003c] text-[#ff003c] hover:bg-[#ff003c] hover:text-white ml-2">Kembali</button>
         </nav>
     </header>
 
@@ -261,17 +290,21 @@
 
                 <form id="amalan-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    <!-- 1. Student Name & Class -->
-                    <div class="md:col-span-1 space-y-2">
-                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">1. Nama Murid</label>
-                        <select id="student-select" required class="input-persona w-full p-3 text-lg cursor-pointer">
-                            <option value="">-- Memuat turun senarai dari CSV... --</option>
-                        </select>
-                        <input type="hidden" id="student-name">
-                    </div>
+                    <!-- 1. Kelas & Student Name (Split and Sequenced) -->
                     <div class="md:col-span-1 space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">Kelas</label>
-                        <input type="text" id="student-class" readonly class="input-persona w-full p-3 text-lg text-[#D4AF37] font-bold bg-[rgba(0,0,0,0.3)] cursor-not-allowed border-[rgba(212,175,55,0.1)]" placeholder="Pilih nama murid dahulu">
+                        <select id="class-select" required class="input-persona w-full p-3 text-lg cursor-pointer">
+                            <option value="">-- Memuat turun senarai kelas... --</option>
+                        </select>
+                        <input type="hidden" id="student-class">
+                    </div>
+                    
+                    <div class="md:col-span-1 space-y-2">
+                        <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">1. Nama Murid</label>
+                        <select id="student-select" required class="input-persona w-full p-3 text-lg cursor-pointer" disabled>
+                            <option value="">-- Pilih Kelas Dahulu --</option>
+                        </select>
+                        <input type="hidden" id="student-name">
                     </div>
 
                     <!-- 2 & 3. Dates -->
@@ -297,7 +330,7 @@
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-gray-300 uppercase tracking-wider">8. Nama Pelapor</label>
                         <select id="reporter-name" required class="input-persona w-full p-3">
-                            <option value="">-- Memilih dari senarai --</option>
+                            <option value="">-- Memilih dari senarai... --</option>
                         </select>
                     </div>
 
@@ -352,21 +385,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             
                             <div class="space-y-2">
-                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">9. Pelapor</label>
+                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">9. Pelapor (Wajib)</label>
                                 <div class="signature-wrapper"><canvas id="sig-reporter" class="signature-pad"></canvas></div>
-                                <button type="button" onclick="clearPad('reporter')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
+                                <button type="button" onclick="window.clearPad('reporter')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">10. Disemak Oleh<br><span class="text-[10px] text-gray-500">Ling Mee Choo (PK HEM)</span></label>
-                                <div class="signature-wrapper"><canvas id="sig-pk" class="signature-pad"></canvas></div>
-                                <button type="button" onclick="clearPad('pk')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
+                            <div class="space-y-2 opacity-50 pointer-events-none">
+                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">10. Disemak Oleh<br><span class="text-[10px] text-gray-500">Akan ditandatangan di Senarai Rekod</span></label>
+                                <div class="signature-wrapper bg-gray-800"><canvas id="sig-pk" class="signature-pad"></canvas></div>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">10. Disahkan Oleh<br><span class="text-[10px] text-gray-500">Aziz bin Tahir (Guru Besar)</span></label>
-                                <div class="signature-wrapper"><canvas id="sig-gb" class="signature-pad"></canvas></div>
-                                <button type="button" onclick="clearPad('gb')" class="w-full text-xs text-gray-400 hover:text-white mt-1 text-right">Padam & Semula</button>
+                            <div class="space-y-2 opacity-50 pointer-events-none">
+                                <label class="block text-xs font-bold text-gray-300 uppercase text-center">10. Disahkan Oleh<br><span class="text-[10px] text-gray-500">Akan ditandatangan di Senarai Rekod</span></label>
+                                <div class="signature-wrapper bg-gray-800"><canvas id="sig-gb" class="signature-pad"></canvas></div>
                             </div>
 
                         </div>
@@ -374,21 +405,57 @@
 
                     <!-- Action Buttons -->
                     <div class="md:col-span-2 flex flex-col md:flex-row gap-4 mt-8">
-                        <button type="submit" class="btn-persona flex-1 py-4 text-lg">Simpan Rekod & Jana PDF</button>
-                        <button type="button" onclick="resetForm()" class="px-8 py-4 bg-transparent border-2 border-gray-500 text-gray-300 hover:bg-gray-800 font-bold uppercase clip-diagonal transition-colors">Batal</button>
+                        <button type="submit" class="btn-persona flex-1 py-4 text-lg" id="submit-btn-text">Simpan Rekod</button>
+                        <button type="button" onclick="window.resetForm()" class="px-8 py-4 bg-transparent border-2 border-gray-500 text-gray-300 hover:bg-gray-800 font-bold uppercase clip-diagonal transition-colors">Batal</button>
                     </div>
 
                 </form>
             </div>
         </section>
 
-        <!-- TAB 2: RECORD LIST -->
+        <!-- TAB 2: ALL RECORDS (SEMAKAN & PENGESAHAN) -->
+        <section id="records-tab" class="hidden animate-enter space-y-6">
+            <div class="glass-panel clip-panel p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
+                    <h2 class="text-3xl cinzel text-[#D4AF37] flex items-center gap-3">
+                        <span class="inline-block w-2 h-8 bg-[#04E762] skew-x-[-15deg]"></span>
+                        Semakan & Pengesahan Rekod
+                    </h2>
+                    <div class="w-full md:w-1/3">
+                        <input type="text" id="search-raw-records" placeholder="Cari nama atau kelas..." class="input-persona w-full p-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-[rgba(212,175,55,0.1)] text-[#D4AF37] uppercase border-b-2 border-[#D4AF37]">
+                                <th class="p-3 font-bold">Tarikh</th>
+                                <th class="p-3 font-bold">Nama Murid</th>
+                                <th class="p-3 font-bold">Kelas</th>
+                                <th class="p-3 font-bold">Pelapor</th>
+                                <th class="p-3 font-bold text-center">Status Semakan</th>
+                                <th class="p-3 font-bold text-center">Status Pengesahan</th>
+                                <th class="p-3 font-bold text-center">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="raw-records-body" class="text-gray-200">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-gray-500">Memuatkan data dari pangkalan...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MERIT LIST (ONLY SAH RECORDS) -->
         <section id="list-tab" class="hidden animate-enter space-y-6">
             <div class="glass-panel clip-panel p-6 md:p-8">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
                     <h2 class="text-3xl cinzel text-[#D4AF37] flex items-center gap-3">
                         <span class="inline-block w-2 h-8 bg-[#04E762] skew-x-[-15deg]"></span>
-                        Senarai Merit Murid
+                        Senarai Merit Murid (Disahkan)
                     </h2>
                     <div class="w-full md:w-1/3">
                         <input type="text" id="search-student" placeholder="Tapis nama murid..." class="input-persona w-full p-2 text-sm">
@@ -402,7 +469,7 @@
                                 <th class="p-4 font-bold">Nama Murid</th>
                                 <th class="p-4 font-bold">Kelas</th>
                                 <th class="p-4 font-bold text-center">Jumlah Merit (Terkumpul)</th>
-                                <th class="p-4 font-bold text-right">Bil. Kes</th>
+                                <th class="p-4 font-bold text-right">Bil. Kes Disahkan</th>
                             </tr>
                         </thead>
                         <tbody id="merit-table-body" class="text-gray-200">
@@ -421,7 +488,7 @@
     <div id="pdf-template">
         <div class="pdf-header">
             <h1 style="font-size: 24px; font-weight: bold; margin: 0;">LAPORAN AMALAN BAIK MURID</h1>
-            <p style="font-size: 14px; margin: 5px 0 0 0;">Sistem Pengurusan Disiplin & Sahsiah</p>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">Unit Disiplin SKPK Miri</p>
         </div>
         
         <table class="pdf-table">
@@ -494,10 +561,27 @@
         </div>
     </div>
 
+    <!-- Signature Modal for Semakan & Pengesahan in Senarai Rekod -->
+    <div id="signature-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel clip-panel p-6 w-full max-w-md relative mx-4">
+            <h3 id="signature-modal-title" class="text-2xl cinzel text-[#D4AF37] mb-4">Tandatangan</h3>
+            <div class="signature-wrapper mb-4">
+                <canvas id="modal-sig-pad" class="signature-pad w-full h-[200px]"></canvas>
+            </div>
+            <div class="flex justify-end mb-6">
+                <button type="button" onclick="window.clearModalPad()" class="text-xs text-gray-400 hover:text-white">Padam & Semula</button>
+            </div>
+            <div class="flex gap-4">
+                <button type="button" onclick="window.submitModalSignature()" class="btn-persona flex-1 py-3 text-sm">Simpan & Sahkan</button>
+                <button type="button" onclick="window.closeSignatureModal()" class="px-6 py-3 border-2 border-gray-500 text-gray-300 hover:bg-gray-800 font-bold uppercase clip-diagonal text-sm">Batal</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Environment variables
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
@@ -520,7 +604,7 @@
                     console.log("Firebase Auth Success:", currentUser.uid);
                     
                     // Load data for dashboard
-                    loadRecords();
+                    window.loadRecords();
                 } else {
                     console.warn("Firebase config not found. App will run in local-only mode.");
                 }
@@ -598,8 +682,15 @@
 
         // UI State & Instances
         let sigPadReporter, sigPadPk, sigPadGb;
+        let modalSigPad; // Pad for the pop-up modal
+        let currentSignId = null;
+        let currentSignType = null;
         let studentsData = [];
         let base64Evidence = "";
+        
+        // Editing state
+        window.editingId = null;
+        window.currentEditingRecord = null;
 
         // Elements
         const catSelect = document.getElementById('category-select');
@@ -609,6 +700,11 @@
         const finalMarkInput = document.getElementById('final-mark');
         const displayMark = document.getElementById('display-mark');
         const evidenceFile = document.getElementById('evidence-file');
+        
+        const classSelect = document.getElementById('class-select');
+        const studentSelect = document.getElementById('student-select');
+        const studentClassInput = document.getElementById('student-class');
+        const studentNameInput = document.getElementById('student-name');
 
         window.onload = async () => {
             initAnimatedBackground();
@@ -624,6 +720,9 @@
             sigPadPk = new SignaturePad(document.getElementById('sig-pk'), canvasOpts);
             sigPadGb = new SignaturePad(document.getElementById('sig-gb'), canvasOpts);
 
+            // Init Modal Signature Pad
+            modalSigPad = new SignaturePad(document.getElementById('modal-sig-pad'), canvasOpts);
+
             const studentCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiXe9TdBW-DC6ZR4CI73lEfF6mD6o4mcbeZJ8LjemodSsnaxE8cswYIzJzZvf9yO5VmerrGj3r-mRQ/pub?output=csv";
             const reporterCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSdF191iBW-AeowPV7V7Y8cOtViagbtuIkf4GivqTWFpxApaA9K9EuIcD5cot664hNH8vcHqOsxvJU2/pub?output=csv";
             
@@ -637,7 +736,7 @@
                 },
                 error: function(err) {
                     console.error("CSV Parse Error:", err);
-                    document.getElementById('student-select').innerHTML = '<option value="">Ralat memuat senarai murid. Sila isikan manual jika perlu (hubungi admin).</option>';
+                    classSelect.innerHTML = '<option value="">Ralat memuat senarai kelas.</option>';
                 }
             });
 
@@ -679,31 +778,63 @@
         };
 
         function processCSVData(data) {
-            const studentSelect = document.getElementById('student-select');
-            studentSelect.innerHTML = '<option value="">-- Pilih Murid --</option>';
-
+            classSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
             studentsData = [];
+            let classes = new Set();
 
-            // Guessing column names dynamically since we don't know exact CSV structure
             if (data.length > 0) {
                 const keys = Object.keys(data[0]);
-                // Very basic heuristic: find keys that might mean Name, Class
                 let nameKey = keys.find(k => k.toLowerCase().includes('nama') && !k.toLowerCase().includes('guru')) || keys[0];
                 let classKey = keys.find(k => k.toLowerCase().includes('kelas') || k.toLowerCase().includes('tingkatan')) || keys[1] || "";
 
                 data.forEach(row => {
                     if (row[nameKey]) {
                         const name = row[nameKey].trim();
-                        const className = classKey ? (row[classKey] || "").trim() : "";
+                        const className = classKey ? (row[classKey] || "Tiada Kelas").trim() : "Tiada Kelas";
                         studentsData.push({ name, class: className });
-                        
-                        const opt = document.createElement('option');
-                        opt.value = JSON.stringify({ name, class: className });
-                        opt.textContent = name;
-                        studentSelect.appendChild(opt);
+                        if(className) classes.add(className);
                     }
                 });
             }
+
+            // Populate Class Dropdown
+            Array.from(classes).sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                classSelect.appendChild(opt);
+            });
+            
+            // Handle Class Selection -> Unlock & Populate Student Dropdown
+            classSelect.addEventListener('change', (e) => {
+                const selectedClass = e.target.value;
+                studentClassInput.value = selectedClass;
+                studentNameInput.value = ""; // reset hidden input
+                
+                if (!selectedClass) {
+                    studentSelect.innerHTML = '<option value="">-- Pilih Kelas Dahulu --</option>';
+                    studentSelect.disabled = true;
+                    return;
+                }
+                
+                studentSelect.innerHTML = '<option value="">-- Pilih Murid --</option>';
+                studentSelect.disabled = false;
+                
+                const filteredStudents = studentsData
+                    .filter(s => s.class === selectedClass)
+                    .sort((a,b) => a.name.localeCompare(b.name));
+                    
+                filteredStudents.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.name; // Just store name
+                    opt.textContent = s.name;
+                    studentSelect.appendChild(opt);
+                });
+            });
+            
+            studentSelect.addEventListener('change', (e) => {
+                studentNameInput.value = e.target.value;
+            });
         }
 
         function processReporterCSVData(data) {
@@ -712,7 +843,6 @@
 
             if (data.length > 0) {
                 const keys = Object.keys(data[0]);
-                // Assumes the first column or a column with 'nama' contains the names
                 let nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[0];
 
                 data.forEach(row => {
@@ -732,7 +862,7 @@
             const cat = e.target.value;
             subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
             markContainer.classList.add('hidden');
-            setMark(0);
+            window.setMark(0);
 
             if (cat && amalanCategories[cat]) {
                 subSelect.disabled = false;
@@ -752,7 +882,7 @@
             const cat = catSelect.value;
             if (!cat || !e.target.value) {
                 markContainer.classList.add('hidden');
-                setMark(0);
+                window.setMark(0);
                 return;
             }
 
@@ -760,7 +890,7 @@
             if (marks[0] === marks[1]) {
                 // Fixed mark
                 markContainer.classList.add('hidden');
-                setMark(marks[0]);
+                window.setMark(marks[0]);
             } else {
                 // Range, need user selection
                 markContainer.classList.remove('hidden');
@@ -774,7 +904,7 @@
                     `;
                     markRadios.appendChild(label);
                 }
-                setMark(0); // Reset until chosen
+                window.setMark(0); // Reset until chosen
             }
         });
 
@@ -789,18 +919,6 @@
             else if (type === 'gb' && sigPadGb) sigPadGb.clear();
         }
 
-        // Student Data Split
-        document.getElementById('student-select').addEventListener('change', (e) => {
-            if(e.target.value) {
-                const data = JSON.parse(e.target.value);
-                document.getElementById('student-name').value = data.name;
-                document.getElementById('student-class').value = data.class;
-            } else {
-                document.getElementById('student-name').value = '';
-                document.getElementById('student-class').value = '';
-            }
-        });
-
         document.getElementById('amalan-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -809,16 +927,20 @@
                 return;
             }
 
-            // Only validate reporter signature now. PK & GB are optional.
             if (sigPadReporter.isEmpty()) {
                 alert("Sila lengkapkan tandatangan pelapor.");
                 return;
             }
 
+            const btn = document.getElementById('submit-btn-text');
+            const originalText = btn.textContent;
+            btn.textContent = "Menyimpan...";
+            btn.disabled = true;
+
             // Gather Data
             const formData = {
-                studentName: document.getElementById('student-name').value,
-                studentClass: document.getElementById('student-class').value,
+                studentName: studentNameInput.value,
+                studentClass: studentClassInput.value,
                 dateRecorded: document.getElementById('date-recorded').value,
                 dateIncident: document.getElementById('date-incident').value,
                 location: document.getElementById('location').value,
@@ -827,29 +949,42 @@
                 subcategory: document.getElementById('subcategory-select').value,
                 mark: parseInt(finalMarkInput.value),
                 description: document.getElementById('description').value,
-                timestamp: new Date().toISOString()
+                evidenceBase64: base64Evidence,
+                sigReporter: sigPadReporter.toDataURL(),
+                statusSemakan: window.editingId ? window.currentEditingRecord.statusSemakan : 'Belum Disemak',
+                statusPengesahan: window.editingId ? window.currentEditingRecord.statusPengesahan : 'Belum Disahkan',
+                timestamp: window.editingId ? window.currentEditingRecord.timestamp : new Date().toISOString()
             };
 
             // Save to Firebase (Public Data Rule 1)
             if (db && currentUser) {
                 try {
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
-                    await addDoc(colRef, formData);
-                    console.log("Record saved to Firestore");
+                    if (window.editingId) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'amalan_baik', window.editingId);
+                        await updateDoc(docRef, formData);
+                        alert("Rekod berjaya dikemaskini.");
+                    } else {
+                        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
+                        await addDoc(colRef, formData);
+                        alert("Rekod berjaya disimpan.");
+                    }
+                    
+                    window.resetForm();
+                    window.loadRecords();
+                    window.switchTab('records-tab');
                 } catch (err) {
                     console.error("Error saving to Firestore:", err);
+                    alert("Ralat semasa menyimpan rekod.");
+                } finally {
+                    btn.textContent = window.editingId ? "Kemaskini Rekod" : "Simpan Rekod";
+                    btn.disabled = false;
                 }
             }
-
-            // Generate PDF
-            generatePDF(formData);
         });
 
-        async function generatePDF(data) {
-            const btn = document.querySelector('button[type="submit"]');
-            const originalText = btn.textContent;
-            btn.textContent = "Menjana PDF... Sila Tunggu";
-            btn.disabled = true;
+        window.triggerJanaPDF = async (id) => {
+            const data = window.allRawRecords.find(r => r.id === id);
+            if (!data) return;
 
             // Populate Template
             document.getElementById('pdf-nama').textContent = data.studentName;
@@ -869,8 +1004,8 @@
             const evImg = document.getElementById('pdf-evidence-img');
             const evNone = document.getElementById('pdf-evidence-none');
             
-            if (base64Evidence) {
-                evImg.src = base64Evidence;
+            if (data.evidenceBase64) {
+                evImg.src = data.evidenceBase64;
                 evContainer.style.display = 'block';
                 evNone.style.display = 'none';
             } else {
@@ -879,9 +1014,10 @@
             }
 
             // Populate Signatures
-            document.getElementById('pdf-sig-img-reporter').src = sigPadReporter.toDataURL();
-            document.getElementById('pdf-sig-img-pk').src = sigPadPk.toDataURL();
-            document.getElementById('pdf-sig-img-gb').src = sigPadGb.toDataURL();
+            const defaultBlank = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+            document.getElementById('pdf-sig-img-reporter').src = data.sigReporter || defaultBlank;
+            document.getElementById('pdf-sig-img-pk').src = data.sigPk || defaultBlank;
+            document.getElementById('pdf-sig-img-gb').src = data.sigGb || defaultBlank;
 
             // Wait a tick for images to load into DOM
             await new Promise(r => setTimeout(r, 500));
@@ -908,70 +1044,199 @@
                 });
 
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasRatio = canvas.height / canvas.width;
+                let imgHeight = pdfWidth * canvasRatio;
 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save(`Amalan_Baik_${data.studentName.replace(/\s+/g, '_')}.pdf`);
+                // FIT TO PAGE LOGIC
+                if (imgHeight > pdfHeight) {
+                    const scaledWidth = pdfHeight / canvasRatio;
+                    // Center horizontally if we had to scale down by height
+                    pdf.addImage(imgData, 'PNG', (pdfWidth - scaledWidth) / 2, 0, scaledWidth, pdfHeight);
+                } else {
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+                }
                 
-                // Switch to list and reload
-                resetForm();
-                loadRecords();
-                switchTab('list-tab');
+                pdf.save(`Amalan_Baik_${data.studentName.replace(/\s+/g, '_')}.pdf`);
 
             } catch (err) {
                 console.error("PDF Gen Error:", err);
                 alert("Ralat semasa menjana PDF.");
+            }
+        }
+
+        window.loadRecords = async () => {
+            if (!db || !currentUser) return;
+            
+            const rawBody = document.getElementById('raw-records-body');
+            const meritBody = document.getElementById('merit-table-body');
+            
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
+                // No complex queries as per Rule 2, fetching all and sorting/filtering locally
+                const q = query(colRef);
+                const querySnapshot = await getDocs(q);
+                
+                const rawRecords = [];
+                const aggregated = {};
+                
+                querySnapshot.forEach((d) => {
+                    const data = d.data();
+                    data.id = d.id; // Store document ID for updating status
+                    
+                    // Defaults for old records
+                    if(!data.statusSemakan) data.statusSemakan = 'Belum Disemak';
+                    if(!data.statusPengesahan) data.statusPengesahan = 'Belum Disahkan';
+                    
+                    rawRecords.push(data);
+                    
+                    // Only aggregate for merit if 'Disahkan'
+                    if (data.statusPengesahan === 'Disahkan') {
+                        const key = `${data.studentName}|${data.studentClass}`;
+                        
+                        if (!aggregated[key]) {
+                            aggregated[key] = {
+                                name: data.studentName,
+                                class: data.studentClass,
+                                totalMark: 0,
+                                count: 0
+                            };
+                        }
+                        aggregated[key].totalMark += data.mark || 0;
+                        aggregated[key].count += 1;
+                    }
+                });
+
+                // Sort Raw Records by newest first
+                window.allRawRecords = rawRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                renderRawTable(window.allRawRecords);
+
+                // Convert Aggregated to array and sort by marks descending
+                window.allMeritRecords = Object.values(aggregated).sort((a, b) => b.totalMark - a.totalMark);
+                renderMeritTable(window.allMeritRecords);
+
+            } catch (err) {
+                console.error("Error loading records:", err);
+                rawBody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">Ralat memuat data pangkalan.</td></tr>`;
+                meritBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Ralat memuat data pangkalan.</td></tr>`;
+            }
+        };
+        
+        window.openSignatureModal = (id, type) => {
+            currentSignId = id;
+            currentSignType = type;
+            const modal = document.getElementById('signature-modal');
+            const title = document.getElementById('signature-modal-title');
+            const canvas = document.getElementById('modal-sig-pad');
+            
+            title.textContent = type === 'semak' ? 'Tandatangan Semakan (PK HEM)' : 'Tandatangan Pengesahan (Guru Besar)';
+            
+            modal.classList.remove('hidden');
+            
+            // Adjust canvas resolution dynamically when shown
+            setTimeout(() => {
+                const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                modalSigPad.clear();
+            }, 50);
+        };
+
+        window.closeSignatureModal = () => {
+            document.getElementById('signature-modal').classList.add('hidden');
+            currentSignId = null;
+            currentSignType = null;
+            if (modalSigPad) modalSigPad.clear();
+        };
+
+        window.clearModalPad = () => {
+            if (modalSigPad) modalSigPad.clear();
+        };
+
+        window.submitModalSignature = async () => {
+            if (!db || !currentSignId) return;
+            
+            if (modalSigPad.isEmpty()) {
+                alert("Sila masukkan tandatangan anda untuk meneruskan.");
+                return;
+            }
+
+            const btn = document.querySelector('#signature-modal .btn-persona');
+            const originalText = btn.textContent;
+            btn.textContent = "Memproses...";
+            btn.disabled = true;
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'amalan_baik', currentSignId);
+                const updates = {};
+                const sigData = modalSigPad.toDataURL();
+                
+                if (currentSignType === 'semak') {
+                    updates.statusSemakan = 'Disemak';
+                    updates.sigPk = sigData;
+                } else if (currentSignType === 'sah') {
+                    updates.statusPengesahan = 'Disahkan';
+                    updates.sigGb = sigData;
+                }
+                
+                await updateDoc(docRef, updates);
+                window.closeSignatureModal();
+                window.loadRecords(); // Refresh tables silently
+            } catch (err) {
+                console.error("Error updating status", err);
+                alert("Ralat mengemaskini status.");
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
-        }
+        };
 
-        async function loadRecords() {
-            if (!db || !currentUser) return;
+        function renderRawTable(data) {
+            const tbody = document.getElementById('raw-records-body');
+            tbody.innerHTML = '';
             
-            const tbody = document.getElementById('merit-table-body');
-            
-            try {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'amalan_baik');
-                // No complex queries as per Rule 2, fetching all and sorting locally
-                const q = query(colRef);
-                const querySnapshot = await getDocs(q);
-                
-                const aggregated = {};
-                
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const key = `${data.studentName}|${data.studentClass}`;
-                    
-                    if (!aggregated[key]) {
-                        aggregated[key] = {
-                            name: data.studentName,
-                            class: data.studentClass,
-                            totalMark: 0,
-                            count: 0
-                        };
-                    }
-                    aggregated[key].totalMark += data.mark || 0;
-                    aggregated[key].count += 1;
-                });
-
-                // Convert to array and sort by marks descending
-                window.allRecords = Object.values(aggregated).sort((a, b) => b.totalMark - a.totalMark);
-                renderTable(window.allRecords);
-
-            } catch (err) {
-                console.error("Error loading records:", err);
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Ralat memuat data pangkalan.</td></tr>`;
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Tiada rekod dijumpai.</td></tr>`;
+                return;
             }
+
+            data.forEach(row => {
+                const isDisemak = row.statusSemakan === 'Disemak';
+                const isDisahkan = row.statusPengesahan === 'Disahkan';
+                
+                const badgeSemak = isDisemak ? `<span class="badge badge-success">Disemak</span>` : `<span class="badge badge-pending">Belum</span>`;
+                const badgeSah = isDisahkan ? `<span class="badge badge-success">Disahkan</span>` : `<span class="badge badge-pending">Belum</span>`;
+                
+                const actionSemak = !isDisemak ? `<button onclick="window.openSignatureModal('${row.id}', 'semak')" class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs mx-1 transition mb-1 md:mb-0">Semak</button>` : '';
+                const actionSah = !isDisahkan ? `<button onclick="window.openSignatureModal('${row.id}', 'sah')" class="bg-[#04E762] hover:bg-green-400 text-black font-bold px-2 py-1 rounded text-xs mx-1 transition mb-1 md:mb-0">Sahkan</button>` : '';
+                
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-[rgba(212,175,55,0.1)] hover:bg-[rgba(255,255,255,0.05)] transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3 text-gray-400 whitespace-nowrap">${row.dateRecorded}</td>
+                    <td class="p-3 font-bold text-white">${row.studentName}</td>
+                    <td class="p-3 text-gray-300">${row.studentClass || '-'}</td>
+                    <td class="p-3 text-gray-400 text-xs">${row.reporter}</td>
+                    <td class="p-3 text-center">${badgeSemak}</td>
+                    <td class="p-3 text-center">${badgeSah}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        ${actionSemak}${actionSah}
+                        <button onclick="window.triggerJanaPDF('${row.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs mx-1 transition mb-1 md:mb-0">PDF</button>
+                        <button onclick="window.editRecord('${row.id}')" class="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs mx-1 transition mb-1 md:mb-0">Edit</button>
+                        <button onclick="window.deleteRecord('${row.id}')" class="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-xs mx-1 transition mb-1 md:mb-0">Padam</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        function renderTable(data) {
+        function renderMeritTable(data) {
             const tbody = document.getElementById('merit-table-body');
             tbody.innerHTML = '';
             
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Tiada rekod dijumpai.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Tiada rekod yang telah disahkan.</td></tr>`;
                 return;
             }
 
@@ -982,7 +1247,7 @@
                     <td class="p-4 font-bold text-white">${row.name}</td>
                     <td class="p-4 text-gray-300">${row.class || '-'}</td>
                     <td class="p-4 text-center font-black text-[#04E762] text-xl">${row.totalMark}</td>
-                    <td class="p-4 text-right text-gray-400">${row.count} rekod</td>
+                    <td class="p-4 text-right text-gray-400">${row.count} rekod sah</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -991,63 +1256,169 @@
         // Search Filter Logic
         document.getElementById('search-student').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            if (window.allRecords) {
-                const filtered = window.allRecords.filter(r => 
+            if (window.allMeritRecords) {
+                const filtered = window.allMeritRecords.filter(r => 
                     r.name.toLowerCase().includes(term) || 
                     (r.class && r.class.toLowerCase().includes(term))
                 );
-                renderTable(filtered);
+                renderMeritTable(filtered);
+            }
+        });
+        
+        document.getElementById('search-raw-records').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if (window.allRawRecords) {
+                const filtered = window.allRawRecords.filter(r => 
+                    r.studentName.toLowerCase().includes(term) || 
+                    (r.studentClass && r.studentClass.toLowerCase().includes(term))
+                );
+                renderRawTable(filtered);
             }
         });
 
         // Utilities
         window.switchTab = (tabId) => {
-            document.getElementById('form-tab').classList.add('hidden');
-            document.getElementById('list-tab').classList.add('hidden');
+            const tabs = ['form-tab', 'records-tab', 'list-tab'];
+            const navs = ['nav-form', 'nav-records', 'nav-list'];
             
-            document.getElementById('nav-form').classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
-            document.getElementById('nav-form').classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
+            // Hide all tabs & reset button styles
+            tabs.forEach(t => document.getElementById(t).classList.add('hidden'));
+            navs.forEach(n => {
+                const btn = document.getElementById(n);
+            btn.classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
+            btn.classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
+        });
+
+        // Show active tab & set active button style
+        document.getElementById(tabId).classList.remove('hidden');
+        
+        const activeBtnMap = { 'form-tab': 'nav-form', 'records-tab': 'nav-records', 'list-tab': 'nav-list' };
+        const activeBtn = document.getElementById(activeBtnMap[tabId]);
+        activeBtn.classList.remove('bg-transparent', 'text-[#D4AF37]');
+        activeBtn.classList.add('bg-[#D4AF37]', 'text-[#0D2818]');
+    };
+
+    window.editRecord = (id) => {
+        const record = window.allRawRecords.find(r => r.id === id);
+        if (!record) return;
+
+        window.editingId = id;
+        window.currentEditingRecord = record;
+
+        // Tukar ke tab borang
+        window.switchTab('form-tab');
+        document.getElementById('submit-btn-text').textContent = "Kemaskini Rekod";
+
+        // Auto-scroll ke atas supaya pengguna nampak borang
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Isi input asas
+        document.getElementById('date-recorded').value = record.dateRecorded || "";
+        document.getElementById('date-incident').value = record.dateIncident || "";
+        document.getElementById('location').value = record.location || "";
+        
+        if (record.reporter) {
+            document.getElementById('reporter-name').value = record.reporter;
+        }
+        
+        document.getElementById('description').value = record.description || "";
+        base64Evidence = record.evidenceBase64 || "";
+
+        // Isi Kelas & Murid (Secara Segera/Synchronous)
+        if (record.studentClass) {
+            classSelect.value = record.studentClass;
+            classSelect.dispatchEvent(new Event('change')); // Hasilkan pilihan murid
             
-            document.getElementById('nav-list').classList.remove('bg-[#D4AF37]', 'text-[#0D2818]');
-            document.getElementById('nav-list').classList.add('bg-transparent', 'border-[#D4AF37]', 'text-[#D4AF37]');
+            if (record.studentName) {
+                studentSelect.value = record.studentName;
+                studentNameInput.value = record.studentName;
+            }
+        }
 
-            const activeBtn = tabId === 'form-tab' ? 'nav-form' : 'nav-list';
-            document.getElementById(activeBtn).classList.remove('bg-transparent', 'text-[#D4AF37]');
-            document.getElementById(activeBtn).classList.add('bg-[#D4AF37]', 'text-[#0D2818]');
+        // Isi Kategori & Pecahan (Secara Segera/Synchronous)
+        if (record.category) {
+            catSelect.value = record.category;
+            catSelect.dispatchEvent(new Event('change')); // Hasilkan pilihan pecahan
+            
+            if (record.subcategory) {
+                subSelect.value = record.subcategory;
+                subSelect.dispatchEvent(new Event('change')); // Hasilkan pilihan markah
+                
+                if (record.mark) {
+                    const radio = document.querySelector(`input[name="merit_choice"][value="${record.mark}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                    }
+                    window.setMark(record.mark);
+                }
+            }
+        }
 
-            document.getElementById(tabId).classList.remove('hidden');
-        };
+        // Isi Tandatangan
+        if (record.sigReporter) {
+            // Beri masa untuk canvas render sebelum melukis
+            setTimeout(() => {
+                if(sigPadReporter) sigPadReporter.fromDataURL(record.sigReporter);
+            }, 100);
+        } else {
+            if(sigPadReporter) sigPadReporter.clear();
+        }
+    };
 
-        window.resetForm = () => {
-            document.getElementById('amalan-form').reset();
-            sigPadReporter.clear();
-            sigPadPk.clear();
-            sigPadGb.clear();
-            base64Evidence = "";
-            setMark(0);
-            markContainer.classList.add('hidden');
-            subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
-            subSelect.disabled = true;
-            document.getElementById('date-recorded').valueAsDate = new Date();
-        };
+    window.deleteRecord = async (id) => {
+        const pass = prompt("Sila masukkan kata laluan rahsia untuk memadam rekod ini (Amaran: Tindakan tidak boleh diundur):");
+        if (pass === '920307136255') {
+            if (!db) {
+                alert("Ralat sambungan pangkalan data. Sila cuba lagi.");
+                return;
+            }
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'amalan_baik', id));
+                alert("Rekod berjaya dipadam.");
+                window.loadRecords(); // Segarkan jadual secara automatik
+            } catch (err) {
+                console.error("Delete Error:", err);
+                alert("Ralat semasa memadam rekod: " + err.message);
+            }
+        } else if (pass !== null && pass.trim() !== "") {
+            alert("Kata laluan salah. Operasi memadam dibatalkan.");
+        }
+    };
 
-        window.triggerGlitchTransition = () => {
+    window.resetForm = () => {
+        document.getElementById('amalan-form').reset();
+        
+        window.editingId = null;
+        window.currentEditingRecord = null;
+        document.getElementById('submit-btn-text').textContent = "Simpan Rekod";
+
+        if(sigPadReporter) sigPadReporter.clear();
+        if(sigPadPk) sigPadPk.clear();
+        if(sigPadGb) sigPadGb.clear();
+        base64Evidence = "";
+        window.setMark(0);
+        markContainer.classList.add('hidden');
+        subSelect.innerHTML = '<option value="">-- Pilih Pecahan --</option>';
+        subSelect.disabled = true;
+        studentSelect.innerHTML = '<option value="">-- Pilih Kelas Dahulu --</option>';
+        studentSelect.disabled = true;
+        studentClassInput.value = "";
+        studentNameInput.value = "";
+        document.getElementById('date-recorded').valueAsDate = new Date();
+    };
+
+    window.triggerGlitchTransition = () => {
             const overlay = document.getElementById('glitch-overlay');
             overlay.classList.add('glitch-active');
-            
-            // Apply slight shake to the main body content
             document.body.style.animation = "shake 0.4s ease-in-out";
 
             setTimeout(() => {
                 try {
-                    // This works perfectly on a real server/local folder
                     window.location.href = 'index.html';
                 } catch (e) {
-                    // Fallback for sandboxed preview environments that block relative URLs
-                    console.warn("Sandboxed environment detected. Falling back to page reload.");
                     window.location.reload();
                 }
-            }, 600); // Wait for the glitch animation to complete before redirecting
+            }, 600);
         };
 
         // Initialize active tab styling properly on load
@@ -1073,7 +1444,6 @@
                     this.vx = (Math.random() - 0.5) * 1.5;
                     this.vy = (Math.random() - 0.5) * 1.5;
                     this.size = Math.random() * 2 + 0.5;
-                    // Colors matching the High Republic theme (Gold and Teal variations)
                     const colors = ['rgba(212, 175, 55, 0.6)', 'rgba(4, 231, 98, 0.4)', 'rgba(13, 40, 24, 0.8)'];
                     this.color = colors[Math.floor(Math.random() * colors.length)];
                 }
@@ -1082,7 +1452,6 @@
                     this.x += this.vx;
                     this.y += this.vy;
 
-                    // Wrap around edges
                     if (this.x < 0) this.x = canvas.width;
                     if (this.x > canvas.width) this.x = 0;
                     if (this.y < 0) this.y = canvas.height;
@@ -1097,7 +1466,6 @@
                 }
             }
 
-            // Create particles
             const particleCount = Math.min(100, window.innerWidth / 10);
             for (let i = 0; i < particleCount; i++) {
                 particles.push(new Particle());
@@ -1106,7 +1474,6 @@
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Draw connecting lines (network effect)
                 ctx.lineWidth = 0.5;
                 for(let i=0; i<particles.length; i++) {
                     for(let j=i+1; j<particles.length; j++) {
@@ -1134,7 +1501,6 @@
 
             animate();
         }
-
     </script>
 </body>
 </html>
