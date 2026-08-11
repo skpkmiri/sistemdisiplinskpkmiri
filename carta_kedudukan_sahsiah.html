@@ -473,64 +473,58 @@
         function processAggregatedData() {
             const studentsMap = new Map();
 
-            // Helper to strictly normalize names for bulletproof matching across systems
-            // Menapis semua jenis jarak, newline, tab, dan zero-width character supaya nama PADAN 100%
+            // Helper to strictly normalize names for matching across both systems
             const normalizeName = (name) => {
                 if (!name) return '';
                 return String(name)
-                    .replace(/[\u200B-\u200D\uFEFF]/g, '') 
-                    .replace(/[\r\n\t]+/g, ' ') 
+                    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                    .replace(/[\r\n\t]+/g, ' ')
                     .trim()
                     .toUpperCase()
                     .replace(/\s+/g, ' ');
             };
 
             // 1. Process Amalan Baik (Merits)
-            if (Array.isArray(amalanBaikData)) {
-                amalanBaikData.forEach(doc => {
-                    if (!doc.studentName) return;
-                    const rawName = String(doc.studentName).trim();
-                    const key = normalizeName(rawName);
-                    
-                    if (!studentsMap.has(key)) {
-                        studentsMap.set(key, { 
-                            id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
-                            name: rawName, // Keep original casing for display
-                            class: doc.studentClass || 'N/A', 
-                            merit: 0, 
-                            demerit: 0, 
-                            score: 100 // Starting base marks
-                        });
-                    }
-                    studentsMap.get(key).merit += Number(doc.mark || 0);
-                });
-            }
+            amalanBaikData.forEach(doc => {
+                if (!doc.studentName) return;
+                const rawName = String(doc.studentName).trim();
+                const key = normalizeName(rawName);
+                
+                if (!studentsMap.has(key)) {
+                    studentsMap.set(key, { 
+                        id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
+                        name: rawName, // Keep original casing for display
+                        class: doc.studentClass || 'N/A', 
+                        merit: 0, 
+                        demerit: 0, 
+                        score: 100 // Starting base marks
+                    });
+                }
+                studentsMap.get(key).merit += Number(doc.mark || 0);
+            });
 
-            // 2. Process Imperial Discipline (Demerits) - Menjumlahkan Markah Terkumpul secara dinamik dari Databank
+            // 2. Process Imperial Discipline (Demerits)
+            // disciplineData contains ONLY records confirmed by Guru Besar.
+            // Sum each confirmed record's own totalMarks so edits/deletions recalculate correctly.
             const demeritTerkumpulMap = new Map();
-            
-            if (Array.isArray(disciplineData)) {
-                disciplineData.forEach(doc => {
-                    if (!doc.studentName) return;
-                    const key = normalizeName(doc.studentName);
-                    
-                    // Ambil markah kesalahan untuk direkodkan dan dijumlahkan 
-                    // (Langkah ini menjamin Markah Terkumpul terhasil tanpa ralat snapshot)
-                    const markahRekod = Number(doc.totalMarks || 0);
-                    
-                    if (!demeritTerkumpulMap.has(key)) {
-                        demeritTerkumpulMap.set(key, {
-                            marks: 0,
-                            rawName: String(doc.studentName).trim(),
-                            className: doc.studentClass || 'N/A'
-                        });
-                    }
-                    // Tambah markah untuk mendapatkan Jumlah Terkumpul yang tepat untuk murid ini
-                    demeritTerkumpulMap.get(key).marks += markahRekod;
-                });
-            }
 
-            // Masukkan data Demerit (Markah Terkumpul) ke dalam map utama (studentsMap)
+            disciplineData.forEach(doc => {
+                if (!doc.studentName) return;
+                const key = normalizeName(doc.studentName);
+                const markahRekod = Number(doc.totalMarks || 0);
+
+                if (!demeritTerkumpulMap.has(key)) {
+                    demeritTerkumpulMap.set(key, {
+                        marks: 0,
+                        rawName: String(doc.studentName).trim(),
+                        className: doc.studentClass || 'N/A'
+                    });
+                }
+
+                demeritTerkumpulMap.get(key).marks += markahRekod;
+            });
+
+            // Masukkan data Demerit ke dalam map utama (studentsMap)
             demeritTerkumpulMap.forEach((data, key) => {
                 if (!studentsMap.has(key)) {
                     studentsMap.set(key, { 
@@ -694,24 +688,7 @@
             window.requestAnimationFrame(step);
         }
 
-        // Load LocalStorage Demerits (Imperial Discipline Datapad)
-        function loadLocalDemerits() {
-            try {
-                const raw = localStorage.getItem('imperialDisciplineRecords');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        disciplineData = parsed;
-                    }
-                }
-            } catch(e) {
-                console.error("Error parsing discipline datapad records:", e);
-            }
-            // Sentiasa jalankan proses ini bagi mengemas kini visual walaupun rekod kosong
-            processAggregatedData();
-        }
-
-        // Initialize Firebase for Merits (Amalan Baik System)
+        // Initialize Firebase for both Merit (Amalan Baik) and Demerit (Imperial Discipline)
         async function initFirebase() {
             try {
                 const firebaseConfig = {
@@ -723,7 +700,7 @@
                     appId: "1:778292133080:web:4bc389ecf3f4487c826bad",
                     measurementId: "G-8HSDV4GG0B"
                 };
-                
+
                 const app = initializeApp(firebaseConfig);
                 const db = getFirestore(app);
                 const auth = getAuth(app);
@@ -733,39 +710,70 @@
                 } catch (authErr) {
                     console.warn("Anonymous auth failed (ensure it's enabled in Firebase Console). Proceeding...", authErr);
                 }
-                
-                const appId_val = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
-                const colRef = collection(db, 'artifacts', appId_val, 'public', 'data', 'amalan_baik');
-                
-                // Real-time listener
-                onSnapshot(query(colRef), (snapshot) => {
+
+                // -----------------------------
+                // MERIT: Amalan Baik
+                // -----------------------------
+                const meritAppId = typeof __app_id !== 'undefined' ? __app_id : 'amalan-baik-app';
+                const meritRef = collection(db, 'artifacts', meritAppId, 'public', 'data', 'amalan_baik');
+
+                onSnapshot(query(meritRef), (snapshot) => {
                     amalanBaikData = [];
-                    snapshot.forEach(doc => {
-                        amalanBaikData.push(doc.data());
+
+                    snapshot.forEach(docSnapshot => {
+                        amalanBaikData.push(docSnapshot.data());
                     });
+
+                    console.log(`[MERIT] ${amalanBaikData.length} rekod Amalan Baik diterima.`);
                     processAggregatedData();
                 }, (error) => {
-                    console.error("Firebase Snapshot Error:", error);
+                    console.error("[MERIT] Firebase Snapshot Error:", error);
                 });
+
+                // -----------------------------
+                // DEMERIT: Imperial Discipline
+                // Same Firestore path used by imperial_discipline_datapad.html.
+                // Only records confirmed by Guru Besar affect the ranking.
+                // -----------------------------
+                const disciplineAppId = typeof __app_id !== 'undefined' ? __app_id : 'pengurusan-disiplin';
+                const disciplineRef = collection(
+                    db,
+                    'artifacts',
+                    disciplineAppId,
+                    'public',
+                    'data',
+                    'disciplineRecords'
+                );
+
+                onSnapshot(query(disciplineRef), (snapshot) => {
+                    disciplineData = [];
+
+                    snapshot.forEach(docSnapshot => {
+                        const record = docSnapshot.data();
+
+                        if (record.statusPengesahan === true) {
+                            disciplineData.push(record);
+                        }
+                    });
+
+                    console.log(`[DEMERIT] ${disciplineData.length} rekod disiplin yang telah disahkan diterima.`);
+                    processAggregatedData();
+                }, (error) => {
+                    console.error("[DEMERIT] Firebase Snapshot Error:", error);
+                });
+
             } catch(e) {
                 console.error("Firebase Init Error:", e);
             }
         }
-        
+
+
         // Listen for filter input
         document.getElementById('search-filter').addEventListener('input', renderChart);
 
-        // Listen for storage events to instantly deduct marks when Datapad updates
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'imperialDisciplineRecords') {
-                loadLocalDemerits();
-            }
-        });
-
         // Bootstrap App
-        loadLocalDemerits(); // Initial local load
-        setInterval(loadLocalDemerits, 2000); // Poll local storage for cross-tab updates
-        initFirebase(); // Initialize cloud connection
+        // Merit and demerit data are synchronized directly from Firestore.
+        initFirebase();
 
     </script>
 </body>
