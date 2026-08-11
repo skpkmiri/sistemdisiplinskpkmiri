@@ -474,7 +474,8 @@
             const studentsMap = new Map();
 
             // Helper to strictly normalize names for bulletproof matching across systems
-            const normalizeName = (name) => String(name).trim().toUpperCase();
+            // Convert to uppercase and replace multiple spaces with a single space
+            const normalizeName = (name) => String(name).trim().toUpperCase().replace(/\s+/g, ' ');
 
             // 1. Process Amalan Baik (Merits)
             amalanBaikData.forEach(doc => {
@@ -495,25 +496,40 @@
                 studentsMap.get(key).merit += Number(doc.mark || 0);
             });
 
-            // 2. Process Imperial Discipline (Demerits) - True 'Markah Terkumpul'
-            // We calculate the accumulated marks by summing the totalMarks of all active records in the Databank Archive.
+            // 2. Process Imperial Discipline (Demerits) - Guna 'Markah Terkumpul' (accumulatedMarks)
+            const demeritTerkumpulMap = new Map();
+            
+            // Cari Markah Terkumpul (accumulatedMarks) yang paling tinggi/terkini untuk setiap murid dalam Archive
             disciplineData.forEach(doc => {
                 if (!doc.studentName) return;
-                const rawName = String(doc.studentName).trim();
-                const key = normalizeName(rawName);
+                const key = normalizeName(doc.studentName);
                 
+                // Ambil nilai accumulatedMarks. Jika tiada (fallback), guna totalMarks
+                const markahTerkumpul = Number(doc.accumulatedMarks || doc.totalMarks || 0);
+                
+                if (!demeritTerkumpulMap.has(key) || markahTerkumpul > demeritTerkumpulMap.get(key).marks) {
+                    demeritTerkumpulMap.set(key, {
+                        marks: markahTerkumpul,
+                        rawName: String(doc.studentName).trim(),
+                        className: doc.studentClass || 'N/A'
+                    });
+                }
+            });
+
+            // Masukkan data Demerit ke dalam map utama (studentsMap)
+            demeritTerkumpulMap.forEach((data, key) => {
                 if (!studentsMap.has(key)) {
                     studentsMap.set(key, { 
                         id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
-                        name: rawName, 
-                        class: doc.studentClass || 'N/A', 
+                        name: data.rawName, 
+                        class: data.className, 
                         merit: 0, 
                         demerit: 0, 
                         score: 100 // Starting base marks
                     });
                 }
-                // Add up individual 'totalMarks' to get the exact current 'Terkumpul'
-                studentsMap.get(key).demerit += Number(doc.totalMarks || 0);
+                // SET demerit = Markah Terkumpul dari Databank Archive secara mutlak
+                studentsMap.get(key).demerit = data.marks;
             });
 
             // Calculate final scores: 100 + Merit - Demerit
