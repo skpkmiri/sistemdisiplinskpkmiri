@@ -473,35 +473,39 @@
         function processAggregatedData() {
             const studentsMap = new Map();
 
+            // Helper to strictly normalize names for bulletproof matching across systems
+            const normalizeName = (name) => String(name).trim().toUpperCase();
+
             // 1. Process Amalan Baik (Merits)
             amalanBaikData.forEach(doc => {
                 if (!doc.studentName) return;
-                const name = String(doc.studentName).trim(); // Ensure exact matching between systems
+                const rawName = String(doc.studentName).trim();
+                const key = normalizeName(rawName);
                 
-                if (!studentsMap.has(name)) {
-                    studentsMap.set(name, { 
-                        id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
-                        name: name, 
+                if (!studentsMap.has(key)) {
+                    studentsMap.set(key, { 
+                        id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
+                        name: rawName, // Keep original casing for display
                         class: doc.studentClass || 'N/A', 
                         merit: 0, 
                         demerit: 0, 
                         score: 100 // Starting base marks
                     });
                 }
-                studentsMap.get(name).merit += Number(doc.mark || 0);
+                studentsMap.get(key).merit += Number(doc.mark || 0);
             });
 
             // 2. Process Imperial Discipline (Demerits) - True 'Markah Terkumpul'
             // We calculate the accumulated marks by summing the totalMarks of all active records in the Databank Archive.
-            // This ensures accuracy even if older records were deleted from the datapad.
             disciplineData.forEach(doc => {
                 if (!doc.studentName) return;
-                const name = String(doc.studentName).trim();
+                const rawName = String(doc.studentName).trim();
+                const key = normalizeName(rawName);
                 
-                if (!studentsMap.has(name)) {
-                    studentsMap.set(name, { 
-                        id: 's-' + name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
-                        name: name, 
+                if (!studentsMap.has(key)) {
+                    studentsMap.set(key, { 
+                        id: 's-' + key.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(), 
+                        name: rawName, 
                         class: doc.studentClass || 'N/A', 
                         merit: 0, 
                         demerit: 0, 
@@ -509,7 +513,7 @@
                     });
                 }
                 // Add up individual 'totalMarks' to get the exact current 'Terkumpul'
-                studentsMap.get(name).demerit += Number(doc.totalMarks || 0);
+                studentsMap.get(key).demerit += Number(doc.totalMarks || 0);
             });
 
             // Calculate final scores: 100 + Merit - Demerit
@@ -642,7 +646,7 @@
 
         // Utility to animate number counting
         function animateValue(obj, start, end, duration) {
-            if(start === end) {
+            if(start === end || isNaN(start)) { // Added safeguard against NaN
                 obj.innerHTML = end;
                 return;
             }
@@ -666,12 +670,17 @@
             if (raw) {
                 try {
                     const parsed = JSON.parse(raw);
-                    // Check if data changed to avoid redundant renders
-                    if (JSON.stringify(parsed) !== JSON.stringify(disciplineData)) {
-                        disciplineData = parsed;
-                        processAggregatedData();
-                    }
-                } catch(e) {}
+                    // Force the data to process every time to guarantee deduction UI updates
+                    disciplineData = parsed;
+                    processAggregatedData();
+                } catch(e) {
+                    console.error("Error parsing discipline datapad records:", e);
+                }
+            } else {
+                if (disciplineData.length > 0) {
+                    disciplineData = [];
+                    processAggregatedData();
+                }
             }
         }
 
@@ -718,6 +727,13 @@
         
         // Listen for filter input
         document.getElementById('search-filter').addEventListener('input', renderChart);
+
+        // Listen for storage events to instantly deduct marks when Datapad updates
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'imperialDisciplineRecords') {
+                loadLocalDemerits();
+            }
+        });
 
         // Bootstrap App
         loadLocalDemerits(); // Initial local load
